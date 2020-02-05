@@ -1,0 +1,566 @@
+/* Let's start with global declarations */
+*
+{
+	font-family: verdana, arial; 
+	margin: 0;
+}
+/* Div for staging server rendering */
+#staging{
+	z-index: 100;
+	position: absolute;
+	bottom: 0; right: 0;
+	background-color: #ffdddd;
+	text-align: center;
+	font-size:12px;  
+	font-weight:bolder; 
+	color:#FF3333;
+	padding:4px 6px 4px 6px; 
+}
+/* The userbanner is the lucky inhabitant of the top of the screen */
+#userbanner {
+	font-size: .6em;
+	position:absolute;
+	top:0; right:0;
+}
+/* The userbanner is the lucky inhabitant of the top of the screen */
+.helpicon {
+	position:absolute;
+	top:1em; right:0;
+}
+#search {
+	position:absolute; left: 0px; top: 0px;
+	margin-top: -13px;
+	font-size:.6em;
+}
+
+#wrapper {
+    position: absolute;
+	/* Leave just enough room for the userbanner */
+    top: 1.25em;
+    left: 5;
+	min-height: 95%;
+	/* next 2 lines: hack for IE 6 */
+	height: auto !important;
+	height: 95%;
+	width: 95%;
+	margin: 0 auto -4em;
+} 
+
+html, body {
+	height: 95%;
+    background-color: #efe;
+/* This is an IE-only workaround for the fact that IE doesn't support hover behaviors for non "a"-tags */
+	behavior:url("csshover.htc");
+}
+#dynamicimage {
+	float: left;
+	position:absolute;
+	height: 110px;
+	width: 110px;
+}
+#footer {
+	font-size: .6em;
+	float: left;
+	position:absolute;
+	bottom: 0; left: 0;
+	height: 4em;
+}
+#logo {
+	float: right;
+	position:absolute;
+	bottom: 0; right: 0;
+}
+.pushlogo {
+	height: 200px;
+}
+.push {
+	height: 1em;
+}
+div.navtop {
+	padding: 0px;
+	text-align:left;
+	width:auto;
+}
+
+
+.navtop ul {
+	margin: 0;
+	padding: 0 0 25px 0;
+	list-style-type: none;	
+	
+}
+
+.navtop li  {
+	width:120px;
+	margin: 0 -1px 0 0;
+	padding: 0;
+	border:1px solid #88aa88;
+	color:black;
+	text-decoration:none;
+	background-color:#88aa88;
+	float:left;
+}
+
+.navtop a {
+	text-decoration: none;
+	display: block;
+	color: #000000;
+	background-color: #inherit;
+	padding: 5px;
+	background-color:#88aa88; /* IE */
+/*	width:100%; /* IE */
+}
+
+.navtop a:hover {
+	text-decoration: none;
+	color: #FFFFFF;
+	background-color: #003300;
+}
+
+
+.navtop li:hover ul {
+	visibility: visible;
+	display: block;
+	position:absolute;
+	z-index:1;
+	width:120px;
+	padding: 0;
+	margin: 0;
+	border:1px solid #88aa88;
+	border-bottom-color:#efe;
+	border-right-color: #efe;
+	border-left-color:#efe;
+}
+
+.navtop li li {
+	border: none;
+	
+}	
+
+.navtop li ul {
+	display: none;
+}
+
+.navtop li li a {
+	padding: 2px 2px 2px 10px;
+}
+
+/* Element hiding and showing via Javascript 
+	hideit and showit are triggered via the utils.js togglevis function */
+.helpmainhide {display:none}
+.helpmainshow {display:inline;
+	position:absolute;
+	bottom: 10em; left: 200;
+}
+#helpclose{ margin-top: -10px;font-size: .9em; float:right;}
+.hideit {display:none}
+.showit {display:inline}
+
+#idcard{
+text-align:center;
+}
+#idcard_address{
+	text-align:center;
+	font-size: .7em;
+}
+img.idcard_logo{
+	height:90px;
+}
+img.idcard_barcode{
+	height:60px;
+}
+img.idcard_redemptioncardbarcode{
+	height:50px;
+}
+td.idcard_cell{
+	width:270px;height:105px;
+}
+table.memberlist {
+}
+table.memberlist td{
+	padding: 2px 10px 2px 10px;
+}
+table.noborders {
+	border-width: 0px 0px 0px 0px;
+	border-spacing: 2px; 
+	border-style: outset outset outset outset;
+	border-collapse: separate; 
+	padding: 2px 10px 2px 10px;
+}
+table.noborders td{
+	padding: 2px 10px 2px 10px;
+}
+tr.totalrow {
+	 border: 1px solid #efe;
+}
+table.idcard {
+	table-layout: fixed;
+	border-width: 0px 0px 0px 0px;
+	border-spacing: 2px;
+	border-style: outset outset outset outset;
+	border-collapse: separate;
+	background-color: white;
+}
+
+table.idcard td {
+	border-width: 1px 1px 1px 1px;
+	padding: 1px 1px 1px 1px;
+	border-style: inset inset inset inset;
+	background-color: white;
+	-moz-border-radius: 10px 10px 10px 10px;
+}
+/* Conditional font styling */
+.error { color: red;font-weight:bold; background-color:inherit}
+.noevents { color: red;font-weight:bold; background-color:inherit}
+.money { background-color:inherit}
+.debit { color: red;font-style:italic; background-color:inherit}
+.moneytotal { border-width: 3px 0 0 0; border-style: solid;  border-color:#000000; font-weight:bold ; font-size: 1.5em; background-color:inherit}
+.moneytotaldebit { border-width: 3px 0 0 0; border-style: solid; font-style:italic; border-color:#000000; color: red; font-weight:bold ; font-size: 1.5em; background-color:inherit}
+.billingissue { color:#CC6600;font-weight:bold; background-color:inherit}
+.important { color:#CC33CC;font-weight:bold; background-color:inherit}
+.usererror { color: red;font-weight:bold; background-color:inherit}
+.attention {font-weight:bold; background-color:inherit}
+.bold { font-weight:bold ; background-color:inherit}
+.subdued{ color:#999999; background-color:inherit}
+.small {	font-size: .8em;background-color:inherit}
+.smallnormal {	font-size: .8em;font-weight: normal;background-color:inherit}
+.normal {	font-weight: normal;}
+.smallbold {	font-size: .8em;font-weight:bold ;background-color:inherit}
+.smaller {	font-size: .6em;background-color:inherit}
+.smallerbold {	font-size: .6em;font-weight:bold ;background-color:inherit}
+.bigstrong {	 font-weight:bold ;font-size: 1.5em;background-color:inherit}
+.bigstrongcenter {	 font-weight:bold ;font-size: 1.5em;background-color:inherit;text-align: center}
+.strong { font-weight:bold ;}
+
+/* Anchor treatment can be summed up as follows:
+	Background inherits the parent unless it is rolled over,
+	in which case it is blue.
+	font style is always bold	
+	Images in anchors should also show the blue background on rollover. */
+a:hover img {
+	background-color: #003300;
+}
+a { 
+color: #000;
+background-color:inherit;
+text-decoration: none;
+font-weight:bold;
+}
+a:link, #navlist a:visited
+{
+color: #000;
+background-color:inherit;
+text-decoration: none;
+font-weight:bold;
+}
+a:hover
+{
+color: #fff;
+background-color: #003300;
+text-decoration: none;
+font-weight:bold;
+}
+/* div indented group - for grouping controls under a header */
+div.group{
+	width:auto;
+	border: solid; 
+	border-width: thin; 
+}
+div.indented-group{
+	margin-left:2em;
+	width:auto;
+	border: solid; 
+	border-width: thin; 
+	margin: 1em;
+}
+/* div indented group - for grouping controls under a header */
+div.indented-group-noborder{
+	margin-left:2em;
+	margin: 1em;
+}
+/* This is for expandable headers (using togglerender from javascript into an iframe) in order to tighten the space up. */
+.expandable{
+	margin-bottom: 0em;
+	padding: -1em;
+}
+/* Table styling */
+table {
+	border-width: 1px 1px 1px 1px;
+	border-spacing: 2px;
+	border-style: none none none none;
+	border-color: #efe;
+	border-collapse: collapse;
+}
+table th {
+	border-width: 1px 1px 1px 1px;
+	padding: 1px 1px 1px 1px;
+	border-style: solid solid solid solid;
+	border-color: #88aa88;
+	background-color:#88aa88;
+	font:bold; 
+}
+table tr {
+	border: 1px solid #88aa88;
+}
+
+tr.even td {
+	background-color:#aaddaa; 
+}
+tr.odd td {
+	background-color:#ddffdd; 
+}
+
+/* Anchor opacity changes on rollover: requires javascript: */
+a.linkopacity img {
+filter:alpha(opacity=50); 
+-moz-opacity: 0.5; 
+opacity: 0.5;}
+
+a.linkopacity:hover img {
+filter:alpha(opacity=100);   
+-moz-opacity: 1.0;   
+opacity: 1.0;
+}
+
+/* Forms elements */
+textarea{
+	font-size: 1em; 
+  border-color:black;
+  border-width:thin;
+  background:#fefffe;
+}
+
+input{
+  border-color:#88aa88;
+  border-width:thin;
+  background:#fefffe;
+  font-size:9px;
+}
+
+input.btn{
+   font-weight:bold;
+   font-size:9px;
+   background-color: #ddeedd;
+   border-color:#efe;
+   -moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+
+input.btnhover{
+  	color: #FFFFFF;
+	background-color: #003300; 
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+input.btnbig{
+   font-weight:bold;
+   font-size:14px;
+   background-color: #ddffdd;
+   -moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+input.btnbighover{
+	font-size:14px;
+  	color: #FFFFFF;
+	background-color: #003300;
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+/* For help text blocks */
+div helpbox{
+	margin-top:1em;
+}
+div.helpboxtitle {
+	font-size: 2em; 
+	font-size: .83em; 
+	font-weight: bolder;
+	margin-left:50px;
+	margin-right:200px;
+} 
+div.helpboxtext {
+	font-size: .75em; 
+	padding:4px 6px 4px 6px; 
+	color: #555555; 
+	background-color: #eeeeee; 
+	border: #dddddd 2px solid;
+	margin-left:50px;
+	margin-right:200px;
+	margin-bottom:1em;
+	width:55%;
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+div.scanbox {
+	font-size: .75em; 
+	padding:4px 6px 4px 6px; 
+	background-color: #ddeedd; 
+	border: #dddddd 2px solid;
+	margin-left:50px;
+	margin-right:100px;
+	width:45%;
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+div.errorboxtitle {
+	color:#FF0000;
+	font-size: 1em; 
+	font-weight: bolder;
+} 
+
+div.errorboxclose {
+	float: right;
+	position:absolute;
+	top: 0; right: 0;
+} 
+
+div.errorboxshow {
+	display:inline;
+	font-size: .75em; 
+	color:#FF0000;
+	position:absolute;
+	top: 100px;
+	left: 33%;
+	padding:4px 6px 4px 6px; 
+	background-color: #ddeedd; 
+	border: #dddddd 2px solid;
+	margin-left:50px;
+	margin-right:100px;
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+div.msgboxtitle {
+	color:#000000;
+	font-size: 1em; 
+	font-weight: bolder;
+} 
+
+div.msgboxclose {
+	float: right;
+	position:absolute;
+	top: 0; right: 0;
+} 
+
+div.msgboxshow {
+	display:inline;
+	font-size: .75em; 
+	color:#000000;
+	position:absolute;
+	top: 33%;
+	left: 33%;
+	padding:4px 6px 4px 6px; 
+	background-color: #ddeedd; 
+	border: #dddddd 2px solid;
+	margin-left:50px;
+	margin-right:100px;
+	-moz-border-radius: 5px; -webkit-border-radius: 5px;
+}
+
+div.confirmboxtitle {
+	color:#000000;
+	font-size: 1em; 
+	font-weight: bolder;
+} 
+
+div.confirmboxclose {
+	float: right;
+	position:absolute;
+	top: 0; right: 0;
+} 
+
+div.confirmboxshow {
+	display:inline;
+	font-size: .75em; 
+	color:#000000;
+	position:absolute;
+	top: 33%;
+	left: 33%;
+	padding:4px 6px 4px 6px; 
+	background-color: #ddeedd; 
+	border: #dddddd 2px solid;
+	margin-left:50px;
+	margin-right:100px;
+}
+
+div.boxbutton{
+	position:absolute;
+	left: 50%;
+	bottom: 0;
+}
+div.boxbutton1{
+	position:absolute;
+	left: 30%;
+	bottom: 0;
+}
+div.boxbutton2{
+	position:absolute;
+	left: 60%;
+	bottom: 0;
+}
+.errorboxhide {display:none}
+.msgboxhide {display:none}
+.confirmboxhide {display:none}
+
+TH              { font-weight: bolder; text-align: center }
+CAPTION         { text-align: center }
+BODY            { padding: 8px; line-height: 1.33 }
+H1              { font-size: 2em; margin: .67em 0 }
+H2              { font-size: 1.5em; margin: .83em 0 }
+H3              { font-size: 1.17em; }
+H4, P,
+BLOCKQUOTE, UL,
+FIELDSET, FORM,
+OL, DL, DIR,
+MENU            { margin: 1.33em 0 }
+TABLE,P,UL,OL,select   { font-size: 10px }
+H5              { font-size: .83em; line-height: 1.17em; margin: 1.67em 0 }
+H6              { font-size: .67em; margin: 2.33em 0 }
+H1, H2, H3, H4,
+H5, H6, B,
+STRONG          { font-weight: bolder }
+
+
+/* Calendar stuff */
+/* special tiny text for number of events on a date */
+#datedetail {
+	font-size: .6em;
+	background-color:inherit;
+	text-decoration: none;
+	text-align:right;
+}
+table#calendar {
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+}
+table#calendar caption {
+	font-weight: bold;
+}
+table#calendar tr#days th {
+	background-color: #aaddaa;
+	padding: .3em 1px;
+}
+table#calendar tr#title th {
+	background-color:#88aa88; 
+}
+table#calendar td {
+	width: 30px;
+	color: #777;
+/*	text-align: right; */
+	border: 1px solid gray;
+	border-color: #BBB #EEE #EEE #BBB;
+	vertical-align: top;
+}
+table#calendar .day7 {
+	border-right: 1px solid #BBB;
+}
+table#calendar .day1, table#calendar .day7 {
+	background: #DDD;
+}
+table#calendar .blank {
+	background: #AAA;
+	border: 1px solid #AAB;
+	border-right: 1px solid #99A;
+}
+table#calendar .lastweek td {
+	border-bottom: 2px solid #AAB;
+}
+table#calendar .today {
+	background: #aaddaa;
+/* 	border: 2px solid #99CC99; */
+}
