@@ -1,4 +1,4 @@
-<?php  
+<?php
 include_once ('globals.php');
 function is_url($str) {
 	return ( ! preg_match('/^(http|https):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i', $str)) ? FALSE : TRUE;
@@ -47,14 +47,14 @@ function isTeamAdminLoggedIn($session){
 // Assure the user is of the required role
 function isUser($session, $roleid){
 	if ((isset($session['roleid'])) && (doesRoleContain($session['roleid'], $roleid))) {
-		return true; 
+		return true;
 	} else {
 		return false;
 	}
 }
 
-// Does this role contain that role. In other words, does one role contain another. 
-// For example, if a user's role is 5, that contains role 4 and 1 
+// Does this role contain that role. In other words, does one role contain another.
+// For example, if a user's role is 5, that contains role 4 and 1
 function doesRoleContain( $roleid, $roleTest){
 	return ($roleid & $roleTest);
 }
@@ -71,7 +71,7 @@ function isAnyAdminOrCoachLoggedIn($session) {
 	else return false;
 }
 
-// Members and coaches 
+// Members and coaches
 function isNonAdmin($session) {
 	if (!isAdminLoggedIn($session) && isTeamAdminLoggedIn($session)) return true;
 	else return false;
@@ -116,9 +116,9 @@ function isSessionKeyValid( $sessionkey ) {
 	}
 	$dbconn = getConnection();
 	$strSQL = "SELECT * FROM sessions WHERE sessionkey = '" . getCleanInput($sessionkey) . "';";
-	
+
 	$rs = odbc_exec($dbconn, $strSQL);
-	
+
 	if (odbc_fetch_row($rs)) {
 		return true;
 	} else {
@@ -157,11 +157,11 @@ function isThisMe($session, $userid){
 // Determine if (the given user is belongs to the current logged in user's coach
 function isThisMyCoach($session, $coachid){
 	if ((!isset($session["userid"])) || (!isset($session["teamid"]))) return false;
-	
+
 	$strSQL = "SELECT coachid FROM users WHERE id = " . $session["userid"] . " and teamid = " . $session["teamid"] . ";";
 	$dbconn = getConnection();
 	$rs = odbc_exec($dbconn, $strSQL);
-	
+
 	if (odbc_fetch_row($rs)) {
 		if ($coachid == odbc_result($rs, "coachid")) return true;
 		else return false;
@@ -178,11 +178,11 @@ function canIAdministerThisUser( $session, $id){
 	} else if (isAdminLoggedIn($session)) {
 		return true;
 	} else if (isTeamAdminLoggedIn($session)) {
-		// Special case - guest users aren't on team roster, so allow "admin" of these no matter what 
+		// Special case - guest users aren't on team roster, so allow "admin" of these no matter what
 		if ($id == User::UserID_Guest){
 			return true;
 		} else {
-			$dbh = getDBH($session);  
+			$dbh = getDBH($session);
 			// See if this user is on my team
 			$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
 			$pdostatement = $dbh->prepare($strSQL);
@@ -190,7 +190,7 @@ function canIAdministerThisUser( $session, $id){
 			else {
 				$results = $pdostatement->fetchAll();
 				if (count($results) == 1) return true;
-				else return false;  	
+				else return false;
 			}
 		}
 	} else {
@@ -208,7 +208,7 @@ function canIViewThisUser( $session, $id){
 	} else if (isAdminLoggedIn($session)) {
 		return true;
 	} else if (isTeamAdminLoggedIn($session)) {
-		$dbh = getDBH($session);  
+		$dbh = getDBH($session);
 		// See if this user is on my team
 		$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
@@ -216,7 +216,7 @@ function canIViewThisUser( $session, $id){
 		else {
 			$results = $pdostatement->fetchAll();
 			if (count($results) == 1) return true;
-			else return false;  	
+			else return false;
 		}
 	} else if (isThisMyCoach($session, $id)){
 		return true;
@@ -278,7 +278,7 @@ function getPass(){
 	return getPass1();
 }
 function getPass1(){
-     $handle = fopen(pgd, "r");
+     $handle = fopen(mysqlp, "r");
 	if ($handle) {
 		$pass = fgets($handle);
 		fclose($handle);
@@ -324,17 +324,17 @@ function startSession( $sessionkey, $userid ){
 		if (isStagingServer() || isDevelopmentServer())
 			echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
 	}
-		
+
 	if (count($sessionResults) != 1) {
 		return RC_SessionNotFound_Error;
 	}
-	
+
 	// Before we return the session, run one more query through to see if the session should be expired
 	if (isSessionExpired($sessionResults[0]["timeexpires"])) {
 		return RC_SessionExpired;
 	} else {
 		$session = array();
-		
+
 		$session["ipaddr"] = $sessionResults[0]["ipaddr"];
 		$session["userid"] = (int) $userid;
 		$session["sessionkey"] = $sessionkey;
@@ -353,15 +353,15 @@ function startSession( $sessionkey, $userid ){
 //	     $session["dbh"] = $dbh;
 		// This allows a quick and dirty test on the array
 		$session["isvalid"] = true;
-		
+
 		// Get the team image
 		if ( $session["teamid"] != TeamID_Undefined){
 			$strSQL = "SELECT teams.*, images.* FROM teams LEFT OUTER JOIN images ON (images.teamid = teams.id) WHERE teams.id = ? and images.id = teams.imageid";
 			$pdostatement = $dbh->prepare($strSQL);
 			$pdostatement->execute(array($session["teamid"]));
-			
+
 			$teamResults = $pdostatement->fetchAll();
-			
+
 			if (count($teamResults) > 0) {
 			     // Set team image
 				if ((isset($teamResults[0]["url"])) && (is_url($teamResults[0]["url"])))
@@ -369,9 +369,9 @@ function startSession( $sessionkey, $userid ){
 				else if (isset($teamResults[0]["filename"])){
                          $session["teamimageurl"] = "/1team/".uploadsDir."/".$session["teamid"]."/".$teamResults[0]["filename"];
 				} else $session["teamimageurl"] = "";
-			}		
+			}
 		} else $session["teamimageurl"] = "";
-		
+
 		return $session;
 	}
 }
@@ -387,10 +387,10 @@ function isSessionExpired2($session){
 	} else {
 		$timeExpireSQL = "1 month";
 	}
-	
+
 	$strSQL = "select (select timeexpires from sessions where userid = " . $session["userid"] . " and ipaddr = '" . $session["ipaddr"] . ")  + cast('" . $timeExpireSQL . "' as interval) - current_date as expired;";
 	$rs = odbc_exec($dbconn, $strSQL);
-	
+
 	if (odbc_fetch_row($rs)) {
 		$expired = odbc_result($rs,"expired");
 		echo "expires= " . $expired;
@@ -398,7 +398,7 @@ function isSessionExpired2($session){
 		return false;
 	// This should not fail, but if it does, the safe thing to do is assume expired
 	} else {
-		return true; 
+		return true;
 	}
 }
 
@@ -411,20 +411,20 @@ function isValidSessionKey( $userid, $sessionkey ){
 	// Generate a session key and test for a match
 	$ipaddr = (string) $_SERVER["REMOTE_ADDR"];
 	if (($sessionkeyTest = createSessionKey( $ipaddr, $userid)) == RC_SessionKey_Invalid) {
-		return false;		
-	} 
+		return false;
+	}
 	if (strcmp($sessionkeyTest, $sessionkey) != 0){
 		return false;
 	}
 
-	// Make sure the session is in the sessions table 
+	// Make sure the session is in the sessions table
 	$strSQL = "SELECT timeexpires FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
 	$dbconn = getConnection();
 	$rs = odbc_exec($dbconn, $strSQL);
 	// If no results, create a session record
 	if (($rs == false) || (! odbc_fetch_row($rs))) {
 		return false;
-	}	
+	}
 	// if Session is expired, delete the row and return false
 	if (isSessionExpired(odbc_result($rs,"timeexpires"))) {
 		// delete the session row
@@ -433,7 +433,7 @@ function isValidSessionKey( $userid, $sessionkey ){
 		odbc_exec($dbconn, $strSQL);
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -441,15 +441,15 @@ function isValidSessionKey( $userid, $sessionkey ){
 // This is a hash of user id and ipaddr
 function createSessionKey($ipaddr, $userid){
 	$sessionKey = RC_SessionKey_Invalid;
-	
+
 	$sessionKey = trimSessionKey(generateHash($ipaddr, $userid));
-	
+
 	return $sessionKey;
 }
 
 // Don't want to store a long string, so we trim it down
 function trimSessionKey( $sessionKey){
-	return substr($sessionKey, 0, SESSIONKEY_LENGTH); 
+	return substr($sessionKey, 0, SESSIONKEY_LENGTH);
 }
 
 // returns true if session has expired, else false
@@ -471,7 +471,7 @@ function isSessionExpired( $timeexpires){
 function getSessionTimeRemaining( $session){
 	$timeexpires = $session["timeexpires"];
 	// This should never be null, but I saw some unexplained errors in SQL log
-	if (is_null($timeexpires)) { 
+	if (is_null($timeexpires)) {
 		return "";
 	}
 	$strSQL = "select age('" . $timeexpires . "', current_timestamp);";
@@ -481,7 +481,7 @@ function getSessionTimeRemaining( $session){
 		$age = odbc_result($rs,"age");
 		// If the result is positive, the session is expired
 		$aage = explode(":", $age);
-		if ($aage[0] == "00") { 
+		if ($aage[0] == "00") {
 			$aage[0] = "";
 		} else if ($aage[0] == "01") {
 			$aage[0] = "1 hour";
@@ -498,10 +498,10 @@ function getSessionTimeRemaining( $session){
 // returns RC_RequiredInputMissing on failure
 function getSessionKey(){
 	if (isset($_GET["sessionkey"])){
-		return $_GET["sessionkey"]; 
+		return $_GET["sessionkey"];
 	} else {
 		if (isset($_POST["sessionkey"])){
-			return $_POST["sessionkey"]; 
+			return $_POST["sessionkey"];
 		} else {
 			return RC_RequiredInputMissing;
 		}
@@ -512,10 +512,10 @@ function getSessionKey(){
 // returns RC_RequiredInputMissing on failure
 function getUserID(){
 	if (isset($_GET["userid"])){
-		return $_GET["userid"]; 
+		return $_GET["userid"];
 	} else {
 		if (isset($_POST["userid"])){
-			return $_POST["userid"]; 
+			return $_POST["userid"];
 		} else {
 			return RC_RequiredInputMissing;
 		}
@@ -565,11 +565,11 @@ function generateHash($plainText, $salt = null)
 	if (($strsha1 = sha1($salt . $plainText)) == false){
 		return RC_HashFailure;
 	}
-	
+
     return $salt . $strsha1;
 }
 
-// Return the leading salt off 
+// Return the leading salt off
 function getSalt( $salted ){
 	return substr($salted, 0, SALT_LENGTH);
 }
@@ -596,9 +596,9 @@ function getTeamInfo( $id){
 		return RC_TeamID_Invalid;
 	}
 	$teaminfo = array();
-	
+
 	$strSQL = "SELECT * FROM teams WHERE id = " . $id . ";";
-	
+
 	$dbconn = getConnection();
 	$rsTeam = odbc_exec($dbconn, $strSQL);
 
@@ -612,7 +612,7 @@ function getTeamInfo( $id){
 		$teaminfo["website"] = odbc_result($rsTeam, "website");
 		return $teaminfo;
 	} else {
-		return RC_TeamInfoError;		
+		return RC_TeamInfoError;
 	}
 }
 
@@ -654,7 +654,7 @@ function getCleanInput( $input) {
 }
 // This removes cr lf characters, which is a common hacker attack for email forms
 // Getting rid of these could prevent them from taking over email forms
-function cleanCRLF($str){	
+function cleanCRLF($str){
 	$cleanStr = str_replace(chr(13), "", $str);
 	$cleanStr = str_replace(chr(10), "", $cleanStr);
 	return $cleanStr;
@@ -662,7 +662,7 @@ function cleanCRLF($str){
 
 // Simple method for cleaning out SQL injection by replacing // with ////
 function cleanSQL( $str){
-	if (is_numeric( $str)) { 
+	if (is_numeric( $str)) {
 		// prevent loss of precision by seeing if (there is a floating point part of the number
 		if (((int)$str) - ((float)$str) != 0) {
 			return (float)($str);
@@ -703,7 +703,7 @@ function boolToTFStr( $boolval){
 	}
 }
 
-// 
+//
 function getAdminEmail($session, $dbh){
 	$strSQL = "SELECT email FROM useraccountinfo, users WHERE useraccountinfo.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND users.roleid = ?;";
 	$pdostatement = $dbh->prepare($strSQL);
@@ -734,9 +734,9 @@ function isSuccessful( $rc){
 	return (($rc >= RC_Success) ? true : false);
 }
 
-// Get the team terms array. Must be used by any script needing to display team terms 
+// Get the team terms array. Must be used by any script needing to display team terms
 function getTeamTerms(	$teamid, $dbh){
-	
+
 	$teamterms = array();
 
 	// Default values
@@ -746,10 +746,10 @@ function getTeamTerms(	$teamid, $dbh){
 	$termmember = defaultterm_member;
 	$termteam = defaultterm_team;
 	$termclass = defaultterm_class;
-	if ($teamid >= TeamID_Base) {	
+	if ($teamid >= TeamID_Base) {
 		$strSQL = "SELECT * FROM teamterms WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid)); 
+		$pdostatement->execute(array($teamid));
 		$termsResults = $pdostatement->fetch(PDO::FETCH_ASSOC);
 		if (isset($termsResults["id"])) {
 			$termadmin = $termsResults["termadmin"];
@@ -759,7 +759,7 @@ function getTeamTerms(	$teamid, $dbh){
 			$termclass = $termsResults["termclass"];
 		}
 	}
-	
+
 	// Store the terms in the array
 	$teamterms["termuser"] = $termuser;
 	// The next 3 terms are tied to roles in the app, and are customizable
@@ -768,9 +768,9 @@ function getTeamTerms(	$teamid, $dbh){
 	$teamterms["termmember"] = $termmember;
 	$teamterms["termteam"] = $termteam;
 	$teamterms["termclass"] = $termclass;
-	
+
 	return $teamterms;
-} 
+}
 
 function isProductionServer(){
 	if (strcasecmp($_SERVER['HTTP_HOST'], productionserveraddr) == 0) {
@@ -836,20 +836,20 @@ function isAdminSystem( ){
 	// Get the address of the client
 	$clientaddr = $_SERVER["REMOTE_ADDR"];
 	// Compare it to the stored session value
-	if (strcmp($clientaddr, productionserveraddr) == 0) { 
+	if (strcmp($clientaddr, productionserveraddr) == 0) {
 		$result = true;
 	} else {
 		// allow localhost, which returns ::1
 		if (strcmp($clientaddr, "::1") == 0) {
 			$result = true;
 		} else {
-			// allow subnet 
+			// allow subnet
 			$arrayclientaddr = explode(".", $clientaddr);
 			$arrayadminip = explode(".",productionserveraddr);
 			// if there aren't 4 parts to this address, we're probably running from localhost, so pass
-			if ((is_array($arrayclientaddr)) && (count($arrayclientaddr) > 2) && 
+			if ((is_array($arrayclientaddr)) && (count($arrayclientaddr) > 2) &&
 				(is_array($arrayadminip)) && (count($arrayadminip) > 2)) {
-				if (($arrayclientaddr[0] == $arrayadminip[0]) && 
+				if (($arrayclientaddr[0] == $arrayadminip[0]) &&
 					($arrayclientaddr[1] == $arrayadminip[1]) && ($arrayclientaddr[2] == $arrayadminip[2])) {
 					$result = true;
 				}
@@ -857,7 +857,7 @@ function isAdminSystem( ){
 			// Final attempt - if coming from same subnet, first 3 octets of HTTP_HOST will be same as client
 			if ($result == false) {
 				$arrayserverhttphost = explode(".", $_SERVER['HTTP_HOST']);
-				if (($arrayclientaddr[0] == $arrayserverhttphost[0]) && 
+				if (($arrayclientaddr[0] == $arrayserverhttphost[0]) &&
 					($arrayclientaddr[1] == $arrayserverhttphost[1]) && ($arrayclientaddr[2] == $arrayserverhttphost[2])) {
 					$result = true;
 				}
@@ -873,7 +873,7 @@ function isAdminSystem( ){
 function showError( $errorTitle, $errorText, $javascriptnext){
 	echo "<div class=\"errorboxshow\" id=\"errorbox\">
 <div class=\"errorboxtitle\">". $errorTitle . "<div class=\"errorboxclose\"><a class=\"linkopacity\" href=\"javascript:togglevis2('errorbox', 'errorboxshow', 'errorboxhide')\"><img src=\"img/x-closebutton.png\" border=\"0\"/></a></div><hr /></div>"
-. $errorText . 
+. $errorText .
 "<br ><br >
 <div class=\"boxbutton\"><input type=\"button\" value=\"Ok\" class=\"btn\" onmouseover=\"this.className='btn btnhover'\" onmouseout=\"this.className='btn'\" onClick=\"javascript:togglevis2('errorbox', 'errorboxshow', 'errorboxhide');" . $javascriptnext . "\"></div>
 </div>";
@@ -885,7 +885,7 @@ function showError( $errorTitle, $errorText, $javascriptnext){
 function showMessage( $msgTitle, $msgText){
 	echo "<div class=\"msgboxshow\" id=\"msgbox\">
 <div class=\"msgboxtitle\">". $msgTitle . "<div class=\"msgboxclose\"><a class=\"linkopacity\" href=\"javascript:togglevis2('msgbox', 'msgboxshow', 'msgboxhide')\"><img src=\"img/x-closebutton.png\" border=\"0\"/></a></div><hr /></div>"
-. $msgText . 
+. $msgText .
 "<br ><br >
 <div class=\"boxbutton\"><input type=\"button\" value=\"Ok\" class=\"btn\" onmouseover=\"this.className='btn btnhover'\" onmouseout=\"this.className='btn'\" onClick=\"javascript:togglevis2('msgbox', 'msgboxshow', 'msgboxhide');\"></div>
 </div> <script language=\"javascript\">setTimeout(\"timedfade('msgbox', 1000)\",3000)</script>";
@@ -893,11 +893,11 @@ function showMessage( $msgTitle, $msgText){
 }
 
 // Show a message with a button in div. See .css for render details
-// javascriptnext - gives us a handy way of submitting form OK button is clicked 
+// javascriptnext - gives us a handy way of submitting form OK button is clicked
 function showConfirmMessage( $msgTitle, $msgText, $javascriptnext){
 	echo "<div class=\"confirmboxhide\" id=\"confirmbox\">
 <div class=\"confirmboxtitle\">". $msgTitle . "<div class=\"confirmboxclose\"><a class=\"linkopacity\" href=\"javascript:togglevis2('confirmbox', 'confirmboxshow', 'confirmboxhide')\"><img src=\"img/x-closebutton.png\" border=\"0\"/></a></div><hr /></div>"
-. $msgText . 
+. $msgText .
 "<br ><br >
 <div class=\"boxbutton1\"><input type=\"button\" value=\"Ok\" class=\"btn\" onmouseover=\"this.className='btn btnhover'\" onmouseout=\"this.className='btn'\" onClick=\"javascript:togglevis2('confirmbox', 'confirmboxshow', 'confirmboxhide');" . $javascriptnext . "\"></div>
 <div class=\"boxbutton2\"><input type=\"button\" value=\"Cancel\" class=\"btn\" onmouseover=\"this.className='btn btnhover'\" onmouseout=\"this.className='btn'\" onClick=\"javascript:togglevis2('confirmbox', 'confirmboxshow', 'confirmboxhide');\"></div>
@@ -911,10 +911,10 @@ function roleToStr( $roleid, $teamterms){
 	// Build the string from most important to least important role
 	if (doesRoleContain($roleid, Role_ApplicationAdmin)) {
 		array_push($rolesarray, defaultterm_appadmin);
-	}  
+	}
 	if (doesRoleContain($roleid, Role_TeamAdmin)) {
 		array_push($rolesarray, $teamterms["termadmin"]);
-	}  
+	}
 	if (doesRoleContain($roleid, Role_Coach)) {
 		array_push($rolesarray, $teamterms["termcoach"]);
 	}

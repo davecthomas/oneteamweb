@@ -2,5 +2,15 @@
   "name": "One Team Web",
   "description": "For managing sports clubs membership, payment, attendance",
   "repository": "https://github.com/davecthomas/oneteamweb",
-  "addons": []
+  "addons": [
+    {
+      "plan": "cleardb:ignite"
+    },
+    {
+      "plan": "papertrail:choklad"
+    },
+    {
+      "plan": "sendgrid:starter"
+    }
+  ]
 }
