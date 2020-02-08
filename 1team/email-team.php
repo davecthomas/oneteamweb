@@ -410,8 +410,8 @@ function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemai
 			//define the headers we want passed. Note that they are separated with \r\n
 		}
 
-//		ini_set("SMTP", MailServer);
-		// m = Mail();
+		ini_set("SMTP", MailServer);
+		$m = new Mail();
 		// $statuscode = m->mail($toemail, $subject, $message );
 		// if (!m->statusok($statuscode)){
 		// 	$bError = true;

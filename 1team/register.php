@@ -69,7 +69,7 @@ if (!$bError){
 		$textBody = $textBody . "Phone: " . $phone . "\n\n";
 		$textBody = $textBody . "Referred by: " . $referredby . "\n\n";
 		ini_set("SMTP", MailServer);
-		// m = Mail();
+		$m = new Mail();
 		// $statuscode = m->mail(emailadmin, $emailsubject, $textBody);
 		//
 		// // $mailok = mail($this->getEmail(), $subject, $message , $headers);

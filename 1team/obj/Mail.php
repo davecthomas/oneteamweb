@@ -1,17 +1,17 @@
 <?php
 include_once ('globals.php');
 include_once ('utils.php');
-// require '../../vendor/autoload.php';
+require '../../vendor/autoload.php';
 /**
  * Support Mail
  *
  * @author dthomas
  */
-// class Mail {
-//   function __construct( ) {
-//     $this->from = new SendGrid\Email(null, emailadmin);
-//     $this->apiKey = getenv('SENDGRID_API_KEY');
-  // }
+class Mail {
+  function __construct( ) {
+    $this->from = new SendGrid\Email(null, emailadmin);
+    $this->apiKey = getenv('SENDGRID_API_KEY');
+  }
 //
 //   function mail($to_address, $subject, $body){
 //     $from = $this->from;
@@ -31,5 +31,5 @@ include_once ('utils.php');
 //     return $statuscode < 400;
 //   }
 //
-// }
+}
 ?>
