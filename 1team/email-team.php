@@ -411,7 +411,7 @@ function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemai
 		}
 
 //		ini_set("SMTP", MailServer);
-		m = Mail();
+		// m = Mail();
 		// $statuscode = m->mail($toemail, $subject, $message );
 		// if (!m->statusok($statuscode)){
 		// 	$bError = true;
