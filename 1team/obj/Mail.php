@@ -7,11 +7,11 @@ include_once ('utils.php');
  *
  * @author dthomas
  */
-class Mail {
-  function __construct( ) {
+// class Mail {
+//   function __construct( ) {
 //     $this->from = new SendGrid\Email(null, emailadmin);
 //     $this->apiKey = getenv('SENDGRID_API_KEY');
-  }
+  // }
 //
 //   function mail($to_address, $subject, $body){
 //     $from = $this->from;
@@ -31,5 +31,5 @@ class Mail {
 //     return $statuscode < 400;
 //   }
 //
-}
+// }
 ?>
