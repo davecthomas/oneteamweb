@@ -69,13 +69,13 @@ if (!$bError){
 		$textBody = $textBody . "Phone: " . $phone . "\n\n";
 		$textBody = $textBody . "Referred by: " . $referredby . "\n\n";
 		ini_set("SMTP", MailServer);
-		m = Mail();
-		$statuscode = m->mail(emailadmin, $emailsubject, $textBody);
-
-		// $mailok = mail($this->getEmail(), $subject, $message , $headers);
-		if (!m->statusok($statuscode)){
-			$bError = TRUE;
-		}
+		// m = Mail();
+		// $statuscode = m->mail(emailadmin, $emailsubject, $textBody);
+		//
+		// // $mailok = mail($this->getEmail(), $subject, $message , $headers);
+		// if (!m->statusok($statuscode)){
+		// 	$bError = TRUE;
+		// }
 		// $mailok = mail(emailadmin, $emailsubject, $textBody , "From: " . emailadmin);
 ?>
 <h3><?php echo $title?></h3>
