@@ -1,13 +1,13 @@
 <?php
 include_once ('globals.php');
 include_once ('utils.php');
-// require '../../vendor/autoload.php';
-// /**
-//  * Support Mail
-//  *
-//  * @author dthomas
-//  */
-// class Mail {
+require '../../vendor/autoload.php';
+/**
+ * Support Mail
+ *
+ * @author dthomas
+ */
+class Mail {
 //   function __construct( ) {
 //     $this->from = new SendGrid\Email(null, emailadmin);
 //     $this->apiKey = getenv('SENDGRID_API_KEY');
@@ -31,5 +31,5 @@ include_once ('utils.php');
 //     return $statuscode < 400;
 //   }
 //
-// }
+}
 ?>

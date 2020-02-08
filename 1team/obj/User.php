@@ -84,7 +84,7 @@ class User extends DbObject {
 		$headers .= "Content-type:text/html;charset=iso-8859-1" . "\r\n";
 		//define the headers we want passed. Note that they are separated with \r\n
 
-		// m = Mail();
+		m = Mail();
 		// $statuscode = m->mail($this->getEmail(), $subject, $message );
 		//
 		// // $mailok = mail($this->getEmail(), $subject, $message , $headers);
