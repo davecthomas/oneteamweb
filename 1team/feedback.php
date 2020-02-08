@@ -46,7 +46,7 @@ if (!$bError) {
 
 	if (!$bError){
 		$m = new Mail();
-		$statuscode = m->mail(getAdminEmail($session, $dbh), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbh) );
+		$statuscode = $m->mail(getAdminEmail($session, $dbh), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbh) );
 
 		redirect("feedback-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 	}

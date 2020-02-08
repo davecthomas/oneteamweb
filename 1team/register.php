@@ -70,9 +70,9 @@ if (!$bError){
 		$textBody = $textBody . "Referred by: " . $referredby . "\n\n";
 		ini_set("SMTP", MailServer);
 		$m = new Mail();
-		$statuscode = m->mail(emailadmin, $emailsubject, $textBody);
+		$statuscode = $m->mail(emailadmin, $emailsubject, $textBody);
 
-		if (!m->statusok($statuscode)){
+		if (!$m->statusok($statuscode)){
 			$bError = TRUE;
 		}
 ?>

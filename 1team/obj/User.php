@@ -85,10 +85,10 @@ class User extends DbObject {
 		//define the headers we want passed. Note that they are separated with \r\n
 
 		$m = new Mail();
-		$statuscode = m->mail($this->getEmail(), $subject, $message );
+		$statuscode = $m->mail($this->getEmail(), $subject, $message );
 
 		// $mailok = mail($this->getEmail(), $subject, $message , $headers);
-		if (!m->statusok($statuscode)){
+		if (!$m->statusok($statuscode)){
 			$bError = true;
 			$err = "mail";
 		}
