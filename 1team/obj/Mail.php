@@ -1,7 +1,6 @@
 <?php
 include_once ('globals.php');
 include_once ('utils.php');
-require 'vendor/autoload.php';
 /**
  * Support Mail
  *
