@@ -1,5 +1,6 @@
 <?php
 include_once('DbObject.php');
+include_once('Mail.php');
 /**
  * Support a user object as stored in the DB
  *
@@ -34,7 +35,7 @@ class User extends DbObject {
 			$this->firstname = User::Username_Guest;
 			$this->lastname = "";
 			$this->status = UserAccountStatus_Guest;
-	
+
 		} else if ($id != DbObject::DbID_Undefined) {
 			$this->initRecord( );
 
@@ -53,7 +54,7 @@ class User extends DbObject {
 	}
 
 	private function initRecord( ){
-		$strSQL = "SELECT users.*, users.id AS userid, useraccountinfo.*, images.* FROM useraccountinfo, teams 
+		$strSQL = "SELECT users.*, users.id AS userid, useraccountinfo.*, images.* FROM useraccountinfo, teams
 			RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id
 			WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 
@@ -83,8 +84,11 @@ class User extends DbObject {
 		$headers .= "Content-type:text/html;charset=iso-8859-1" . "\r\n";
 		//define the headers we want passed. Note that they are separated with \r\n
 
-		$mailok = mail($this->getEmail(), $subject, $message , $headers);
-		if (!$mailok){
+		m = Mail();
+		$statuscode = m->mail($this->getEmail(), $subject, $message );
+
+		// $mailok = mail($this->getEmail(), $subject, $message , $headers);
+		if (!m->statusok($statuscode)){
 			$bError = true;
 			$err = "mail";
 		}

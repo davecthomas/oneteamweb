@@ -1,5 +1,5 @@
 <?php
-include('obj/objects.php');
+include('obj/Objects.php');
 
 // Declare global variables
 define("dbusername", "postgres");
@@ -17,12 +17,12 @@ define("companyname", "1 Team Web");
 define("appname",  "1 Team Web");
 define("appname_nowhitespace",  "1TeamWeb");
 define("apptagline",  "Focus on the Team.");
-define("appversion",  "3.0.1");
+define("appversion",  "3.0.2");       // oneteamweb3
 define("author",  "David Thomas");
 define("contact",  "contact.php");
-define("emailadmin",  "1teamweb@dcthomas.com");
+define("emailadmin",  "seattlejits@gmail.com");
 define("siteurl", "https://www.1teamweb.com");
-define("MailServer", "smtp-server.austin.rr.com");
+define("MailServer", "smtp.sendgrid.net");
 define("Default_Logo", "1team/img/1teamweb-logo-200.png");
 define("jirahome", url_root.":8080");
 

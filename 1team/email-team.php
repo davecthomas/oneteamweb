@@ -1,6 +1,7 @@
 <?php
 ob_start(); 	// This caches non-header output, allowing us to redirect after header.php
 include('utils.php');
+include_once('obj/Mail.php');
 $bError = false;
 $err = "";
 // Assure we have the input we need, else send them to default.php
@@ -16,7 +17,7 @@ if (! isValidSession($session )){
 // Only admins can execute this script
 redirectToLoginIfNotAdminOrCoach( $session);
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -385,11 +386,11 @@ div.push {
 		redirect($_SERVER["HTTP_REFERER"] . "&done=" . urlencode($returnString));
 		ob_end_flush();
 	}
-} 
+}
 if ($bError) {
 	redirect($_SERVER["HTTP_REFERER"] . "&err=" . urlencode($returnErrString));
 	ob_end_flush();
-} 	
+}
 
 
 function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemail, $sms, &$err){
@@ -410,8 +411,9 @@ function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemai
 		}
 
 //		ini_set("SMTP", MailServer);
-		$mailok = mail($toemail, $subject, $message , $headers);
-		if (!$mailok){
+		m = Mail();
+		$statuscode = m->mail($toemail, $subject, $message );
+		if (!m->statusok($statuscode)){
 			$bError = true;
 			$err = "mail";
 		}

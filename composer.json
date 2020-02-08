@@ -1,5 +1,6 @@
 {
-  "require" : {
+  "require": {
+    "sendgrid/sendgrid": "~5.0.9"
   },
   "require-dev": {
     "heroku/heroku-buildpack-php": "*"

@@ -1,5 +1,6 @@
-<?php   
+<?php
 include('utils.php');
+include_once('obj/Mail.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
 	redirect("default.php?rc=" . RC_RequiredInputMissing);
@@ -14,15 +15,15 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
-	} 
+	}
 }
 
 if (isset($_POST["summary"])) {
@@ -37,18 +38,19 @@ if (isset($_POST["details"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
-	
+	$dbh = getDBH($session);
+
 	$strSQL = "INSERT INTO feedback VALUES (DEFAULT, ?, ?, ?, ?, ?);";
 	$pdostatement = $dbh->prepare($strSQL);
 	$bError = ! $pdostatement->execute(array($summary, $details, $session["userid"], date("m-d-Y"), $teamid));
-	
+
 	if (!$bError){
-		$mailok = mail(getAdminEmail($session, $dbh), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbh));
-	
+		m = Mail();
+		$statuscode = m->mail(getAdminEmail($session, $dbh), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbh) );
+
 		redirect("feedback-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 	}
-} 
+}
 if ($bError) {
 	redirect("feedback-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");
 }?>

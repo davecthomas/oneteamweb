@@ -1,5 +1,6 @@
 <?php
 include("utilsbase.php");
+include_once('obj/Mail.php');
 $title = appname . " Registration";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -68,12 +69,19 @@ if (!$bError){
 		$textBody = $textBody . "Phone: " . $phone . "\n\n";
 		$textBody = $textBody . "Referred by: " . $referredby . "\n\n";
 		ini_set("SMTP", MailServer);
-		$mailok = mail(emailadmin, $emailsubject, $textBody , "From: " . emailadmin);
+		m = Mail();
+		$statuscode = m->mail(emailadmin, $emailsubject, $textBody);
+
+		// $mailok = mail($this->getEmail(), $subject, $message , $headers);
+		if (!m->statusok($statuscode)){
+			$bError = TRUE;
+		}
+		// $mailok = mail(emailadmin, $emailsubject, $textBody , "From: " . emailadmin);
 ?>
 <h3><?php echo $title?></h3>
 <p>Your registration has been sent. We will contact you with details soon. Thank you!</p>
 <p><a href="default.php">Home</a></p>
-<?php 	
+<?php
 }
 
 // else bad input or captcha
