@@ -412,13 +412,11 @@ function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemai
 
 		ini_set("SMTP", MailServer);
 		$m = new Mail();
-		// $statuscode = m->mail($toemail, $subject, $message );
-		// if (!m->statusok($statuscode)){
-		// 	$bError = true;
-		// 	$err = "mail";
-		// }
-//		print_r(array($toemail, $subject, $message , "From: " . $fromemail));
-//		echo "<br>";
+		$statuscode = m->mail($toemail, $subject, $message );
+		if (!m->statusok($statuscode)){
+			$bError = true;
+			$err = "mail";
+		}
 	}
 	if (!$bError ) return RC_Success;
 	else return RC_EmailFailed;
