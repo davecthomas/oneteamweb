@@ -29,19 +29,15 @@ if (! isValidSession($session )) {
 redirectToLoginIfNotAdmin( $session);
 
 if ((!isset($_GET["err"])) && (!isset($_GET["done"]))){
-
-	$dbh = getDBH($session);
 	// Get the retry count to decide what text to include
 	$strSQL = "SELECT authsmsretries FROM sessions WHERE userid = ? and login = ? and teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($session["userid"], $session["login"], $session["teamid"]));
-	$authsmsretries = $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	$authsmsretries = executeQueryFetchColumn($dbconn, $strSQL, array($session["userid"], $session["login"], $session["teamid"]));
 	if ($authsmsretries >= authsmsretries_Max){
 		// Penalty box! TODO: lock the account for 5 minutes
 		$timeoutpenalty = authsmsfailure_LockoutPenalty;
 		$strSQL = "UPDATE users SET timelockoutexpires = (current_timestamp  + cast('" . $timeoutpenalty . "' as interval)) WHERE id = ? and teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($session["userid"], $session["teamid"]));
+		executeQuery($dbconn, $strSQL, array($session["userid"], $session["teamid"]));
 
 		// Log off user
 		deleteSession($session);?>
@@ -51,7 +47,7 @@ if ((!isset($_GET["err"])) && (!isset($_GET["done"]))){
 <?php
 	} else {
 		// Generate an SMS code to the current session user
-		$bError = generate2fauthn( $session, $err); 
+		$bError = generate2fauthn( $session, $err);
 		if (!$bError) {?>
 <p>You are signed on as a <?php echo $teamterms["termadmin"]?> from an unrecognized location.
 You will shortly receive a text message to your account mobile phone number with an authentication code. </p>

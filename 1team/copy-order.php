@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -15,11 +15,11 @@ redirectToLoginIfNotAdmin( $session);
 //This accepts post or get input since it is called both ways
 $bError = false;
 $err = "non";
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_REQUEST["teamid"])){
 		$teamid = $_REQUEST["teamid"];
@@ -34,9 +34,9 @@ if ( isset($_REQUEST["uid"])) {
 } else {
 	$bError = true;
 	$err = "u";
-} 	
+}
 if (isset($_REQUEST["orderdate"])) {
-	$orderdate = $_REQUEST["orderdate"]; 
+	$orderdate = $_REQUEST["orderdate"];
 } else {
 	$bError = true;
 	$err = "od";
@@ -49,7 +49,7 @@ if (isset($_REQUEST["id"])) {
 }
 if (isset($_REQUEST["order"])) {
 	$order = $_REQUEST["order"];
-	$orderarray = explode( ",",$order); 
+	$orderarray = explode( ",",$order);
 	$numorderitems = count($orderarray)/OrderItemArraySize;
 } else {
 	$bError = true;
@@ -58,14 +58,14 @@ if (isset($_REQUEST["order"])) {
 
 // due date is optional
 if (isset($_REQUEST["duedate"])) {
-	$duedate = $_REQUEST["duedate"]; 
+	$duedate = $_REQUEST["duedate"];
 	if (empty($duedate)) $duedate = NULL;
 } else {
 	$duedate = NULL;
 }
 
 if (isset($_REQUEST["paymentmethod"])) {
-	$paymentmethod = $_REQUEST["paymentmethod"]; 
+	$paymentmethod = $_REQUEST["paymentmethod"];
 } else {
 	$bError = true;
 	$err = "pm";
@@ -89,22 +89,18 @@ if (isset($_POST["isrefunded"])) {
 
 
 $discount = 0.00;
-
-$dbh = getDBH($session);  
-
+$dbconn = getConnection();
+$orderid = array();
 if ( !$bError) {
 	if (is_null($duedate)) {
 		$strSQL = "INSERT INTO orders VALUES (DEFAULT, ?, ?, ?, NULL, ?, ?, ?) RETURNING id;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$bError = (!$pdostatement->execute(array($userid, $teamid, $orderdate, $discount, $ispaidsql, $paymentmethod)));
+		$orderid = executeQueryFetchColumn($dbconn, $strSQL, array($userid, $teamid, $orderdate, $discount, $ispaidsql, $paymentmethod)));
 	} else {
 		$strSQL = "INSERT INTO orders VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?) RETURNING id;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$bError = (!$pdostatement->execute(array($userid, $teamid, $orderdate, $duedate, $discount, $ispaidsql, $paymentmethod)));
+		$orderid = executeQueryFetchColumn($dbconn, $strSQL, array($userid, $teamid, $orderdate, $duedate, $discount, $ispaidsql, $paymentmethod)));
 	}
 
 	if (!$bError){
-		$orderid = $pdostatement->fetchColumn();
 		// Now create the individual orderitems from the orderarray
 		// 1-based loop since we are using loop index as a multiplier into the orderarray
 		for ($loopOrderItems = 1; $loopOrderItems <= $numorderitems; $loopOrderItems++){
@@ -114,11 +110,8 @@ if ( !$bError) {
 
 			// get the programid and numclassesfrom the sku, for each orderitem in the order
 			$strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = (!$pdostatement->execute(array($skuid, $teamid)));
-			if ($bError) $err = "pis";
+			$resultsSku = executeQuery($dbconn, $strSQL, array($skuid, $teamid)));
 
-			$resultsSku = $pdostatement->fetchAll();
 			$numSkus = count($resultsSku );
 			if ($numSkus == 1) {
 				$programid = $resultsSku[0]["programid"];
@@ -133,9 +126,7 @@ if ( !$bError) {
 			if (!$bError){
 				// Store the orderitem (FALSE is for isrefunded field)
 				$strSQL = "insert into orderitems VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?);";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = (!$pdostatement->execute(array($programid, $orderdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $orderid )));
-				if ($bError) $err = $orderid;
+				executeQuery($dbconn, $strSQL, array($programid, $orderdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $orderid ));
 			}
 
 		}
@@ -144,9 +135,7 @@ if ( !$bError) {
 		if ((isset($_GET["epayid"])) && (!$bError)){
 			$epayid = $_GET["epayid"];
 			$strSQL = "UPDATE epayments set reconciled = TRUE WHERE id = ? and teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = (!$pdostatement->execute(array($epayid, $teamid)));
-			if ($bError) $err = "epu";
+			executeQuery($dbconn, $strSQL, array($epayid, $teamid));
 			// Success
 			if (!$bError){
 				redirect( "payment-history.php?". returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $userid . "&done=1");
@@ -156,13 +145,13 @@ if ( !$bError) {
 			}
 		// Success
 		} else {
-			if (!$bError) 
+			if (!$bError)
 				redirect( "manage-orders-form.php?".returnRequiredParams($session). "&teamid=" . $teamid . "&done=1");
-			else	
+			else
 				redirect( "manage-orders-form.php?".returnRequiredParams($session)."&teamid=" . $teamid . "&err=". $err);
 		}
 
-	} 
+	}
 }
 if ($bError) {
 	redirect( "manage-orders-form.php?".returnRequiredParams($session)."&teamid=" . $teamid . "&err=". $err);

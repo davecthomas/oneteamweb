@@ -1,4 +1,4 @@
-<?php  
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -15,7 +15,7 @@ redirectToLoginIfNotAdmin( $session);
 $err = "";
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( isUser($session, Role_TeamAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -37,33 +37,32 @@ if (isset($_GET["paymentid"])) {
 } else {
 	$bError = true;
 	$err = "input";
-} 	
+}
 
 if (isset($_GET["id"])) {
 	$objid= $_GET["id"];
 } else {
 	$bError = true;
 	$err = "input";
-} 	
+}
 
 if (isset($_GET["whomode"])) {
 	$whomode= $_GET["whomode"];
 } else {
 	$bError = true;
 	$err = "input";
-} 	
+}
 
 if (!$bError) {
-	$dbh = getDBH($session);  
 	$strSQL = "DELETE FROM orderitems WHERE id = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($delete_id, $teamid));
-	
-	// Send them back 
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
+
+	// Send them back
 	if (!$bError) {
-		redirect("payment-history.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&id=" . $objid . "&whomode=" . $whomode . "&done=1"); 
+		redirect("payment-history.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&id=" . $objid . "&whomode=" . $whomode . "&done=1");
 	}
-} 
+}
 if ($bError) {
-	redirect("payment-history.php?"  . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $objid . "&whomode=" . $whomode . "&err=" . $err); 
+	redirect("payment-history.php?"  . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $objid . "&whomode=" . $whomode . "&err=" . $err);
 }?>

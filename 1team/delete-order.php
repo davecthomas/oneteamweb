@@ -1,4 +1,4 @@
-<?php  
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -15,7 +15,7 @@ redirectToLoginIfNotAdmin( $session);
 $err = "";
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( isUser($session, Role_TeamAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -37,26 +37,25 @@ if (isset($_GET["id"])) {
 } else {
 	$bError = true;
 	$err = "id";
-} 	
+}
 
 if (!$bError) {
-	$dbh = getDBH($session);  
-	// Remove orderitems 
+	// Remove orderitems
 	$strSQL = "DELETE FROM orderitems WHERE orderid = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($delete_id, $teamid));
-	
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
+
 	if (!$bError) {
 		// Remove the order
 		$strSQL = "DELETE FROM orders WHERE id = ? AND teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$bError = ! $pdostatement->execute(array($delete_id, $teamid));
-		// Send them back 
+		$dbconn = getConnection();
+		executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
+		// Send them back
 		if (!$bError) {
-			redirect("manage-orders-form.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&done=1"); 
+			redirect("manage-orders-form.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&done=1");
 		}
-	} 	
-} 
+	}
+}
 if ($bError) {
-	redirect("manage-orders-form.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&err=". $err); 
+	redirect("manage-orders-form.php?" . returnRequiredParams($session) ."&teamid=" . $teamid . "&err=". $err);
 }?>

@@ -114,12 +114,12 @@ function isSessionKeyValid( $sessionkey ) {
 	if ((strlen($sessionkey) < SESSIONKEY_LENGTH) || (!is_string($sessionkey))) {
 		return false;
 	}
-	$dbconn = getConnection();
 	$strSQL = "SELECT * FROM sessions WHERE sessionkey = '" . getCleanInput($sessionkey) . "';";
 
-	$rs = odbc_exec($dbconn, $strSQL);
+	$dbconn = getConnection();
+  $results = executeQuery($dbconn, $strSQL);
 
-	if (odbc_fetch_row($rs)) {
+	if (count($results)>0) {
 		return true;
 	} else {
 		return false;
@@ -160,12 +160,9 @@ function isThisMyCoach($session, $coachid){
 
 	$strSQL = "SELECT coachid FROM users WHERE id = " . $session["userid"] . " and teamid = " . $session["teamid"] . ";";
 	$dbconn = getConnection();
-	$rs = odbc_exec($dbconn, $strSQL);
-
-	if (odbc_fetch_row($rs)) {
-		if ($coachid == odbc_result($rs, "coachid")) return true;
-		else return false;
-	}
+  $result_id = executeQueryFetchColumn($dbconn, $strSQL);
+	if ($coachid == $result_id) return true;
+	else return false;
 }
 
 // Can I administer this user
@@ -185,13 +182,12 @@ function canIAdministerThisUser( $session, $id){
 			$dbh = getDBH($session);
 			// See if this user is on my team
 			$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			if (!$pdostatement->execute(array($id, $session["teamid"]))) return false;
-			else {
-				$results = $pdostatement->fetchAll();
-				if (count($results) == 1) return true;
-				else return false;
-			}
+			$dbconn = getConnection();
+		  $results = executeQuery($dbconn, $strSQL, array($id, $session["teamid"]));
+
+			if (count($results) == 1) return true;
+			else return false;
+
 		}
 	} else {
 		return false;
@@ -211,13 +207,11 @@ function canIViewThisUser( $session, $id){
 		$dbh = getDBH($session);
 		// See if this user is on my team
 		$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		if (!$pdostatement->execute(array($id, $session["teamid"]))) return false;
-		else {
-			$results = $pdostatement->fetchAll();
-			if (count($results) == 1) return true;
-			else return false;
-		}
+		$dbconn = getConnection();
+		$results = executeQuery($dbconn, $strSQL, array($id, $session["teamid"]));
+		if (count($results) == 1) return true;
+		else return false;
+
 	} else if (isThisMyCoach($session, $id)){
 		return true;
 	} else {
@@ -252,10 +246,9 @@ function getSessionUserID($session){
 
 function getUserEmail($session, $dbh){
 	$strSQL = "SELECT email FROM useraccountinfo WHERE useraccountinfo.userid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($session["userid"]));
-	return $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	$result = executeQueryFetchColumn($dbconn, $strSQL, array($session["userid"]));
+	return $result;
 }
 
 function getTeamID($session){
@@ -266,35 +259,80 @@ function getTeamID($session){
 	}
 }
 
+// On fail return array(RC_PDO_Error)
+function executeQuery($db, $sql, &$bError = false, $array_params = array()){
+	$statement = $db->prepare($sql);
+  $bError = ! $statement->execute($array_params);
+	if (!$bError) $items = $statement->fetchAll();
+	return $items;
+}
+
+// On fail return array(RC_PDO_Error)
+function executeQueryFetchColumn($db, $sql, &$bError = false, $array_params = array()){
+	$statement = $db->prepare($sql);
+  $bError = ! $statement->execute($array_params);
+  if (!$bError) $item = $statement->fetchColumn();
+	return $item;
+}
+
+function getDBH($session = 0){
+	$dbconnstr = getenv('CLEARDB_DATABASE_URL');
+//	if ((isset($session)) && (is_object($session["dbh"])) && (is_a($session["dbh"], 'PDO'))) return $session["dbh"];
+//	else {
+		try{
+//			$dbh = new PDO('odbc:DRIVER={'.dbdriver.'};UID=' . dbusername. ';SERVER=' . getDBServer() . ';Port='.dbport.';Database=' . dbname . ';PWD=' . getPass1(). ';');
+			$dbh = new PDO($dbconnstr);
+			if (isStagingServer() || isDevelopmentServer())
+				$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			return $dbh;
+		} catch( PDOException $Exception ) {
+			if (isStagingServer() || isDevelopmentServer()) {
+				echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
+				exit();
+			}
+			return null;
+		}
+//	}
+}
+
 function getConnection(){
-	return odbc_connect(getConnName(), getDBName(), getPass());
-}
+	$pdo = null;
 
-function getDBName(){
-	return dbname;
-}
+	try {
+		$cleardb_url      = parse_url(getenv("CLEARDB_DATABASE_URL"));
+		$cleardb_server   = $cleardb_url["host"];
+		$cleardb_username = $cleardb_url["user"];
+		$cleardb_password = $cleardb_url["pass"];
+		$cleardb_db       = substr($cleardb_url["path"],1);
 
-function getPass(){
-	return getPass1();
-}
-function getPass1(){
-     $handle = fopen(mysqlp, "r");
-	if ($handle) {
-		$pass = fgets($handle);
-		fclose($handle);
-		return $pass;
-	} else {
-		return "";
+	try {
+	    $pdo = new PDO("mysql:host=".$cleardb_server."; dbname=".$cleardb_db, $cleardb_username, $cleardb_password);
+	    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	} catch (PDOException $e) {
+	    print "Error!: " . $e->getMessage() . "<br/>";
 	}
-}
-function getPass2($session){
-	if ((isset($session)) && (isset($session["dbpass"]))) return $session["dbpass"];
-	else return "";
+	return $pdo;
+	// return odbc_connect(getConnName(), getDBName(), getPass());
 }
 
-function getConnName(){
-	return dbconn;
-}
+// function getDBName(){
+// 	return dbname;
+// }
+//
+// function getPass(){
+// 	return getPass1();
+// }
+// function getPass1(){
+// 	return getenv('SENDGRID_API_KEY');
+// }
+// function getPass2($session){
+// 	if ((isset($session)) && (isset($session["dbpass"]))) return $session["dbpass"];
+// 	else return "";
+// }
+//
+// function getConnName(){
+// 	return dbconn;
+// }
 
 function utilIsUserBillable($session){
 	return $session["isbillable"];
@@ -313,13 +351,11 @@ function startSession( $sessionkey, $userid ){
 		return RC_SessionKey_Invalid;
 	}
 	try{
-		$dbh = getDBH();
 		// Attempt to get the session from the DB
 		$strSQL = "SELECT * FROM sessions WHERE sessionkey = ? AND userid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($sessionkey, $userid));
+		$dbconn = getConnection();
+		$sessionResults = executeQuery($dbconn, $strSQL, array($sessionkey, $userid));
 
-		$sessionResults = $pdostatement->fetchAll();
 	} catch( PDOException $Exception ) {
 		if (isStagingServer() || isDevelopmentServer())
 			echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
@@ -357,10 +393,8 @@ function startSession( $sessionkey, $userid ){
 		// Get the team image
 		if ( $session["teamid"] != TeamID_Undefined){
 			$strSQL = "SELECT teams.*, images.* FROM teams LEFT OUTER JOIN images ON (images.teamid = teams.id) WHERE teams.id = ? and images.id = teams.imageid";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($session["teamid"]));
-
-			$teamResults = $pdostatement->fetchAll();
+			$dbconn = getConnection();
+			$teamResults = executeQuery($dbconn, $strSQL, array($session["teamid"]));
 
 			if (count($teamResults) > 0) {
 			     // Set team image
@@ -389,17 +423,13 @@ function isSessionExpired2($session){
 	}
 
 	$strSQL = "select (select timeexpires from sessions where userid = " . $session["userid"] . " and ipaddr = '" . $session["ipaddr"] . ")  + cast('" . $timeExpireSQL . "' as interval) - current_date as expired;";
-	$rs = odbc_exec($dbconn, $strSQL);
+	$dbconn = getConnection();
+	$teamResults = executeQuery($dbconn, $strSQL);
 
-	if (odbc_fetch_row($rs)) {
-		$expired = odbc_result($rs,"expired");
-		echo "expires= " . $expired;
-		// TO DO - logic to test value
-		return false;
-	// This should not fail, but if it does, the safe thing to do is assume expired
-	} else {
-		return true;
-	}
+	$expired = $results[0]["expired"];
+	echo "expires= " . $expired;
+	if $expired<1 return true;
+	else return false;
 }
 
 // Validate a session key:
@@ -420,17 +450,17 @@ function isValidSessionKey( $userid, $sessionkey ){
 	// Make sure the session is in the sessions table
 	$strSQL = "SELECT timeexpires FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
 	$dbconn = getConnection();
-	$rs = odbc_exec($dbconn, $strSQL);
+	$rs = executeQuery($dbconn, $strSQL);
 	// If no results, create a session record
-	if (($rs == false) || (! odbc_fetch_row($rs))) {
+	if (count($rs) == 0) {
 		return false;
 	}
 	// if Session is expired, delete the row and return false
-	if (isSessionExpired(odbc_result($rs,"timeexpires"))) {
+	if (isSessionExpired($rs["timeexpires"])) {
 		// delete the session row
 		$strSQL = "DELETE FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
 		// ignore the rc of odbc_exec, since we are returning false anyway
-		odbc_exec($dbconn, $strSQL);
+		$rs = executeQuery($dbconn, $strSQL);
 		return false;
 	}
 
@@ -457,9 +487,9 @@ function trimSessionKey( $sessionKey){
 function isSessionExpired( $timeexpires){
 	$strSQL = "select age(current_timestamp, '" . $timeexpires . "');";
 	$dbconn = getConnection();
-	$rs = odbc_exec($dbconn, $strSQL);
-	if (odbc_fetch_row($rs)) {
-		$age = odbc_result($rs,"age");
+	$rs = executeQuery($dbconn, $strSQL);
+	if (count($rs)>0) {
+		$age = $rs["age"];
 		// If the result is positive, the session is expired
 		return ((bool) ($age > 0));
 	} else {
@@ -476,9 +506,9 @@ function getSessionTimeRemaining( $session){
 	}
 	$strSQL = "select age('" . $timeexpires . "', current_timestamp);";
 	$dbconn = getConnection();
-	$rs = odbc_exec($dbconn, $strSQL);
-	if (odbc_fetch_row($rs)) {
-		$age = odbc_result($rs,"age");
+	$rs = executeQuery($dbconn, $strSQL);
+	if (count($rs)>0) {
+		$age = $rs["age"];
 		// If the result is positive, the session is expired
 		$aage = explode(":", $age);
 		if ($aage[0] == "00") {
@@ -600,16 +630,17 @@ function getTeamInfo( $id){
 	$strSQL = "SELECT * FROM teams WHERE id = " . $id . ";";
 
 	$dbconn = getConnection();
-	$rsTeam = odbc_exec($dbconn, $strSQL);
+	$rsTeam = executeQuery($dbconn, $strSQL);
 
-	if (odbc_fetch_row($rsTeam)) {
-		$teaminfo["teamname"] = odbc_result($rsTeam, "name");
-		$teaminfo["coachid"] = (int) odbc_result($rsTeam, "coachid");
-		$teaminfo["activityname"] = odbc_result($rsTeam, "activityname");
-		$teaminfo["paymenturl"] = odbc_result($rsTeam, "paymenturl");
-		$teaminfo["startdate"] = odbc_result($rsTeam, "startdate");
-		$teaminfo["eventidattendance"] = odbc_result($rsTeam, "eventidattendance");
-		$teaminfo["website"] = odbc_result($rsTeam, "website");
+	if (count($rsTeam)>0) {
+		$team = $rsTeam[0]
+		$teaminfo["teamname"] = $team["name"];
+		$teaminfo["coachid"] = (int) $team["coachid"];
+		$teaminfo["activityname"] = $team["activityname"];
+		$teaminfo["paymenturl"] = $team["paymenturl"];
+		$teaminfo["startdate"] = $team["startdate"];
+		$teaminfo["eventidattendance"] = $team["eventidattendance"];
+		$teaminfo["website"] = $team["website"];
 		return $teaminfo;
 	} else {
 		return RC_TeamInfoError;
@@ -706,10 +737,8 @@ function boolToTFStr( $boolval){
 //
 function getAdminEmail($session, $dbh){
 	$strSQL = "SELECT email FROM useraccountinfo, users WHERE useraccountinfo.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND users.roleid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($session["teamid"], Role_TeamAdmin));
-	return $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	return executeQueryFetchColumn(array($session["teamid"], Role_TeamAdmin));
 }
 
 // formats money to a whole number or with 2 decimals; includes a dollar sign in front
@@ -748,15 +777,15 @@ function getTeamTerms(	$teamid, $dbh){
 	$termclass = defaultterm_class;
 	if ($teamid >= TeamID_Base) {
 		$strSQL = "SELECT * FROM teamterms WHERE teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-		$termsResults = $pdostatement->fetch(PDO::FETCH_ASSOC);
-		if (isset($termsResults["id"])) {
-			$termadmin = $termsResults["termadmin"];
-			$termcoach = $termsResults["termcoach"];
-			$termmember = $termsResults["termmember"];
-			$termteam = $termsResults["termteam"];
-			$termclass = $termsResults["termclass"];
+		$dbconn = getConnection();
+		$termsResults = executeQuery(array($teamid));
+		if (count($termsResults)>0) {
+			$teamTermResult = $termsResults[0];
+			$termadmin = $teamTermResult["termadmin"];
+			$termcoach = $teamTermResult["termcoach"];
+			$termmember = $teamTermResult["termmember"];
+			$termteam = $teamTermResult["termteam"];
+			$termclass = $teamTermResult["termclass"];
 		}
 	}
 
@@ -1067,46 +1096,25 @@ function cleanupPhone($phone = '', $format = false)
 function deleteSession($session){
 	$dbh = getDBH($session);
 	$strSQL = "DELETE FROM sessions WHERE userid = ? AND sessionkey = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($session["userid"], $session["sessionkey"]));
+	$dbconn = getConnection();
+	$results = executeQuery(array($session["userid"], $session["sessionkey"]));
 	$session = array();
 }
 // returns true if session has expired, else false
 // This should only be called on startSession. The idea is that a false return will cause logout, deletion of session record, and redirect to login page
 function isLockedOut( $dbh, $userid, $teamid){
 	$strSQL = "SELECT timelockoutexpires FROM users WHERE id = ? AND teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($userid, $teamid));
-	$timelockoutexpires = $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	$timelockoutexpires = executeQueryFetchColumn(array($userid, $teamid));
 	if (empty($timelockoutexpires)) return false;
 	else {
 		$strSQL = "select ('".$timelockoutexpires."' > current_timestamp );";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute();
-		$isLocked = $pdostatement->fetchColumn();
-
+		$isLocked = executeQueryFetchColumn()
 		// If the result is positive, the session is expired
 		return $isLocked;
 	}
 }
 
-function getDBH($session = 0){
-//	if ((isset($session)) && (is_object($session["dbh"])) && (is_a($session["dbh"], 'PDO'))) return $session["dbh"];
-//	else {
-		try{
-			$dbh = new PDO('odbc:DRIVER={'.dbdriver.'};UID=' . dbusername. ';SERVER=' . getDBServer() . ';Port='.dbport.';Database=' . dbname . ';PWD=' . getPass1(). ';');
-			if (isStagingServer() || isDevelopmentServer())
-				$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			return $dbh;
-		} catch( PDOException $Exception ) {
-			if (isStagingServer() || isDevelopmentServer()) {
-				echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
-				exit();
-			}
-			return null;
-		}
-//	}
-}
 function includeDojoStyle(){
 //	The Google way
 //	echo '<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/dojo/1.3/dijit/themes/'.dojostyle.'/'.dojostyle.'.css" />';

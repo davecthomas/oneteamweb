@@ -1,10 +1,10 @@
-<?php  
+<?php
 ob_start(); 	// This caches non-header output, allowing us to redirect after header.php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title= " Copy an Existing Order" ;
 include('header.php'); ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.CurrencyTextBox");
 </script>
@@ -18,15 +18,15 @@ if (isset($_GET["id"])) {
 } else {
 	$bError = true;
 	$orderid = 0;
-} 	
+}
 
 if (isset($_GET["uid"])) {
 	$userid = $_GET["uid"];
 } else {
 	$userid = User::UserID_Undefined;
-} 	
+}
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
@@ -36,58 +36,53 @@ if (isUser($session, Role_TeamAdmin)){
 		$teamid = $_GET["teamid"];
 	} else $bError = true;
 }
+$dbconn = getConnection();
 
 if (!$bError){
-$dbh = getDBH($session);  
-$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
-$pdostatement = $dbh->prepare($strSQL);
-$bError = ! $pdostatement->execute(array($userid, $orderid, $teamid));
-$orderResults = $pdostatement->fetchAll();
-$countOrders = 0;	
-$numOrders = count($orderResults); 	
+	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
+	$orderResults = executeQuery($dbconn, $strSQL, array($userid, $orderid, $teamid));
+	$countOrders = 0;
+	$numOrders = count($orderResults);
 
 if ($numOrders > 0){
 	// Conditionally include user name in title
-	if ( $userid >= UserID_Base ) { 
+	if ( $userid >= UserID_Base ) {
 		$bDisplayUserSelector = false;
 		$username = getUserName($userid); ?>
 <h3><?php echo $title?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a></h3>
 <?php
-	} else { 
+	} else {
 		$bDisplayUserSelector = true;
 		$username = "";?>
 <h3><?php echo $title?>&nbsp;for &nbsp;<?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
-<?php 
-	} 
-	
+<?php
+	}
+
 	$bOkForm = true;
-	
+
 	// If invalid userID, Build a select list of all billable and active students to allow selection
 	if ($bDisplayUserSelector) {
 		// Team admin must get team id from session
 		if (isUser( $session, Role_TeamAdmin)) {
 			$teamid = $session["teamid"];
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = ! $pdostatement->execute(array($teamid));
+			$userResults = executeQuery($dbconn, $strSQL, array($teamid));
 		// App Admin query isn't team specific
 		} else {
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = ! $pdostatement->execute();
-		} 
-		$userResults = $pdostatement->fetchAll();
-		$countRows = 0;	
-		$numRows = count($userResults); 
-		
+			$userResults = executeQuery($dbconn, $strSQL);
+		}
+		$countRows = 0;
+		$numRows = count($userResults);
+
 		// If no members, tell them so and don't display the form
-		if ($numRows == 0) { 
+		if ($numRows == 0) {
 			echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName2($teamid, $dbh) . "<br>\n";
 			echo '<a href="/1team/new-user-form.php?' . returnRequiredParams($session) . '">Create a team member</a></p>';
 			echo "\n";
 			$bOkForm = false;
-		} 
-	} 
+		}
+	}
 	if ($bOkForm ){ ?>
 <div class="indented-group-noborder">
 <form name="copyorderform" action="/1team/copy-order.php" method="post">
@@ -106,7 +101,7 @@ if ($numOrders > 0){
 <tr><td class="bold"><?php echo $teamterms["termmember"]?></td>
 <td>
 <?php
-		if (!$bDisplayUserSelector) { 
+		if (!$bDisplayUserSelector) {
  			echo $username; ?>
 <input type="hidden" name="uid" value="<?php echo $userid?>" />
 <?php
@@ -130,41 +125,39 @@ if ($numOrders > 0){
 				$countRows ++;
 			} ?>
 </select>
-<?php 
+<?php
 		}?>
 </td></tr>
 <tr><td class="bold">Date</td>
 <?php // This 	is one key difference with a copied order - use today's date, not the original order date?>
 <td><input type="text" name="orderdate" id="orderdate" value="<?php echo date("Y-m-d")?>" dojoType="dijit.form.DateTextBox" required="true" /></td></tr>
-<?php 
-	
-		// GEt payment methods for this team 
+<?php
+
+		// GEt payment methods for this team
 		$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ?";
-		$pdostatementPM = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementPM->execute(array($teamid));
-		$paymenttypeResults = $pdostatementPM->fetchAll();
+		$paymenttypeResults = executeQuery($dbconn, $strSQL, array($teamid));
 		$rowCountPM	  = count( $paymenttypeResults);
-		
+
 		// Display paymentmethods for this team
-		if ($rowCountPM > 0) { 
+		if ($rowCountPM > 0) {
 			$countRowsPM = 0; ?>
 <tr><td class="bold">Method</td><td>
 <select name="paymentmethod">
-<option value="<?php echo PaymentMethod_Undefined?>">Select a payment method...</option><?php 
+<option value="<?php echo PaymentMethod_Undefined?>">Select a payment method...</option><?php
 			while ($countRowsPM < $rowCountPM) {
 				echo "<option value=\"";
 				echo $paymenttypeResults[$countRowsPM]["id"];
 				echo '"';
-				if ($paymenttypeResults[$countRowsPM]["id"] == $orderResults[0]["orderpaymentmethod"]) 
+				if ($paymenttypeResults[$countRowsPM]["id"] == $orderResults[0]["orderpaymentmethod"])
 					echo " selected";
 				echo '>';
 				echo $paymenttypeResults[$countRowsPM]["name"];
 				echo "</option>\n";
 				$countRowsPM ++;
 			} ?>
-</select>				
+</select>
 </td></tr>
-<?php 
+<?php
 		} ?>
 <tr><td class="bold">Paid?</td><td><input type="checkbox" name="ispaid" id="ispaid" onchange="isPaidChanged()" <?php if ($orderResults[0]["ispaid"]) echo "checked";?>/></td><tr>
 </table>
@@ -174,30 +167,28 @@ if ($numOrders > 0){
 </table>
 </div>
 <table class="noborders" width="65%" id="ordertable">
-<thead class="head"> 
+<thead class="head">
 <th width="5%" >#</th>
 <th width="45%" style="text-align:left">SKU</th>
 <th width="20%" style="text-align:left">Amount ($US)</th>
 <th width="20%" style="text-align:left">Fee ($US)</th>
 </thead>
 <?php
-		// GEt skus once for use in the selector used in the loop 
+		// GEt skus once for use in the selector used in the loop
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$pdostatementS = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementS->execute(array($teamid));
-		$skuResults = $pdostatementS->fetchAll();
+		$skuResults = executeQuery($dbconn, $strSQL, array($teamid));
 		$rowCountS = count( $skuResults);
 		$amountTotal = 0.00;
 		$feeTotal = 0.00;
 
-		// One set of edit controls per orderitem 
+		// One set of edit controls per orderitem
 		while ($countOrders < $numOrders){ ?>
 <tr id="orderitem<?php echo $orderResults[$countOrders]["orderitemid"]?>" class="<?php if ((bool)( ($countOrders) % 2 )) echo("even"); else echo("odd") ?>">
 <td width="5%"><?php echo $countOrders+1?></td>
 <td width="45%"><?php echo $orderResults[$countOrders]["skuname"];?></td>
 <td width="20%"><?php echo $orderResults[$countOrders]["amount"]?></td>
 <td width="20%"<?php if ($orderResults[$countOrders]["fee"] < 0) echo 'class="debit"';?>><?php echo $orderResults[$countOrders]["fee"]?></td>
-<?php 
+<?php
 			$amountTotal += $orderResults[$countOrders]["amount"];
 			$feeTotal += $orderResults[$countOrders]["fee"];
 			$countOrders++;
@@ -278,7 +269,7 @@ var skuAmount=new Array();
 </tr>
 </table>
 </div>
-<?php 
+<?php
 		if ($userid == User::UserID_Undefined) {
 			$objid = $teamid;
 			$whomode = "team";
@@ -299,7 +290,7 @@ var order = new Array();
 // Add items to the order array based on existing items. More items may come later.
 <?php
 		$countOrders = 0;
-		// One set of edit controls per orderitem 
+		// One set of edit controls per orderitem
 		while ($countOrders < $numOrders) { ?>
 // New order array element
 order[<?php echo $countOrders?>] = new Array(3);
@@ -308,9 +299,9 @@ order[<?php echo $countOrders?>][<?php echo OrderItemArrayIndex_Amount?>] = <?ph
 order[<?php echo $countOrders?>][<?php echo OrderItemArrayIndex_Fee?>] = <?php echo $orderResults[$countOrders]["fee"]?>;
 
 updateTotals(order[<?php echo $countOrders?>][1], order[<?php echo $countOrders?>][2]);
-<?php		
+<?php
 			$countOrders ++;
-		} 
+		}
 ?>
 document.copyorderform.order.value = order.toString();
 
@@ -322,27 +313,27 @@ var orderitemidx = <?php echo $countOrders-1?>;
 // Update the totals of the order
 function updateTotals(amount, fee){
 	total += amount;
-	
+
 	// Add decimals to make it look pretty
-	if (Math.round(total) == total) deci = ".00"; else deci = ""; 
+	if (Math.round(total) == total) deci = ".00"; else deci = "";
 	totalamtdiv.innerHTML = "$ " + total + deci;
-	
+
 	totalfee += fee;
 	totalfee = Math.round(totalfee*100)/100
 	// Add decimals to make it look pretty
-	if (Math.round(totalfee) == totalfee) deci = ".00"; else deci = ""; 
-	if (totalfee < 0) { 	
+	if (Math.round(totalfee) == totalfee) deci = ".00"; else deci = "";
+	if (totalfee < 0) {
 		totalfeediv.innerHTML = "$ (" + (-totalfee) + deci + ")";
 	}else {
 		totalfeediv.innerHTML = "$ " + totalfee + deci;
 	}
-	
-	// Keep a running total 
+
+	// Keep a running total
 	totalnet = total + totalfee;
 	// Add decimals to make it look pretty
-	if (Math.round(totalnet) == totalnet) deci = ".00"; else deci = ""; 
+	if (Math.round(totalnet) == totalnet) deci = ".00"; else deci = "";
 	totalnetdiv.innerHTML = "Order Total: $ " + totalnet + deci;
-	
+
 }
 
 // Add an item to the order, add a row to the order table using DOM methods
@@ -495,30 +486,30 @@ function onNewItemChanged(skuindex){
 	document.copyorderform.skuid.focus();
 }
 
-<?php 
-		// Get skus and build javascript array mapping skus to amounts 
+<?php
+		// Get skus and build javascript array mapping skus to amounts
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
 		$pdostatementS = $dbh->prepare($strSQL);
 		$bError = ! $pdostatementS->execute(array($teamid));
 		$skuResults = $pdostatementS->fetchAll();
 		$rowCountS = count( $skuResults);
-			
+
 		// Display skus for this team
-		if ($rowCountS > 0) { 
-			$countRowsS = 0; ?>		
+		if ($rowCountS > 0) {
+			$countRowsS = 0; ?>
 var skuID=new Array();
 var skuAmount=new Array();
-<?php 
+<?php
 			// build array for javascript
-			if ($rowCountS > 0) { 
-				$countRowsS = 0; 		
+			if ($rowCountS > 0) {
+				$countRowsS = 0;
 				while ($countRowsS < $rowCountS) {
 					echo "	skuID[". $countRowsS . "] = " . $skuResults[$countRowsS]["id"] . ";\n";
 					echo "	skuAmount[". $countRowsS . "] = " . $skuResults[$countRowsS]["price"] . ";\n";
 					$countRowsS ++;
-				} 
+				}
 			}?>
-<?php 
+<?php
 		}
 ?>
 function isPaidChanged(){

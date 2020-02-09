@@ -18,7 +18,6 @@ if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = 
 			$bError = true;
 			$err = "a";
 		} else {
-			$dbh = getDBH($session);
 			// Pull Request Parameters
 			if (isset($_REQUEST['p'])) {
 				$formPassword = $_REQUEST['p'];
@@ -39,9 +38,8 @@ if (!$bError) {
 	// Only let active members on active teams login. Get the team status to push the user to license screen if they have not accepted license yet.
 	//$strSQL = "SELECT teamaccountinfo.status as teamstatus, users.teamid as team_id, users.id as userid, users.* FROM users, useraccountinfo, teamaccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND teamaccountinfo.teamid = users.teamid and useraccountinfo.status = " . UserAccountStatus_Active . " AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . " AND login = ?;";
 	$strSQL = "SELECT users.salt, users.passwd FROM users WHERE id = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($uid));
-	$loginResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$loginResults = executeQuery($dbconn, $strSQL, array($uid));
 	$rowCount = count( $loginResults);
 	if ($rowCount != 1) {
 		$bError = true;
@@ -70,4 +68,3 @@ if (!$bError) {
 // Error - return code
 if ($bError) echo htmlspecialchars($err);
  ?>
-

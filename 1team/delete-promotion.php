@@ -1,5 +1,5 @@
-<?php  
-include ('utils.php');  
+<?php
+include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -9,7 +9,7 @@ if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = 
 $session = startSession($sessionkey, $userid);
 if (! isValidSession($session )){
 	redirect("default.php?rc=" . $session);
-} 
+}
 
 // Only admins can promote
 if (!isAnyAdminLoggedIn($session)) {
@@ -20,7 +20,7 @@ $bError = false;
 
 if (!isUser( $session, Role_ApplicationAdmin )) {
 	$teamid = $session["teamid"];
-} else { 
+} else {
 	if (isset($_GET["teamid"])) {
 		$teamid = $_GET["teamid"];
 	} else {
@@ -49,10 +49,9 @@ if ( isset($_GET["pagemode"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
 	$strSQL = "DELETE FROM promotions WHERE memberid = ? AND id = ? AND teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($memberid, $promotionid, $teamid ));
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($memberid, $promotionid, $teamid ));
 	redirect("include-promotions.php?id=" . $memberid . "&pagemode=" . $pagemode . "&whomode=user&teamid=" . $teamid . buildRequiredParamsConcat($session) );
 } else {
 	redirect("include-promotions.php?id=" . $memberid . "&pagemode=" . $pagemode . "&whomode=user&teamid=" . $teamid . "&baddel=1" . buildRequiredParamsConcat($session));

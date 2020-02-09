@@ -1,9 +1,9 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
 	redirect("default.php?rc=" . RC_RequiredInputMissing);
-} 
+}
 // Get $session array initialized
 $session = startSession($sessionkey, $userid);
 if (! isValidSession($session )){
@@ -22,19 +22,17 @@ if (isset($_REQUEST["id"])) {
 }
 
 if ($bError != true) {
-	$dbh = getDBH($session);  
-	
 	$strSQL = "DELETE FROM feedback WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! ($pdostatement->execute(array($teamid)));
-	
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($teamid)));
+
 	if (!$bError) {
 		$strSQL = "DELETE FROM attendanceconsoles WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
 		$bError = ! ($pdostatement->execute(array($teamid)));
 		if ($bError) redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=2");
 	}
-	if (!$bError) { 
+	if (!$bError) {
 		$strSQL = "DELETE FROM attendance WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
 		$bError = ! ($pdostatement->execute(array($teamid)));
@@ -64,19 +62,19 @@ if ($bError != true) {
 		$bError = ! ($pdostatement->execute(array($teamid)));
 		if ($bError) redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=8");
 	}
-	if (!$bError) { 
+	if (!$bError) {
 		$strSQL = "DELETE FROM orderitems WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
 		$bError = ! ($pdostatement->execute(array($teamid)));
 		if ($bError) redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=9");
 	}
-	if (!$bError) { 
+	if (!$bError) {
 		$strSQL = "DELETE FROM epayments WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
 		$bError = ! ($pdostatement->execute(array($teamid)));
 		if ($bError) redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=10");
 	}
-	if (!$bError) { 
+	if (!$bError) {
 		$strSQL = "DELETE FROM events WHERE teamid = ?;";
 		$pdostatement = $dbh->prepare($strSQL);
 		$bError = ! ($pdostatement->execute(array($teamid)));
@@ -174,10 +172,10 @@ if ($bError != true) {
 		$bError = ! ($pdostatement->execute(array($teamid)));
 		if ($bError) redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=1");
 	}
-	if (!$bError) { 
+	if (!$bError) {
 		redirect("teams-roster.php?" . returnRequiredParams($session) . "&done=1");
 	}
-} 
+}
 if ($bError) {
 	redirect("teams-roster.php?" . returnRequiredParams($session) . "&err=".$err);
 }?>

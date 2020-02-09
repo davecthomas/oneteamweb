@@ -1,8 +1,8 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title= " Delete Team" ;
-include('header.php'); 
+include('header.php');
 
 $bError = false;
 if (!isUser($session, Role_ApplicationAdmin)) $bError = true;
@@ -12,19 +12,16 @@ if (isset($_GET["id"])) {
 } else {
 	$id= TeamID_Undefined;
 }
-$dbh = getDBH($session);  
-
 $strSQL = "SELECT teams.name, teams.id FROM teams ORDER BY name;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute();
+$dbconn = getConnection();
+$teamResults = executeQuery($dbconn, $strSQL, $bError);
 
-$teamResults = $pdostatement->fetchAll();
-$rowCount = 0;	
-$numRows = count($teamResults); 
+$rowCount = 0;
+$numRows = count($teamResults);
 ?>
 <h3><?php echo $title?></h3>
-<?php 
-// If we were directed here from a previously deleted team, show completion status text 
+<?php
+// If we were directed here from a previously deleted team, show completion status text
 if (isset($_GET["done"])) {
 	if (strcmp($_GET["done"], "1") == 0) {
 		if (isset($_GET["deletedteam"])) {
@@ -37,16 +34,16 @@ if (isset($_GET["done"])) {
 		echo "<p>There was an error deleting the team '" . $deleteduser . "'. Try again.</p>\n";
 	}
 }
-	
+
 // If no members, tell them so and don't display the form
-if ($numRows == 0) { 
+if ($numRows == 0) {
 	echo "<p>No teams exist.<br>\n";
 	echo '<a href="/1team/new-team-form.php?' . returnRequiredParams($session) . '">Create a team</a></p>';
 	echo "\n";
 	$bOkForm = false;
-} else { 
+} else {
 	$bOkForm = true;
-} 
+}
 if ($bOkForm ){ ?>
 <form name="deleteform" action="/1team/delete-team.php" method="post">
 <?php buildRequiredPostFields($session) ?>
@@ -55,11 +52,11 @@ if ($bOkForm ){ ?>
 <tr>
 <td class="bold">Team name:</td>
 <td><select name="id">
-<?php  
+<?php
 	if ( $id == 0 ) {
 		echo("<option value=\"0\" selected>Select team...</option>");
 	}
-	while($rowCount < $numRows) { 
+	while($rowCount < $numRows) {
 		echo "<option value=\"";
 		echo $teamResults[$rowCount]["id"];
 		echo "\"";
@@ -72,7 +69,7 @@ if ($bOkForm ){ ?>
 		$rowCount++;
 	} ?>
 </select></td>
-</tr>		
+</tr>
 <tr><td><input type="button" value="Delete" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onClick="confSubmit(this.form);"></td>
 </tr>
 </table>
@@ -84,7 +81,7 @@ function confSubmit(form) {
 	}
 }
 </script>
-<?php 
+<?php
 }
 // Start footer section
 include('footer.php'); ?>

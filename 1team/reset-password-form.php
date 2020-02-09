@@ -1,4 +1,4 @@
-<?php  
+<?php
 $title= " Reset Password" ;
 include('header.php');
 
@@ -7,8 +7,8 @@ if (isset($_GET["id"])) {
 	$userid = (int)(getCleanInput($_GET["id"]));
 } else {
 	$userid = 0;
-} 	
-if (isset($_GET["teamid"])) { 
+}
+if (isset($_GET["teamid"])) {
 	$teamid = (int)(getCleanInput($_GET["teamid"]));
 } else {
 	$teamid = 0;
@@ -24,18 +24,18 @@ if ( isUser($session, Role_TeamAdmin)) {
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE status = " . UserAccountStatus_Active . " and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
 } ?>
 <?php
-if (isValidUserID( $userid)) { 
+if (isValidUserID( $userid)) {
 ?>
 <h3><?php echo $title . " for " . getUserName($userid)?></h3>
 <?php
 } else { ?>
 <h3><?php echo $title?></h3>
-<?php 
+<?php
 } ?>
 <div class="indented-group-noborder">
 <form action="/1team/reset-password.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="hidden" name="teamid" value="<?php echo $teamid ?>"/>	
+<input type="hidden" name="teamid" value="<?php echo $teamid ?>"/>
 <?php
 	// If no valid user ID, build a list to allow selection of user
 	if ( isValidUserID( $userid)) { ?>
@@ -43,28 +43,29 @@ if (isValidUserID( $userid)) {
 <?php
 	} ?>
 <table class="noborders">
-<?php  
-	// Conditionally generate a user select list 
+<?php
+	// Conditionally generate a user select list
 	if (( !isValidUserID( $userid))  && (isAnyAdminLoggedIn($session))){ ?>
 <tr>
 <td class="bold"><?php echo $teamterms["termuser"] ?> name:</td>
 <td><select name="id">
-<?php	
+<?php
 		$dbconn = getConnection();
-		$rsUsers = odbc_exec($dbconn, $strSQL); 
+		$results = executeQuery($dbconn, $strSQL);
 		echo("<option value=\"0\" selected>Select member...</option>");
-		while (odbc_fetch_row($rsUsers)) {
+		foreach($results as $row) {
+			$id = $row["id"];
 			echo "<option value=\"";
-			echo odbc_result($rsUsers, "id");
+			echo $row["id"];
 			echo "\"";
-			if ( $userid == odbc_result($rsUsers, "id") ) {
+			if ( $userid == $id ) {
 				echo("selected");
 			}
 			echo ">";
-			echo trim(odbc_result($rsUsers, "firstname"));
+			echo trim($row["firstname"]);
 			echo " ";
-			echo trim(odbc_result($rsUsers, "lastname"));
-			echo " " . roleToStr(odbc_result($rsUsers, "roleid"), $teamterms) ;
+			echo $row["lastname"]);
+			echo " " . roleToStr($row["roleid"], $teamterms) ;
 			echo "</option>\n";
 		} ?>
 </select></td>
@@ -80,7 +81,7 @@ if (isValidUserID( $userid)) {
 <input type="submit" value="Reset Password" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'">
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'home.php?<?php echo returnRequiredParams($session)?>'"/>
 </form>
-<?php 
+<?php
 // Start footer section
 include('footer.php'); ?>
 </body>
