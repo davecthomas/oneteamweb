@@ -36,11 +36,11 @@ if ($bError != true) {
 	// Delete any custom data so we have no orphans
 	$strSQL = "DELETE FROM customdata WHERE customfieldid = ? AND teamid = ?;";
 	$dbconn = getConnection();
-	$results = executeQuery($dbconn, $strSQL, array($customfieldid, $teamid));
+	$results = executeQuery($dbconn, $strSQL, $bError, array($customfieldid, $teamid));
 
 	// Delete the custom field
 	$strSQL = "DELETE FROM customfields WHERE id = ? AND teamid = ?;";
-	$results = executeQuery($dbconn, $strSQL, array($customfieldid, $teamid));
+	$results = executeQuery($dbconn, $strSQL, $bError, array($customfieldid, $teamid));
 
 	redirect("manage-custom-fields.php?" . returnRequiredParams($session) . "&teamid=" . $teamid );
 } else {

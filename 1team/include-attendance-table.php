@@ -76,7 +76,7 @@ function updateProgramID() {
 <input type="hidden" name="id" value="<?php echo $id ?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-	$dbh = getDBH($session);  
+	  
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?";
 	$pdostatementP = $dbh->prepare($strSQL);
@@ -162,7 +162,7 @@ if ( $whomode == "team") {
 	}
 }
 
-$dbh = getDBH($session);  
+  
 
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
@@ -172,7 +172,7 @@ if ($whomode == "user") {
 } else {
 	$sqlwhere = "attendance.teamid = " . $teamid;
 	$objid = $teamid;
-	$objname = getTeamName2($teamid, $dbh);
+	$objname = getTeamName($teamid, $dbconn);
 }
 $urlencodedname = urlencode($objname);
 

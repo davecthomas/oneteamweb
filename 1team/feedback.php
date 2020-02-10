@@ -38,15 +38,15 @@ if (isset($_POST["details"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);
+
 
 	$strSQL = "INSERT INTO feedback VALUES (DEFAULT, ?, ?, ?, ?, ?);";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($summary, $details, $session["userid"], date("m-d-Y"), $teamid));
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($summary, $details, $session["userid"], date("m-d-Y"), $teamid));
 
 	if (!$bError){
 		$m = new Mail();
-		$statuscode = $m->mail(getAdminEmail($session, $dbh), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbh) );
+		$statuscode = $m->mail(getAdminEmail($session, $dbconn), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbconn) );
 
 		redirect("feedback-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 	}

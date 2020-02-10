@@ -109,7 +109,7 @@ if ((isset($_POST["url"])) && (is_url($_POST["url"]))){
 
 // Time to update the images table
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	// Check if this is an INSERT or UPDATE
 	$strSQL = "SELECT * FROM images WHERE type = ? and objid = ? and teamid = ?;";			

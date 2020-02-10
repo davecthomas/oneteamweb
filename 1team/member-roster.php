@@ -4,7 +4,7 @@ $isadminorcoachrequired = true;
 
 $title = "Member Roster";
 include('header.php');
-$dbh = getDBH($session);  
+  
 
 $rowCount = 0;
 // Set up teamid from session or input
@@ -105,7 +105,7 @@ href="member-roster.php<?php buildRequiredParams($session) ?>&teamid=<?php echo 
 // If only one result, go to props page for that user
 	} else { ?>
 <div id="bodycontent">
-<h3><?php echo $title?> for <?php echo getTeamName2($teamid, $dbh)?></h3>
+<h3><?php echo $title?> for <?php echo getTeamName($teamid, $dbconn)?></h3>
 <?php
 		// More than one found, include roster
 		$pagemode = pagemodeRoster;

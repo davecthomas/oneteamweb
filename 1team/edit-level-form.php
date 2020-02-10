@@ -1,23 +1,23 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Edit Level"; 
+$title = "Edit Level";
 include('header.php');
 ?>
 <?php
-$dbh = getDBH($session); 
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 $teamid = NotFound;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_GET["teamid"])){
 		$teamid = $_GET["teamid"];
-	} 
+	}
 }
 
 if (isset($_GET["id"])) {
@@ -27,13 +27,11 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM levels WHERE id = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($levelid));
-
-$levelResults = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$levelResults = executeQuery($dbconn, $strSQL, $bError, array($levelid));
 
 if (count($levelResults) > 0) { ?>
-<h4>Modify a level for <?php echo getTeamName2($teamid, $dbh)?></h4>	
+<h4>Modify a level for <?php echo getTeamName($teamid, $dbconn)?></h4>
 <div class="indented-group-noborder">
 <form action="/1team/edit-level.php" method="post">
 <input type="hidden" name="id" value="<?php echo $levelid ?>"/>
@@ -44,17 +42,14 @@ if (count($levelResults) > 0) { ?>
 <td class="strong">Level name</td><td><input type="text" name="name" size="60" maxlength="80" value="<?php echo $levelResults[0]["name"]?>"></td></tr>
 <tr><td class="strong">Program</td><td><?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$programResults = $pdostatement->fetchAll();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($programResults);?>
 <select name="programid">
 <?php
-	while ($rowCount < $loopMax) { 
-		echo  "<option "; 
+	while ($rowCount < $loopMax) {
+		echo  "<option ";
 		echo  'value="' . $programResults[$rowCount]["id"] . '"';
 		if ($programResults[$rowCount]["id"] == $levelResults[0]["programid"]) {
 			echo " selected ";
@@ -73,8 +68,8 @@ if (count($levelResults) > 0) { ?>
 <input type="submit" value="Modify level" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-levels-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid?>'"/>
 </form>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

@@ -1,9 +1,8 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title = "Edit Attendance Console";
 include('header.php');
-$dbh = getDBH($session);
 $bError = false;
 $teamid = NotFound;
 $err = "";
@@ -29,7 +28,7 @@ if (isset($_GET["id"])) {
 if (!$bError){
 	$ac = new AttendanceConsole($session, $attendanceconsoleid);
 	if ($ac->isValid()) { ?>
-<h3><?php echo $title?> for <?php echo getTeamName2($teamid, $dbh)?></h3>
+<h3><?php echo $title?> for <?php echo getTeamName($teamid)?></h3>
 <div class="indented-group-noborder">
 <form action="/1team/edit-attendance-console.php" method="post">
 <input type="hidden" name="id" value="<?php echo $attendanceconsoleid ?>"/>
@@ -42,7 +41,7 @@ if (!$bError){
 </div>
 <input type="submit" value="Modify attendance console" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/></form>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-attendance-consoles-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid?>'"/>
-<?php 
+<?php
 	} else $bError = true;
 }
 if ($bError) {

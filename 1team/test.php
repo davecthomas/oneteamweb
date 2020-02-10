@@ -16,7 +16,7 @@ if (! isValidSession($session )) {
 }
 // Only admins can execute this script
 redirectToLoginIfNotAdmin( $session);
-$dbh = getDBH($session);
+
 
 if (isStagingServer() || isDevelopmentServer())
 	echo "YEP.";

@@ -11,7 +11,7 @@ dojo.require("dojo.dnd.Source");
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
-$dbh = getDBH($session);
+
 $bError = false;
 $teamid = NotFound;
 $err = "";
@@ -26,7 +26,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$err = "t";
 	}
 }?>
-<h4>Custom Fields for <?php echo getTeamName2($teamid, $dbh);?></h4>
+<h4>Custom Fields for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are Custom Fields?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">

@@ -31,7 +31,7 @@ if (isUser($session, Role_TeamAdmin)){
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	$strSQL = "SELECT * FROM teams WHERE id = ?;";
 	$pdostatement = $dbh->prepare($strSQL);

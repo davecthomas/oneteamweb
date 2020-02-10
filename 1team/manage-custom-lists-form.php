@@ -3,7 +3,7 @@
 $isadminrequired = true;
 $title = "Manage Custom Lists"; 
 include('header.php');
-$dbh = getDBH($session);  
+  
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $teamid = NotFound;
@@ -19,7 +19,7 @@ if (isUser($session, Role_TeamAdmin)){
 }
 
 ?>
-<h4><?php echo $title?> for <?php echo getTeamName2($teamid, $dbh);?></h4>
+<h4><?php echo $title?> for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are Custom Lists?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">

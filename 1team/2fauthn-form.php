@@ -32,12 +32,12 @@ if ((!isset($_GET["err"])) && (!isset($_GET["done"]))){
 	// Get the retry count to decide what text to include
 	$strSQL = "SELECT authsmsretries FROM sessions WHERE userid = ? and login = ? and teamid = ?;";
 	$dbconn = getConnection();
-	$authsmsretries = executeQueryFetchColumn($dbconn, $strSQL, array($session["userid"], $session["login"], $session["teamid"]));
+	$authsmsretries = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($session["userid"], $session["login"], $session["teamid"]));
 	if ($authsmsretries >= authsmsretries_Max){
 		// Penalty box! TODO: lock the account for 5 minutes
 		$timeoutpenalty = authsmsfailure_LockoutPenalty;
 		$strSQL = "UPDATE users SET timelockoutexpires = (current_timestamp  + cast('" . $timeoutpenalty . "' as interval)) WHERE id = ? and teamid = ?;";
-		executeQuery($dbconn, $strSQL, array($session["userid"], $session["teamid"]));
+		executeQuery($dbconn, $strSQL, $bError, array($session["userid"], $session["teamid"]));
 
 		// Log off user
 		deleteSession($session);?>

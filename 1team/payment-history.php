@@ -91,7 +91,7 @@ function updateProgramID() {
 <input type="hidden" name="recentlyexpired" value="<?php echo $recentlyexpired?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php 
-			$dbh = getDBH($session);  
+			  
 			// GEt payment methods for this team 
 			$strSQL = "SELECT * FROM programs WHERE teamid = ?";
 			$pdostatementP = $dbh->prepare($strSQL);

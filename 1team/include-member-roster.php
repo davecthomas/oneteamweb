@@ -1,7 +1,7 @@
 <?php // requires a lot of variables defined to get here ok... ?>
 <div class="showit" id="rosterinfo">
 <div class="indented-group-noborder">
-<?php		
+<?php
 // Build special get parm including the search string
 $searchparm = "";
 if ((isset($pagemode)) && ($pagemode == pagemodeSearch)){
@@ -9,7 +9,7 @@ if ((isset($pagemode)) && ($pagemode == pagemodeSearch)){
 }
 $isAdmin = isAnyAdminLoggedIn($session);
 ?>
-<table  class="memberlist">  
+<table  class="memberlist">
 <thead class="head"><tr>
 <?php
 if (isUser( $session, Role_ApplicationAdmin)){ ?>
@@ -29,19 +29,19 @@ if (isset($pagemode)) {
 	if ($pagemode == pagemodeAttendanceOnDate) { ?>
 <th align="left">Event</th>
 <th align="left">Location</th>
-<?php	
+<?php
 	}
 }
 if ($isAdmin){ ?>
 <th valign="top">Actions</th></tr>
-<?php 
+<?php
 }?>
-</thead>	
+</thead>
 <tbody>
 <?php
 $rowCount = 0;
 $numRows = count($results);
-while ($rowCount < $numRows) { 
+while ($rowCount < $numRows) {
 	$accountStatus = $results[$rowCount]["status"]; ?>
 <tr class="<?php if ((bool)( $rowCount % 2 )) echo("even"); else echo("odd") ?>">
 <?php
@@ -51,34 +51,34 @@ if (isUser( $session, Role_ApplicationAdmin)){ ?>
 }?>
 <td>
 <?php
-	if (is_url($results[$rowCount]["url"])){ 
-		$bhasurl = true; 
+	if (is_url($results[$rowCount]["url"])){
+		$bhasurl = true;
 ?>
 <span id="<?php echo 'u'.$rowCount?>" onmouseout="document.getElementById('dynamicimage').className = 'hideit'" onmouseover="setDynamicImage('<?php echo $results[$rowCount]["url"]?>', document.getElementById('<?php echo 'u'.$rowCount?>'), <?php echo dynamicimagediv_Height/2?>)">
-<?php 
-	} else { 
-		$bhasurl = false; 
-	} 	
+<?php
+	} else {
+		$bhasurl = false;
+	}
 	if ($isAdmin){ ?>
-<a href="user-props-form.php?<?php 
+<a href="user-props-form.php?<?php
 		echo returnRequiredParams($session) . "&id=" . $results[$rowCount][ "userid"] . "&teamid=" . $teamid?>">
 <?php
 	} ?>
 <span <?php echo subdueInactive($accountStatus)?>><?php echo $results[$rowCount][ "firstname"];?></span>
 <?php
 	if ($bhasurl){ ?>&nbsp;<img src="img/pix.gif" border="0"></span>
-<?php 
-	} 
+<?php
+	}
 	if ($isAdmin){ ?>
 </a><?php
 	} ?>
 </td>
 <td <?php echo subdueInactive($accountStatus)?>><?php echo $results[$rowCount][ "lastname"] ?></td>
 <td <?php echo subdueInactive($accountStatus)?>><?php echo roleToStr($results[$rowCount][ "roleid"], $teamterms); ?></td>
-<?php 
+<?php
 	if ($isAdmin){ ?>
 <td <?php echo subdueInactive($accountStatus)?>><?php echo $aStatus[(int)$results[$rowCount][ "status"]+UserAccountStatus_ArrayOffset] ?></td>
-<?php 
+<?php
 		$isUserBillable = BoolToStr((bool) $results[$rowCount][ "isbillable"]); ?>
 <td <?php echo subdueInactive($accountStatus)?>><?php 	echo (string)($isUserBillable); ?></td>
 <?php
@@ -88,10 +88,10 @@ if (isUser( $session, Role_ApplicationAdmin)){ ?>
 			echo "<td>" . $results[$rowCount]["name"] . "</td>";
 			echo "<td>" . $results[$rowCount]["location"] . "</td>";
 		}
-	} 
+	}
 	if ($isAdmin){ ?>
 <td>
-<?php 
+<?php
 		if ($pagemode == pagemodeAttendanceOnDate) { ?>
 <a href="delete-attendance.php<?php buildRequiredParams($session)?>&id=<?php echo $results[$rowCount][ "userid"]?>&teamid=<?php echo $teamid ?>&attendanceid=<?php echo $results[$rowCount]["attendanceid"]?>" title="Delete attendance"><img src="img/delete.gif" alt="Delete attendance?>" border="0"></a>&nbsp;
 <a href="edit-attendance-form.php<?php buildRequiredParams($session)?>&id=<?php echo $results[$rowCount][ "userid"]?>&amp;teamid=<?php echo $teamid ?>&attendanceid=<?php echo $results[$rowCount]["attendanceid"]?>&eventid=<?php echo $results[$rowCount]["eventid"]?>" title="Edit attendance">
@@ -102,25 +102,25 @@ if (isUser( $session, Role_ApplicationAdmin)){ ?>
 <a href="user-props-form.php?id=<?php echo $results[$rowCount][ "userid"] . buildRequiredParamsConcat($session) . "&teamid=" . $teamid?>" title="Edit <?php echo $results[$rowCount][ "firstname"]?>">
 <img src="img/edit.gif" alt="Edit <?php echo $results[$rowCount][ "firstname"]?>" border="0"></a>
 <?php
-		} 
+		}
 	}?>
 </td>
 </tr>
-<?php            
+<?php
 	$rowCount ++;
 }
 // Set up team name from session or query
 if (!isUser( $session, Role_ApplicationAdmin)) {
-	$teamname = getTeamName2($session["teamid"], $dbh);
+	$teamname = getTeamName($session["teamid"]);
 } else {
 	$teamname = "";
-} 
+}
 ?>
 </tbody>
 </table>
 </div>
 <p><?php echo $rowCount?> member<?php if ($rowCount != 1 )  echo("s") ?> of <?php echo $teamname ?> are listed in this view.</p>
-</div>	
+</div>
 <div id="dynamicimage" class="hideit">
 <img name="dynimg" src="" height="<?php echo dynamicimagediv_Height?>">
 </div>

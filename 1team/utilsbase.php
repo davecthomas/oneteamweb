@@ -117,7 +117,7 @@ function isSessionKeyValid( $sessionkey ) {
 	$strSQL = "SELECT * FROM sessions WHERE sessionkey = '" . getCleanInput($sessionkey) . "';";
 
 	$dbconn = getConnection();
-  $results = executeQuery($dbconn, $strSQL);
+  $results = executeQuery($dbconn, $strSQL, $bError);
 
 	if (count($results)>0) {
 		return true;
@@ -160,13 +160,14 @@ function isThisMyCoach($session, $coachid){
 
 	$strSQL = "SELECT coachid FROM users WHERE id = " . $session["userid"] . " and teamid = " . $session["teamid"] . ";";
 	$dbconn = getConnection();
-  $result_id = executeQueryFetchColumn($dbconn, $strSQL);
+  $result_id = executeQueryFetchColumn($dbconn, $strSQL, $bError);
 	if ($coachid == $result_id) return true;
 	else return false;
 }
 
 // Can I administer this user
 function canIAdministerThisUser( $session, $id){
+	$bError = false;
 	if (!isValidUserID($id)) {
 		return false;
 	}
@@ -179,11 +180,11 @@ function canIAdministerThisUser( $session, $id){
 		if ($id == User::UserID_Guest){
 			return true;
 		} else {
-			$dbh = getDBH($session);
+
 			// See if this user is on my team
 			$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
 			$dbconn = getConnection();
-		  $results = executeQuery($dbconn, $strSQL, array($id, $session["teamid"]));
+		  $results = executeQuery($dbconn, $strSQL, $bError, array($id, $session["teamid"]));
 
 			if (count($results) == 1) return true;
 			else return false;
@@ -196,6 +197,7 @@ function canIAdministerThisUser( $session, $id){
 
 // Can I view this user
 function canIViewThisUser( $session, $id){
+	$bError = false;
 	if (!isValidUserID($id)) {
 		return false;
 	}
@@ -204,11 +206,11 @@ function canIViewThisUser( $session, $id){
 	} else if (isAdminLoggedIn($session)) {
 		return true;
 	} else if (isTeamAdminLoggedIn($session)) {
-		$dbh = getDBH($session);
+
 		// See if this user is on my team
 		$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
 		$dbconn = getConnection();
-		$results = executeQuery($dbconn, $strSQL, array($id, $session["teamid"]));
+		$results = executeQuery($dbconn, $strSQL, $bError, array($id, $session["teamid"]));
 		if (count($results) == 1) return true;
 		else return false;
 
@@ -244,10 +246,11 @@ function getSessionUserID($session){
 	}
 }
 
-function getUserEmail($session, $dbh){
+function getUserEmail($session, $dbconn = null){
 	$strSQL = "SELECT email FROM useraccountinfo WHERE useraccountinfo.userid = ?;";
-	$dbconn = getConnection();
-	$result = executeQueryFetchColumn($dbconn, $strSQL, array($session["userid"]));
+	$bError = false;
+	if ($dbconn = null) $dbconn = getConnection();
+	$result = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($session["userid"]));
 	return $result;
 }
 
@@ -275,25 +278,25 @@ function executeQueryFetchColumn($db, $sql, &$bError = false, $array_params = ar
 	return $item;
 }
 
-function getDBH($session = 0){
-	$dbconnstr = getenv('CLEARDB_DATABASE_URL');
-//	if ((isset($session)) && (is_object($session["dbh"])) && (is_a($session["dbh"], 'PDO'))) return $session["dbh"];
-//	else {
-		try{
-//			$dbh = new PDO('odbc:DRIVER={'.dbdriver.'};UID=' . dbusername. ';SERVER=' . getDBServer() . ';Port='.dbport.';Database=' . dbname . ';PWD=' . getPass1(). ';');
-			$dbh = new PDO($dbconnstr);
-			if (isStagingServer() || isDevelopmentServer())
-				$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-			return $dbh;
-		} catch( PDOException $Exception ) {
-			if (isStagingServer() || isDevelopmentServer()) {
-				echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
-				exit();
-			}
-			return null;
-		}
-//	}
-}
+// function getDBH($session = 0){
+// 	$dbconnstr = getenv('CLEARDB_DATABASE_URL');
+// //	if ((isset($session)) && (is_object($session["dbh"])) && (is_a($session["dbh"], 'PDO'))) return $session["dbh"];
+// //	else {
+// 		try{
+// //			$dbh = new PDO('odbc:DRIVER={'.dbdriver.'};UID=' . dbusername. ';SERVER=' . getDBServer() . ';Port='.dbport.';Database=' . dbname . ';PWD=' . getPass1(). ';');
+// 			$dbh = new PDO($dbconnstr);
+// 			if (isStagingServer() || isDevelopmentServer())
+// 				$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// 			return $dbh;
+// 		} catch( PDOException $Exception ) {
+// 			if (isStagingServer() || isDevelopmentServer()) {
+// 				echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
+// 				exit();
+// 			}
+// 			return null;
+// 		}
+// //	}
+// }
 
 function getConnection(){
 	$pdo = null;
@@ -315,25 +318,6 @@ function getConnection(){
 	// return odbc_connect(getConnName(), getDBName(), getPass());
 }
 
-// function getDBName(){
-// 	return dbname;
-// }
-//
-// function getPass(){
-// 	return getPass1();
-// }
-// function getPass1(){
-// 	return getenv('SENDGRID_API_KEY');
-// }
-// function getPass2($session){
-// 	if ((isset($session)) && (isset($session["dbpass"]))) return $session["dbpass"];
-// 	else return "";
-// }
-//
-// function getConnName(){
-// 	return dbconn;
-// }
-
 function utilIsUserBillable($session){
 	return $session["isbillable"];
 }
@@ -343,7 +327,7 @@ function utilIsUserBillable($session){
 // The basic idea is I have replaced the quirky $session global array with my own.
 // Returns session array or error code. In either case, it is assumed the caller will redirect the user to default.php
 function startSession( $sessionkey, $userid ){
-
+	$bError = false;
 	if (! isValidUserID( $userid)) {
 		return RC_UserID_Invalid;
 	}
@@ -354,7 +338,7 @@ function startSession( $sessionkey, $userid ){
 		// Attempt to get the session from the DB
 		$strSQL = "SELECT * FROM sessions WHERE sessionkey = ? AND userid = ?;";
 		$dbconn = getConnection();
-		$sessionResults = executeQuery($dbconn, $strSQL, array($sessionkey, $userid));
+		$sessionResults = executeQuery($dbconn, $strSQL, $bError, array($sessionkey, $userid));
 
 	} catch( PDOException $Exception ) {
 		if (isStagingServer() || isDevelopmentServer())
@@ -394,7 +378,7 @@ function startSession( $sessionkey, $userid ){
 		if ( $session["teamid"] != TeamID_Undefined){
 			$strSQL = "SELECT teams.*, images.* FROM teams LEFT OUTER JOIN images ON (images.teamid = teams.id) WHERE teams.id = ? and images.id = teams.imageid";
 			$dbconn = getConnection();
-			$teamResults = executeQuery($dbconn, $strSQL, array($session["teamid"]));
+			$teamResults = executeQuery($dbconn, $strSQL, $bError, array($session["teamid"]));
 
 			if (count($teamResults) > 0) {
 			     // Set team image
@@ -424,7 +408,7 @@ function isSessionExpired2($session){
 
 	$strSQL = "select (select timeexpires from sessions where userid = " . $session["userid"] . " and ipaddr = '" . $session["ipaddr"] . ")  + cast('" . $timeExpireSQL . "' as interval) - current_date as expired;";
 	$dbconn = getConnection();
-	$teamResults = executeQuery($dbconn, $strSQL);
+	$teamResults = executeQuery($dbconn, $strSQL, $bError);
 
 	$expired = $results[0]["expired"];
 	echo "expires= " . $expired;
@@ -450,7 +434,7 @@ function isValidSessionKey( $userid, $sessionkey ){
 	// Make sure the session is in the sessions table
 	$strSQL = "SELECT timeexpires FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
 	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL);
+	$rs = executeQuery($dbconn, $strSQL, $bError);
 	// If no results, create a session record
 	if (count($rs) == 0) {
 		return false;
@@ -460,7 +444,7 @@ function isValidSessionKey( $userid, $sessionkey ){
 		// delete the session row
 		$strSQL = "DELETE FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
 		// ignore the rc of odbc_exec, since we are returning false anyway
-		$rs = executeQuery($dbconn, $strSQL);
+		$rs = executeQuery($dbconn, $strSQL, $bError);
 		return false;
 	}
 
@@ -487,7 +471,7 @@ function trimSessionKey( $sessionKey){
 function isSessionExpired( $timeexpires){
 	$strSQL = "select age(current_timestamp, '" . $timeexpires . "');";
 	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL);
+	$rs = executeQuery($dbconn, $strSQL, $bError);
 	if (count($rs)>0) {
 		$age = $rs["age"];
 		// If the result is positive, the session is expired
@@ -506,7 +490,7 @@ function getSessionTimeRemaining( $session){
 	}
 	$strSQL = "select age('" . $timeexpires . "', current_timestamp);";
 	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL);
+	$rs = executeQuery($dbconn, $strSQL, $bError);
 	if (count($rs)>0) {
 		$age = $rs["age"];
 		// If the result is positive, the session is expired
@@ -630,7 +614,7 @@ function getTeamInfo( $id){
 	$strSQL = "SELECT * FROM teams WHERE id = " . $id . ";";
 
 	$dbconn = getConnection();
-	$rsTeam = executeQuery($dbconn, $strSQL);
+	$rsTeam = executeQuery($dbconn, $strSQL, $bError);
 
 	if (count($rsTeam)>0) {
 		$team = $rsTeam[0]
@@ -735,10 +719,10 @@ function boolToTFStr( $boolval){
 }
 
 //
-function getAdminEmail($session, $dbh){
+function getAdminEmail($session, $dbconn = null){
 	$strSQL = "SELECT email FROM useraccountinfo, users WHERE useraccountinfo.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND users.roleid = ?;";
-	$dbconn = getConnection();
-	return executeQueryFetchColumn(array($session["teamid"], Role_TeamAdmin));
+	if ($dbconn == null) $dbconn = getConnection();
+	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($session["teamid"], Role_TeamAdmin));
 }
 
 // formats money to a whole number or with 2 decimals; includes a dollar sign in front
@@ -764,7 +748,7 @@ function isSuccessful( $rc){
 }
 
 // Get the team terms array. Must be used by any script needing to display team terms
-function getTeamTerms(	$teamid, $dbh){
+function getTeamTerms(	$teamid, $dbconnection = null){
 
 	$teamterms = array();
 
@@ -777,8 +761,8 @@ function getTeamTerms(	$teamid, $dbh){
 	$termclass = defaultterm_class;
 	if ($teamid >= TeamID_Base) {
 		$strSQL = "SELECT * FROM teamterms WHERE teamid = ?;";
-		$dbconn = getConnection();
-		$termsResults = executeQuery(array($teamid));
+		if ($dbconnection == null) $dbconn = getConnection();
+		$termsResults = executeQuery($strSQL, $dbconn, $bError, array($teamid));
 		if (count($termsResults)>0) {
 			$teamTermResult = $termsResults[0];
 			$termadmin = $teamTermResult["termadmin"];
@@ -1094,10 +1078,10 @@ function cleanupPhone($phone = '', $format = false)
 
 // Remove the session. Typically only used on logout.
 function deleteSession($session){
-	$dbh = getDBH($session);
+
 	$strSQL = "DELETE FROM sessions WHERE userid = ? AND sessionkey = ?;";
 	$dbconn = getConnection();
-	$results = executeQuery(array($session["userid"], $session["sessionkey"]));
+	$results = executeQuery($strSQL, $dbconn, $bError, array($session["userid"], $session["sessionkey"]));
 	$session = array();
 }
 // returns true if session has expired, else false
@@ -1105,11 +1089,11 @@ function deleteSession($session){
 function isLockedOut( $dbh, $userid, $teamid){
 	$strSQL = "SELECT timelockoutexpires FROM users WHERE id = ? AND teamid = ?";
 	$dbconn = getConnection();
-	$timelockoutexpires = executeQueryFetchColumn(array($userid, $teamid));
+	$timelockoutexpires = executeQueryFetchColumn($strSQL, $dbconn, $bError, array($userid, $teamid));
 	if (empty($timelockoutexpires)) return false;
 	else {
 		$strSQL = "select ('".$timelockoutexpires."' > current_timestamp );";
-		$isLocked = executeQueryFetchColumn()
+		$isLocked = executeQueryFetchColumn($strSQL, $dbconn, $bError)
 		// If the result is positive, the session is expired
 		return $isLocked;
 	}

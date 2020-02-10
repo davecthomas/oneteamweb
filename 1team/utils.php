@@ -169,31 +169,25 @@ function datediff($interval, $datefrom, $dateto, $using_timestamps = false)
 }
 
 // Get the date the next payment is due
-function getNextPaymentDueDate2($userid, $payid, $expires, $dbh){
+function getNextPaymentDueDate2($userid, $payid, $expires, $dbconn = null){
 	$strSQL = "select age(((select paymentdate from orderitems where userid = ? and id = ?) + '" . $expires . "'::interval), current_date);";
 
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($userid, $payid, $expires));
-	return $pdostatement->fetchColumn();
+	if ($dbconn == null) $dbconn = getConnection();
+  return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $payid, $expires));
 }
 
 function dateDiffString($dbh, $date1 , $date2){
 	$strSQL = "select age(?, ?)";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($date2, $date1));
-	$diff = $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
 	if (strcmp($diff, "00:00:00") == 0) $diff = "0 days";
 	return $diff;
 }
 
 function dateDiffNumDays($dbh, $date1 , $date2){
 	$strSQL = "select ?::date - ?::date;";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($date2, $date1));
-	$diff = $pdostatement->fetchColumn();
+  $dbconn = getConnection();
+	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
 	return $diff;
 }
 
@@ -218,10 +212,8 @@ function dateDiffNumDays($dbh, $date1 , $date2){
  */
 function dateDiffNumMonths($dbh, $date1 , $date2){
 	$strSQL = "select count(*) from every_what( ?, ?::date, 1, 'months' );";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($date1, $date2));
-	return $pdostatement->fetchColumn();
+  $dbconn = getConnection();
+	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date1, $date2));
 }
 function getMembershipDuration( $dbh, $id) {
 	$strSQL = "select age(current_date, (select startdate from users where id = ?))";
@@ -260,34 +252,18 @@ function getCustomValue($rs, $datatype) {
 }
 
 // Get a team name given the id
-function getTeamName( $id, $dbconn ) {
-	if ((!isset($id)) || ($id == 0)) {
-		$teamname = TeamNameError;
-	} else {
-		$strSQL = "SELECT * FROM teams WHERE id = " . $id . ";";
-
-		$results = executeQuery($dbconn, $strSQL);
-		foreach($results as $row) {
-			$teamname = $row["name"];
-		} else {
-			$teamname = TeamNameError;
-		}
-	}
-	return $teamname;
-}
-
-// Get a team name given the id
-function getTeamName2( $id, $dbh ) {
+function getTeamName( $id, $dbconn = null) {
 	if ((!isset($id)) || ($id == 0)) {
 		$teamname = TeamNameError;
 	} else {
 		$strSQL = "SELECT * FROM teams WHERE id = ?;";
 
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($id));
+    $bError = false;
+    if ($dbconn == null) $dbconn = getConnection()
+  	$results = executeQuery($dbconn, $strSQL, $bError, array($id));
 		$teamname = TeamNameError;
-		foreach ($pdostatement as $row) {
-			$teamname = $row["name"];
+		if (count($results)>0) {
+			$teamname = $results[0]["name"];
 		}
 	}
 	return $teamname;
@@ -367,7 +343,7 @@ function getEmail( $id ){
 	} else {
 		$dbconn = getConnection();
 		$strSQL = "SELECT email FROM useraccountinfo WHERE userid = " . $id . ";";
-		$results = executeQuery($dbconn, $strSQL);
+		$results = executeQuery($dbconn, $strSQL, $bError);
 		foreach($results as $row) {
 			return $row["email"];
 		} else {
@@ -376,25 +352,7 @@ function getEmail( $id ){
 	}
 }
 
-// Get the user name
-function getUserName( $id ){
-	if (!isValidUserID($id)){
-		return "";
-	} else if ($id == User::UserID_Guest){
-		return User::Username_Guest;
-	} else {
-		$dbconn = getConnection();
-		$strSQL = "SELECT firstname, lastname FROM users WHERE id = " . $id . ";";
-    $results = executeQuery($dbconn, $strSQL);
-		foreach($results as $row) {
-			return $row["firstname"] . " " . $row["lastname"];
-		} else {
-			return "";
-		}
-	}
-}
-
-function getUserName2( $id, $dbh){
+function getUserName( $id, $dbconn = null){
 	if (!isValidUserID($id)){
 		return "";
 	} else if ($id == User::UserID_Guest){
@@ -402,8 +360,9 @@ function getUserName2( $id, $dbh){
 	} else {
     $username = UserNotFound;
     $strSQL = "SELECT firstname, lastname FROM users WHERE id = ?;";
+    if ($dbconn == null) $dbconn = getConnection();
     $dbconn = getConnection();
-    $results = executeQuery($dbconn, $strSQL, array($id));
+    $results = executeQuery($dbconn, $strSQL, $bError, array($id));
 		foreach ($results as $row) {
 			$username = $row["firstname"] . " " . $row["lastname"];
 		}
@@ -436,7 +395,7 @@ function subdueInactive( $accountStatus){
 // Figure out when the next payment is due
 function getLastTeamPaymentDate( $teamid, $isbillable, $dbh){
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	if (!$isbillable) {
@@ -448,7 +407,7 @@ function getLastTeamPaymentDate( $teamid, $isbillable, $dbh){
 	// Figure out if (their payment is late
 	$strSQL = "select max(paymentdate) from teampayments where teamid = ? ;";
   $dbconn = getConnection();
-  $results = executeQuery($dbconn, $strSQL, array($teamid));
+  $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
   foreach($results as $row) {
 		$lastPaymentDate = $row["max"];
 	}
@@ -463,7 +422,7 @@ function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbh){
 		return "never - not billable";
 	}
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	if (! is_numeric( $planduration)) {
@@ -472,7 +431,7 @@ function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbh){
 
 	$strSQL = "select ((select max(paymentdate) from teampayments where teamid = ?) + cast('" . $planduration . " months' as interval)) as duedate;";
   $dbconn = getConnection();
-  $dueDate =executeQueryFetchColumn($dbconn, $strSQL, array($teamid));
+  $dueDate =executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid));
 	if (strlen($dueDate) < 1) {
 		$dueDate = "in " . $planduration . " month";
 		if ($planduration != 1) $dueDate += "s";
@@ -482,33 +441,33 @@ function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbh){
 
 function getUserStatus( $userid, $dbh){
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	$strSQL = "SELECT status FROM useraccountinfo WHERE userid = ?";
 
   $dbconn = getConnection();
-  return executeQueryFetchColumn($dbconn, $strSQL, array($userid));
+  return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 }
 
 function getProgramName($programid, $dbh) {
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	$strSQL = "SELECT name FROM programs WHERE id = ?";
   $dbconn = getConnection();
-  return executeQueryFetchColumn($dbconn, $strSQL, array($programid));
+  return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($programid));
 }
 
 function getCustomListName($customlistid, $dbh) {
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	$strSQL = "SELECT name FROM customlists WHERE id = ?";
   $dbconn = getConnection();
-  return executeQueryFetchColumn($dbconn, $strSQL, array($customlistid));
+  return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($customlistid));
 }
 
 function normalizeGender( $gender){
@@ -523,7 +482,7 @@ function isTeamUsingPrograms($session, $teamid, $dbh) {
 	if (isset($session["isteamusingprograms"])) return $session["isteamusingprograms"];
 
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 	// Ignore teamid except for App Admin
 	if (!isUser($session, Role_ApplicationAdmin)){
@@ -535,7 +494,7 @@ function isTeamUsingPrograms($session, $teamid, $dbh) {
 	$strSQL = "SELECT id FROM programs WHERE teamid = ?";
 
   $dbconn = getConnection();
-  $results = executeQuery($dbconn, $strSQL, array($teamid));
+  $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	if (count($results) > 0) $session["isteamusingprograms"] = true;
 	else $session["isteamusingprograms"] = false;
 
@@ -546,7 +505,7 @@ function isTeamUsingLevels($session, $teamid) {
 	// We cache this in the session
 	if (isset($session["isteamusinglevels"])) return $session["isteamusinglevels"];
 
-	$dbh = getDBH($session);
+
 
 	// Ignore teamid except for App Admin
 	if (!isUser($session, Role_ApplicationAdmin)){
@@ -558,7 +517,7 @@ function isTeamUsingLevels($session, $teamid) {
 	$strSQL = "SELECT id FROM levels WHERE teamid = ?";
 
   $dbconn = getConnection();
-  $results = executeQuery($dbconn, $strSQL, array($teamid));
+  $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	if (count($results) > 0) $session["isteamusinglevels"] = true;
 	else $session["isteamusinglevels"] = false;
 
@@ -570,14 +529,14 @@ function getMemberCount( $session, $teamid, $dbh) {
 	if (isset($session["membercount"])) return $session["membercount"];
 
 	if (!isset($dbh)){
-		$dbh = getDBH($session);
+
 	}
 
 	// Count the number of teams. Only used in one place, but handy to have around
 	$strSQL = "SELECT COUNT(*) AS ROW_COUNT FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = ? AND users.teamid = ?";
 
   $dbconn = getConnection();
-  $session["membercount"] =executeQueryFetchColumn($dbconn, $strSQL, array(UserAccountStatus_Active, $teamid));
+  $session["membercount"] =executeQueryFetchColumn($dbconn, $strSQL, $bError, array(UserAccountStatus_Active, $teamid));
 
 	return $session["membercount"];
 }
@@ -588,7 +547,7 @@ function getUserProgram( $session, $userid, $dbh) {
 	$strSQL = "select programid from users where id = ?";
 
   $dbconn = getConnection();
-  return executeQueryFetchColumn($dbconn, $strSQL, array($userid));
+  return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 }
 
 // Convert SQL results to interval constant
@@ -619,14 +578,14 @@ function getMoneyTotalClass($amount){
 // Returns a userid or User::UserID_Undefined on failure
 function 	createUser($session, $teamid, $roleid, $startdate, $firstname, $lastname, $login, $email, $address1, $address2, $city, $state, $postalcode,
 $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $isbillable, $status, $bgenpass, $bIntro, &$err ){
-	$dbh = getDBH($session);
+
 	$bError = false;
 	$userid= User::UserID_Undefined;
 
 	// Make sure this is a unique login on this team
 	$strSQL = "SELECT id FROM users WHERE login=? AND teamid = ?;";
   $dbconn = getConnection();
-  $results = executeQuery($dbconn, $strSQL, array($login, $teamid));
+  $results = executeQuery($dbconn, $strSQL, $bError, array($login, $teamid));
 	if ( count($results) > 0) {
 		$bError = true;
 		$err = "Login unavailable.";
@@ -669,10 +628,10 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 		// Non members have a bunch of null fields
 		if (!doesRoleContain($roleid, Role_Member)) {
 			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
-      $results = executeQuery($dbconn, $strSQL, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
+      $results = executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
 		} else {
 			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
-			$results = executeQuery($dbconn, $strSQL, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $teamid, $roleid, $address2, $smsphonecarrier));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $teamid, $roleid, $address2, $smsphonecarrier));
 		}
 
 		if ($bError) {
@@ -680,7 +639,7 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 		} else {
 			// Get the new userid
 			$strSQL = "SELECT id FROM users WHERE login = ? AND teamid = ?;";
-			$userResults = executeQuery($dbconn, $strSQL, array($login, $teamid));
+			$userResults = executeQuery($dbconn, $strSQL, $bError, array($login, $teamid));
 			// user not created
 			if ( count($userResults) < 1) {
 				$bError = true;
@@ -692,29 +651,29 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 				// Set the dates separately, since SQL is picky about values for dates, can't just throw in an empty string or 0 for NULL
 				if (isValidDate($startdate)){
 				  $strSQL = "UPDATE users SET startdate = ? WHERE teamid = ? and id = ?";
-					$results = executeQuery($dbconn, $strSQL, array($startdate, $teamid, $userid));
+					$results = executeQuery($dbconn, $strSQL, $bError, array($startdate, $teamid, $userid));
 				}
 				// Set the dates separately, since SQL is picky about values for dates, can't just throw in an empty string or 0 for NULL
 				if (isValidDate($birthdate)){
 				  $strSQL = "UPDATE users SET birthdate = ? WHERE teamid = ? and id = ?";
-					$results = executeQuery($dbconn, $strSQL, array($birthdate, $teamid, $userid));
+					$results = executeQuery($dbconn, $strSQL, $bError, array($birthdate, $teamid, $userid));
 				}    // Yes, I'm ignoring errors for setting dates, since I don't think they are crucial and can be set later
 
 				// Create account info. Every user has one, even if they are non-billable
 				if ($roleid == Role_Member) {
 					if ($isbillable) $strSQL = "INSERT INTO useraccountinfo VALUES (DEFAULT, ?, ?, ?, ?, TRUE);";
 					else $strSQL = "INSERT INTO useraccountinfo VALUES (DEFAULT, ?, ?, ?, ?, FALSE);";
-					$results = executeQuery($dbconn, $strSQL, array($email, $status, $userid, $teamid));
+					$results = executeQuery($dbconn, $strSQL, $bError, array($email, $status, $userid, $teamid));
 				} else {
 					$strSQL = "INSERT INTO useraccountinfo VALUES (DEFAULT, ?, ?, ?, ?, FALSE);";
-					$results = executeQuery($dbconn, $strSQL, array($email, UserAccountStatus_Active, $userid, $teamid));
+					$results = executeQuery($dbconn, $strSQL, $bError, array($email, UserAccountStatus_Active, $userid, $teamid));
 				}
 				if ($bError) {
 					$err = "User account info.";
 				} else {
 					// Get the new useraccountinfo id
 					$strSQL = "SELECT id FROM useraccountinfo WHERE userid = ? AND teamid = ?;";
-					$useracctResults = executeQuery($dbconn, $strSQL, array($userid, $teamid));
+					$useracctResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 					if (count($useracctResults) == 0) {
 						$bError = true;
@@ -745,16 +704,16 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 
 function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 	// Get the current user record
-	$dbh = getDBH($session);
+
 	$strSQL = "SELECT * FROM users WHERE id = ? and teamid=?;";
   $dbconn = getConnection();
-  $userprops = executeQuery($dbconn, $strSQL, array($teamid));
+  $userprops = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	if (count($userprops) == 1) {
 		// If intro is set, add into text from team settings to the email you send the user.
 		if ($bIntro){
 			$strSQL = "SELECT introtext, name FROM teams WHERE id = ?;";
-			$teamResults = executeQuery($dbconn, $strSQL, array($teamid));
+			$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 		 	$emailsubject = "Welcome to " . $teamResults[0]["name"] . ", " . $userprops[0]["firstname"] . "!";
 
@@ -792,7 +751,7 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 		// Store the new passwd and the salt
 		$strSQL = "update users set passwd = '" . $passwd . "', salt = '" . $salt . "' where id = " .$userid . ";";
 		$mailok = 0;
-    $results = executeQuery($dbconn, $strSQL);
+    $results = executeQuery($dbconn, $strSQL, $bError);
 		// Email the password to the user
 		$mailok = 0;
 		if ($bEmail) {
@@ -816,10 +775,10 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 
 // get team and accountinfo
 function getTeam($session, $teamid, &$teamResults){
-	$dbh = getDBH($session);
+
 	$strSQL = "SELECT teams.id as id_team, teams.*, teamaccountinfo.* FROM teams, teamaccountinfo WHERE teamaccountinfo.teamid = teams.id AND teams.id = ?;";
   $dbconn = getConnection();
-  $teamResults = executeQuery($dbconn, $strSQL, array($teamid));
+  $teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
   return RC_Success;
 }
 
@@ -852,15 +811,15 @@ function getUserBarcodeNumber($teamid, $id){
 }
 
 function promoteUser($session, $teamid, $userid, $levelID, $promotionDate){
-	$dbh = getDBH($session);
+
 	$strSQL = "SELECT * FROM users WHERE id = ?";
   $dbconn = getConnection();
-  $userprops = executeQuery($dbconn, $strSQL, array($userid ));
+  $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid ));
 
 	if (isset($userprops["id"])) {
 		// Add a record to the promotions table with the member id and date.
 		$strSQL = "INSERT INTO promotions VALUES ( DEFAULT, ?,?,?, ?);";
-		$results = executeQuery($dbconn, $strSQL, array($userid, $promotionDate, $levelID, $teamid));
+		$results = executeQuery($dbconn, $strSQL, $bError, array($userid, $promotionDate, $levelID, $teamid));
 		return RC_Success;
 
 	// Error
@@ -872,10 +831,10 @@ function promoteUser($session, $teamid, $userid, $levelID, $promotionDate){
 // Return the Level ID given the name (case insensitive)
 function getLevelFromName($session, $teamid, $levelname){
 	if (strlen($levelname) > 0){
-		$dbh = getDBH($session);
+
 		$strSQL = "SELECT id FROM levels WHERE name ILIKE '%'||?||'%' and teamid = ?";
     $dbconn = getConnection();
-    return executeQueryFetchColumn($dbconn, $strSQL, array($levelname, $teamid ));
+    return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($levelname, $teamid ));
 	} else return LevelID_Undefined;
 }
 
@@ -903,7 +862,7 @@ function getSmsPhone($dbh, $userid, $teamid, &$smsphonecarrieremail, &$err){
 	$smsphone = "";
 	$strSQL = "SELECT smsphone, smsphonecarrier FROM users WHERE id = ? and teamid = ?;";
   $dbconn = getConnection();
-  $userprops = executeQuery($dbconn, $strSQL, array($userid, $teamid));
+  $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 	$smsphonecarrieremail ="";
 	if (isset($userprops["smsphone"])){
 		$smsphone = cleanupPhone($userprops["smsphone"]);
@@ -919,7 +878,7 @@ function getSmsPhone($dbh, $userid, $teamid, &$smsphonecarrieremail, &$err){
 
 // Generate an "email" SMS to the current session user's smsphone
 function generate2fauthn( $session, &$err){
-	$dbh = getDBH($session);
+
 	$bError = false;
 	$err = "";
 	$carrier_email = "";
@@ -931,7 +890,7 @@ function generate2fauthn( $session, &$err){
 		// Save the auth code in the session
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
     $dbconn = getConnection();
-    $results = executeQuery($dbconn, $strSQL, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
+    $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
 		if (!mail("$smsphone@$carrier_email", "", "$message" , "From: " . emailadmin)) {
 			$bError = true;
 			$err = RC_EmailFailure;

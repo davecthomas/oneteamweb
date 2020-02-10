@@ -10,7 +10,7 @@ dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
 </script> 
 <?php
-$dbh = getDBH($session);  
+  
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $teamid = NotFound;
@@ -26,7 +26,7 @@ if (isUser($session, Role_TeamAdmin)){
 }
 
 ?>
-<h4>SKUs for <?php echo getTeamName2($teamid, $dbh);?></h4>
+<h4>SKUs for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are SKUs?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">
@@ -96,7 +96,7 @@ To reorder the SKU list, click and drag them, then press the "Reorder SKUs" butt
 <?php
 	} ?>
 <table width="65%">
-<tr class="odd"><td colspan="4"><span class="bigstrong">Add new SKU for <?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?>s</span></td></tr>
+<tr class="odd"><td colspan="4"><span class="bigstrong">Add new SKU for <?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms["termmember"]?>s</span></td></tr>
 <tr class="even">
 <td width="50%">
 <form name="newsku" action="/1team/new-sku.php" method="post">

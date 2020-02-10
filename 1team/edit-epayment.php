@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,11 +14,11 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_REQUEST["teamid"])){
 		$teamid = $_REQUEST["teamid"];
@@ -37,40 +37,37 @@ if (isset($_REQUEST["id"])) {
 
 // uid is the user that submitted the epayment. It may not be known yet, so it is not required
 if (isset($_REQUEST["uid"])) {
-	$uid = $_REQUEST["uid"]; 
+	$uid = $_REQUEST["uid"];
 } else {
 	$uid = User::UserID_Undefined;
 }
 
-$dbh = getDBH($session);  
+
 
 // Verify this epayment exists
 if (!$bError) {
 	$strSQL = "SELECT * from epayments WHERE id = ? AND teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	if (!$pdostatement->execute(array($epaymentid, $teamid))){
-		$bError = true;
+	$dbconn = getConnection();
+	$resultsEpayments = executeQuery($dbconn, $strSQL, $bError, array($epaymentid, $teamid));
+	if ($bError){
 		$err = "epn";
 	} else {
-		$resultsEpayments = $pdostatement->fetchAll();
 		if (count($resultsEpayments) == 1){
-			$item = $resultsEpayments[0]["item"]; 	 
+			$item = $resultsEpayments[0]["item"];
 		} else {
 			$bError = true;
 			$err = "pnf";
 		}
-	}	
+	}
 }
 // SKU is not required
 if ((isset($_REQUEST["skuid"])) && (!$bError)) {
-	$skuid = (int)$_REQUEST["skuid"]; 
+	$skuid = (int)$_REQUEST["skuid"];
 	$strSQL = "select name, description from skus where id = ? and teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	if (!$pdostatement->execute(array($skuid, $teamid))){
-		$bError = true;
+	$skuResults = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid));
+	if ($bError){
 		$err = $skuid;
 	} else {
-		$skuResults =$pdostatement->fetchAll();
 		$countSkus = count($skuResults);
 		if ($countSkus == 1) {
 			$skuname = $skuResults[0]["name"];
@@ -81,7 +78,7 @@ if ((isset($_REQUEST["skuid"])) && (!$bError)) {
 			$skuname = "";
 		}
 	}
-	
+
 } else {
 	$skuid = Sku::SkuID_Undefined;
 	$skuname = "";
@@ -89,8 +86,7 @@ if ((isset($_REQUEST["skuid"])) && (!$bError)) {
 
 if (!$bError) {
 	$strSQL = "UPDATE epayments SET skuname = ?, userid = ?, item = ? WHERE id = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($skuname, $uid, $item, $epaymentid, $teamid));
+	executeQuery($dbconn, $strSQL, $bError, array($skuname, $uid, $item, $epaymentid, $teamid));
 	$err = "s";
 }
 if (!$bError){

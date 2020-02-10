@@ -1,19 +1,19 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Modify Custom List Item"; 
+$title = "Modify Custom List Item";
 include('header.php');
 $bError = false;
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 </script>
 <?php
-$dbh = getDBH($session); 
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 $teamid = NotFound;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	$teamid = getTeamID($session);
 } else {
@@ -37,13 +37,11 @@ if (isset($_GET["customlistid"])) {
 }
 
 $strSQL = "SELECT * FROM customlistdata, customlists WHERE customlistdata.customlistid = customlists.id AND customlistdata.id = ? AND customlistdata.teamid = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($customlistitemid, $teamid));
-
-$customlistitemResults = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$customlistitemResults = executeQuery($dbconn, $strSQL, $bError, array($customlistitemid, $teamid));
 
 if (count($customlistitemResults) > 0) { ?>
-<h4><?php echo $customlistitemResults [0]["name"]?> : <?php echo $customlistitemResults [0]["listitemname"]?></h4>	
+<h4><?php echo $customlistitemResults [0]["name"]?> : <?php echo $customlistitemResults [0]["listitemname"]?></h4>
 <div class="indented-group-noborder">
 <form action="/1team/edit-custom-list-item.php" method="post">
 <input type="hidden" name="id" value="<?php echo $customlistitemid ?>"/>
@@ -58,8 +56,8 @@ if (count($customlistitemResults) > 0) { ?>
 <input type="submit" value="Modify list item" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'edit-custom-list-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $customlistid?>'"/>
 </form>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

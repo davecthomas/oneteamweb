@@ -36,7 +36,7 @@ if (isset($_POST["levelorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	for ($i = 0; $i < count($levelorder); $i++){	
 		$strSQL = "UPDATE levels SET listorder = ? WHERE id = ? AND teamid = ?;";

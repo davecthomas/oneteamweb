@@ -39,8 +39,8 @@ if (isUser($session, Role_TeamAdmin)){
 
 
 if (!$bError) {
-	$dbh = getDBH($session);
-	$teamname = getTeamName2($teamid, $dbh);
+	
+	$teamname = getTeamName($teamid, $dbconn);
 
 	// GEt skus
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
@@ -95,13 +95,13 @@ function checkEnableSubmit(submitButton){
 	// Conditionally include user name in title
 	if ( $userid >= UserID_Base ) {
 		$bDisplayUserSelector = false;
-		$username = getUserName($userid); ?>
+		$username = getUserName( $userid, $dbconn); ?>
 <h3><?php echo $title?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a></h3>
 		<?php
 	} else {
 		$bDisplayUserSelector = true;
 		$username = "";?>
-<h3><?php echo $title?>&nbsp;for a&nbsp;<?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
+<h3><?php echo $title?>&nbsp;for a&nbsp;<?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
 		<?php
 	}
 
@@ -128,7 +128,7 @@ function checkEnableSubmit(submitButton){
 
 		// If no members, tell them so and don't display the form
 		if ($numRows == 0) {
-			echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName2($teamid, $dbh) . "<br>\n";
+			echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName($teamid, $dbconn) . "<br>\n";
 			echo '<a href="/1team/new-user-form.php?' . returnRequiredParams($session) . '">Create a team member</a></p>';
 			echo "\n";
 			$bOkForm = false;

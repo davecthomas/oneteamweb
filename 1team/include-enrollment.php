@@ -1,4 +1,4 @@
-<?php 
+<?php
 // The title is set here and rendered in header.php
 $title= " Team Properties " ;
 include('header.php');
@@ -13,8 +13,8 @@ if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) 
 if ((isUser( $session, Role_ApplicationAdmin)) && (isset($_GET["teamid"]))) {
 	$teamid = $_GET["teamid"];
 }
-$dbh = getDBH($session);  
-$teamname = getTeamName2( $teamid, $dbh);
+
+$teamname = getTeamName( $teamid);
 
 $title.= " : " . $teamname;
 // Check inputs
@@ -24,7 +24,7 @@ $teamid = getCleanInput($_GET["teamid"]);
 ?>
 <h3><?php echo $teamname?> Enrollment Trend</h3>
 
-<?php 
+<?php
 // Get start Date for team
 if (isset($_GET["startdate"])) {
 	$startdatetime = new DateTime($_GET["startdate"]);
@@ -47,7 +47,7 @@ $numMonths = datediff("m", $startdatetime->format("m/d/Y"), date("m/d/Y"));
 // This type of cursor is required since I'm counting rows with the recordset.rowcount property
 // Display previous and next links at the top of the table ?>
 <p>Enrollment starting <?php echo $startdatetime->format("M d, Y")?> and running for <?php echo $numMonths?> months.</p>
-<?php 
+<?php
 $nextmonth = new DateTime($startdatetime->format("d-m-Y"));
 
 // Only looking for a count with this query
@@ -103,7 +103,7 @@ $datastring = $datastring . "</chart>";
 <strong>You need to upgrade your Flash Player</strong>
 </div>
 <script type="text/javascript">
-// <![CDATA[		
+// <![CDATA[
 var flashvars = {
   path: "amline/",
   settings_file: escape("amline/amline_settings.xml"),

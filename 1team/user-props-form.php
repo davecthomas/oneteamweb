@@ -50,7 +50,7 @@ if (isThisMe($session, $userid)) {
 	$thisIsMe = false;
 }
 
-$dbh = getDBH($session);
+
 
 // Only display prev/next for app admin, since this data spans teams
 if (isUser( $session, Role_ApplicationAdmin) ) { ?>

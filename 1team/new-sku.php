@@ -42,7 +42,7 @@ if (isset($_POST["price"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	// Leave listorder and description NULL for now
 	$strSQL = "INSERT INTO skus VALUES (DEFAULT, ?, ?, NULL, ?, ?, NULL);";

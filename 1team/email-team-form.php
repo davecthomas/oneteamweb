@@ -13,13 +13,13 @@ if (isset($_REQUEST["sms"])){
 }
 
 include('header.php');
-$dbh = getDBH($session);  
+
 
 $rowCount = 0;
 // Set up teamid from session or input
 $bError = FALSE;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -276,9 +276,8 @@ function getSelectList( srcList){
 	}
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? ORDER BY firstname;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	$results = $pdostatement->fetchAll();?>
+	$dbconn = getConnection();
+	$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));?>
 <div class="hideit" id="rosterdiv">
 <h4>Select From List</h4>
 <p>Send <?php echo $textemail?> to the selected <?php echo $teamterms["termmember"]?>s.</p>
@@ -345,11 +344,7 @@ function getSelectList( srcList){
 <td class="strong">Program</td>
 <td><?php
 		$strSQL = "SELECT * FROM programs WHERE teamid = ? ORDER BY name;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-
-		$programsResults = $pdostatement->fetchAll();
-
+		$programsResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCount = 0;
 		$loopMax = count($programsResults);
 		if ($loopMax > 0){ ?>

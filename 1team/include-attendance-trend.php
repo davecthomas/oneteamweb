@@ -55,7 +55,7 @@ if ( $whomode == "team") {
 	redirectToLoginIfNotAdmin( $session); 
 }
 
-$dbh = getDBH($session);  
+  
 
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
@@ -63,7 +63,7 @@ if ($whomode == "user") {
 	$objname = getUserName2($userid, $dbh);
 } else {
 	$objid = $teamid;
-	$objname = getTeamName2($teamid, $dbh);
+	$objname = getTeamName($teamid, $dbconn);
 }
 $urlencodedName = urlencode($objname);
 

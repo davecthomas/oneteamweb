@@ -36,9 +36,9 @@ if (isset($_GET["id"])){
 	// This setting will force select list to be uninitialized
 	$userid = 0;
 } 
-$dbh = getDBH($session);  
+  
 ?>
-<h3><?php echo $title?> <?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms ["termmember"]?></h3>
+<h3><?php echo $title?> <?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms ["termmember"]?></h3>
 <?php 
 if (isset($_GET["badpromo"])){
 	showError("Error Promoting", "There was an error promoting the " . $teamterms["termmember"], "");

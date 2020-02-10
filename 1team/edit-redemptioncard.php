@@ -31,7 +31,7 @@ if (! isValidSession($session )){
 // Only admins can execute this script
 redirectToLoginIfNotAdminOrCoach( $session);
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -76,14 +76,13 @@ if ( isset($_REQUEST["type"])){
 	$err = "t";
 }
 
-$dbh = getDBH($session);
+
 
 if ( isset($_REQUEST["skuid"])){
 	$skuid = $_REQUEST["skuid"];
 	$strSQL = "SELECT name FROM skus WHERE id = ? AND teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($skuid, $teamid));
-	$skuname = $pdostatement->fetchColumn();
+	$dbconn = getConnection();
+	$skuname = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($skuid, $teamid));
 
 } else {
 	$bError = true;
@@ -171,10 +170,7 @@ switch ($redemptioncardgroup){
 				array_push($redemptioncards, (int)$redemptioncardsStrArray[$i]);
 			}
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ".$teamid." AND userid IN (".$strSQLInjectionProtection.")";
-			$pdostatement = $dbh->prepare($strSQL);
-
-			$pdostatement->execute($redemptioncards);
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, $redemptioncards);
 			$rowCount = 0;
 			$numredemptioncards = count($results);
 			$redemptioncards = array();
@@ -192,9 +188,7 @@ switch ($redemptioncardgroup){
 
 	case RedemptionCard::RecipientGroupAllActiveMembers:
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-		$results = $pdostatement->fetchAll();
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -206,9 +200,7 @@ switch ($redemptioncardgroup){
 
 	case RedemptionCard::RecipientGroupNewMembers:
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email from users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? and (startdate > (current_date - '1 mon'::interval));";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-		$results = $pdostatement->fetchAll();
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -226,9 +218,7 @@ switch ($redemptioncardgroup){
 			$err = "np";
 		}
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email from users, useraccountinfo where users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " EXCEPT (SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM useraccountinfo, (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) WHERE orderitems.programid = ? AND orderitems.teamid = ? AND useraccountinfo.id = users.useraccountinfo AND (paymentdate + expires >= current_date));";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid, $programid_nonparticipant, $teamid));
-		$results = $pdostatement->fetchAll();
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $programid_nonparticipant, $teamid));
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -247,9 +237,7 @@ switch ($redemptioncardgroup){
 		}
 
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.numeventsremaining <> 0 AND orderitems.programid = ? AND orderitems.teamid = ? AND (paymentdate + expires >= current_date) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($programid_participant, $teamid));
-		$results = $pdostatement->fetchAll();
+		$results = executeQuery($dbconn, $strSQL, $bError, array($programid_participant, $teamid));
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -270,16 +258,13 @@ switch ($redemptioncardgroup){
 		// note, the form won't allow the "Any program" variation (but should).
 		if ((isset($programid_participant)) && ($programid_participant != Program_Undefined)){
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.programid = ? AND orderitems.teamid = ? and (((paymentdate + expires > (current_date - '1 mon'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($programid_participant , $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($programid_participant , $teamid));
 
 		// Or to list all orderitems, regardless of program
 		} else {
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.teamid = ? and (((paymentdate + expires > (current_date - '1 mon'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		}
-		$results = $pdostatement->fetchAll();
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -291,9 +276,7 @@ switch ($redemptioncardgroup){
 
 	case RedemptionCard::RecipientGroupPastMembers:			// Inactive members
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, useraccountinfo.status FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Inactive . " AND users.teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-		$results = $pdostatement->fetchAll();
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCount = 0;
 		$numredemptioncards = count($results);
 		$redemptioncards = array();
@@ -315,7 +298,7 @@ $returnErrString = "";
 if (!$bError) {
 	$returnString = "";
 	// Get team terms gracefully handles the case where app admin has no team
-	$teamterms = getTeamTerms(getTeamID($session), getDBH($session));
+	$teamterms = getTeamTerms(getTeamID($session), $dbconn);
 	$rolename = roleToStr($session["roleid"], $teamterms);
 	$teaminfo = getTeamInfo( $teamid);
 	if ((isset($session)) && (isset($session["teamimageurl"]))) {
@@ -366,15 +349,12 @@ if (!$bError) {
 		$redemptioncardarray = $redemptioncards[$loopCount-1];
 		if ($mode == NewCard){
 			$strSQL = "INSERT INTO redemptioncards VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
-			$pdostatement = $dbh->prepare($strSQL);
 			$redemptioncardvalues = array($teamid, $redemptioncardarray[redemptioncard_userid], $skuid, date('m-d-Y'), $amountpaid, $numevents, $expires, $paymentmethod, $description, $type, $facevalue);
-			$pdostatement->execute($redemptioncardvalues);
-			$id = $pdostatement->fetchColumn();
+			$id = executeQueryFetchColumn($dbconn, $strSQL, $bError, $redemptioncardvalues);
 		} else {
 			$strSQL = "UPDATE redemptioncards SET teamid=?, userid=?, skuid=?, createdate=?, amountpaid=?, numeventsremaining=?, expires=?, paymentmethod=?, description=?, type=?, facevalue=? WHERE id = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
 			$redemptioncardvalues = array($teamid, $redemptioncardarray[redemptioncard_userid], $skuid, date('m-d-Y'), $amountpaid, $numevents, $expires, $paymentmethod, $description, $type, $facevalue, $id);
-			$pdostatement->execute($redemptioncardvalues);
+			executeQuery($dbconn, $strSQL, $bError, $redemptioncardvalues);
 		}
 		$cardforname = $redemptioncardarray[redemptioncard_firstname] . " ". $redemptioncardarray[redemptioncard_lastname];
 		// Print out the card ?>
@@ -396,9 +376,8 @@ if (!$bError) {
 		$barcode = substr(hash('sha1', $rawcode), 0, barcodeLength);
 		// Uppdate the record with the barcode
 		$strSQL = "UPDATE redemptioncards SET code=? WHERE id = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
 		$redemptioncardvalues = array($barcode, $id);
-		$pdostatement->execute($redemptioncardvalues);?>
+		executeQuery($dbconn, $strSQL, $bError, $redemptioncardvalues);?>
 <img class="idcard_redemptioncardbarcode" src="./php-barcode/barcode.php?code=<?php echo $barcode?>&encoding=39" alt="barcode"></div>
 <?php echo '<span class="small">' . $description. '. Expires ' . $expires . '</span>'?><br>
 </td>

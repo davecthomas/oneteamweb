@@ -5,8 +5,8 @@
 	}
 	redirectToLoginIfNotAdminOrCoach( $session);
 
-	$dbh = getDBH($session);
-	$teamname = getTeamName2($teamid, $dbh);
+	
+	$teamname = getTeamName($teamid, $dbconn);
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname,
 		orderitems.id as orderitemid, orderitems.*,
 		orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.*
@@ -36,7 +36,7 @@
 		}
 		if ( $userid >= UserID_Base ) {
 			$bDisplayUserSelector = false;
-			$username = getUserName($userid); ?>
+			$username = getUserName( $userid, $dbconn); ?>
 <h3><?php if ($ispaid) echo "Receipt for payment from "; 
 		else echo "Invoice for payment due from ";
 		if ($email) echo '<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a>';

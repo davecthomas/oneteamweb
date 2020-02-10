@@ -22,7 +22,7 @@ if (isUser($session, Role_TeamAdmin)){
 	}
 }
 
-$dbh = getDBH($session);   ?>
+   ?>
 <h3><?php echo $title?></h3>
 <p>All prices are listed per month. 1 year commitment is required, so a team that costs $1 per month, must pay $12 for 12 months up front.</p>
 <p>You must subscribe to an automated payment plan with PayPal. This

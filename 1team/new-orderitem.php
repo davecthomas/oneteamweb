@@ -81,7 +81,7 @@ if (isset($_POST["isrefunded"])) {
 	$isrefunded = false;
 }
 
-$dbh = getDBH($session);  
+  
 
 // get the programid and numclassesfrom the sku
 $strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";

@@ -18,7 +18,7 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	$bError = true;
 }
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	if ( isset($_POST["teamname"])) {
 		$teamname = $_POST["teamname"];

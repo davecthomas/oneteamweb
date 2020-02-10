@@ -26,7 +26,7 @@ if ( isUser($session, Role_TeamAdmin)) {
 <?php
 if (isValidUserID( $userid)) {
 ?>
-<h3><?php echo $title . " for " . getUserName($userid)?></h3>
+<h3><?php echo $title . " for " . getUserName( $userid, $dbconn)?></h3>
 <?php
 } else { ?>
 <h3><?php echo $title?></h3>
@@ -51,7 +51,7 @@ if (isValidUserID( $userid)) {
 <td><select name="id">
 <?php
 		$dbconn = getConnection();
-		$results = executeQuery($dbconn, $strSQL);
+		$results = executeQuery($dbconn, $strSQL, $bError);
 		echo("<option value=\"0\" selected>Select member...</option>");
 		foreach($results as $row) {
 			$id = $row["id"];

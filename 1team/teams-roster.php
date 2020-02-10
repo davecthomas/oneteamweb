@@ -10,7 +10,7 @@ if (!isUser( $session, Role_ApplicationAdmin)){
 
 if (!$bError){ 
 	
-	$dbh = getDBH($session);  
+	  
 	// set up sort order
 	$sortRequest = "name";
 	if (isset($_GET["sort"])) {

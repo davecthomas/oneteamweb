@@ -39,7 +39,7 @@ if (isset($_REQUEST["accepted"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	// First, make sure the team is actually currently TeamAccountStatus_PendingLicense. Otherwise, this could create a status reset back door for overdue customers!
 	$strSQL = "SELECT COUNT(*) FROM teamaccountinfo WHERE status = ? AND id = ?";

@@ -81,7 +81,7 @@ if (!$sms){
 	}
 }
 
-$dbh = getDBH($session);
+
 
 // Array indices for the recipient element in the recipients array
 define("recipient_userid", 0);
@@ -90,7 +90,7 @@ define("recipient_lastname", 2);
 define("recipient_email", 3);
 define("recipient_smsphone", 4);
 define("recipient_smsphonecarrier", 5);
-
+$dbconn = getConnection();
 if (isset($_REQUEST["recipientgroup"])){
 
 	$recipientgroup = $_REQUEST["recipientgroup"];
@@ -112,10 +112,7 @@ if (isset($_REQUEST["recipientgroup"])){
 					array_push($recipients, (int)$recipientsStrArray[$i]);
 				}
 				$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ".$teamid." AND userid IN (".$strSQLInjectionProtection.")";
-				$pdostatement = $dbh->prepare($strSQL);
-
-				$pdostatement->execute($recipients);
-				$results = $pdostatement->fetchAll();
+				$results = executeQuery($dbconn, $strSQL, $bError, $recipients);
 				$rowCount = 0;
 				$numrecipients = count($results);
 				$recipients = array();
@@ -133,9 +130,7 @@ if (isset($_REQUEST["recipientgroup"])){
 
 		case emailRecipientGroupAllActiveMembers:
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -147,9 +142,7 @@ if (isset($_REQUEST["recipientgroup"])){
 
 		case emailRecipientGroupNewMembers:
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email from users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? and (startdate > (current_date - '1 mon'::interval));";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -167,9 +160,7 @@ if (isset($_REQUEST["recipientgroup"])){
 				$err = "np";
 			}
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email from users, useraccountinfo where users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " EXCEPT (SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM useraccountinfo, (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) WHERE orderitems.programid = ? AND orderitems.teamid = ? AND useraccountinfo.id = users.useraccountinfo AND (paymentdate + expires >= current_date));";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid, $programid_nonparticipant, $teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $programid_nonparticipant, $teamid));
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -188,9 +179,7 @@ if (isset($_REQUEST["recipientgroup"])){
 			}
 
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.numeventsremaining <> 0 AND orderitems.programid = ? AND orderitems.teamid = ? AND (paymentdate + expires >= current_date) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($programid_participant, $teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($programid_participant, $teamid));
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -211,16 +200,13 @@ if (isset($_REQUEST["recipientgroup"])){
 			// note, the form won't allow the "Any program" variation (but should).
 			if ((isset($programid_participant)) && ($programid_participant != Program_Undefined)){
 				$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.programid = ? AND orderitems.teamid = ? and (((paymentdate + expires > (current_date - '1 mon'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-				$pdostatement = $dbh->prepare($strSQL);
-				$pdostatement->execute(array($programid_participant , $teamid));
+				$results = executeQuery($dbconn, $strSQL, $bError, array($programid_participant , $teamid));
 
 			// Or to list all orderitems, regardless of program
 			} else {
 				$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM useraccountinfo, (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.teamid = ? and (((paymentdate + expires > (current_date - '1 mon'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) AND useraccountinfo.id = users.useraccountinfo AND useraccountinfo.status = " . UserAccountStatus_Active . ";";
-				$pdostatement = $dbh->prepare($strSQL);
-				$pdostatement->execute(array($teamid));
+				$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			}
-			$results = $pdostatement->fetchAll();
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -232,9 +218,7 @@ if (isset($_REQUEST["recipientgroup"])){
 
 		case emailRecipientGroupPastMembers:			// Inactive members
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email, useraccountinfo.status FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Inactive . " AND users.teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCount = 0;
 			$numrecipients = count($results);
 			$recipients = array();
@@ -259,9 +243,9 @@ if (isset($_REQUEST["recipientgroup"])){
 $returnErrString = "";
 if (!$bError) {
 	$returnString = "";
-	$fromemail = getUserEmail($session, $dbh);
+	$fromemail = getUserEmail($session, $dbconn);
 	// Get team terms gracefully handles the case where app admin has no team
-	$teamterms = getTeamTerms(getTeamID($session), getDBH($session));
+	$teamterms = getTeamTerms(getTeamID($session), $dbconn);
 	$rolename = roleToStr($session["roleid"], $teamterms);
 	$teaminfo = getTeamInfo( $teamid);
 	if ((isset($session)) && (isset($session["teamimageurl"]))) {

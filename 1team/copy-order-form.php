@@ -40,7 +40,7 @@ $dbconn = getConnection();
 
 if (!$bError){
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
-	$orderResults = executeQuery($dbconn, $strSQL, array($userid, $orderid, $teamid));
+	$orderResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $orderid, $teamid));
 	$countOrders = 0;
 	$numOrders = count($orderResults);
 
@@ -48,13 +48,13 @@ if ($numOrders > 0){
 	// Conditionally include user name in title
 	if ( $userid >= UserID_Base ) {
 		$bDisplayUserSelector = false;
-		$username = getUserName($userid); ?>
+		$username = getUserName( $userid, $dbconn); ?>
 <h3><?php echo $title?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a></h3>
 <?php
 	} else {
 		$bDisplayUserSelector = true;
 		$username = "";?>
-<h3><?php echo $title?>&nbsp;for &nbsp;<?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
+<h3><?php echo $title?>&nbsp;for &nbsp;<?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
 <?php
 	}
 
@@ -66,18 +66,18 @@ if ($numOrders > 0){
 		if (isUser( $session, Role_TeamAdmin)) {
 			$teamid = $session["teamid"];
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$userResults = executeQuery($dbconn, $strSQL, array($teamid));
+			$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		// App Admin query isn't team specific
 		} else {
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$userResults = executeQuery($dbconn, $strSQL);
+			$userResults = executeQuery($dbconn, $strSQL, $bError);
 		}
 		$countRows = 0;
 		$numRows = count($userResults);
 
 		// If no members, tell them so and don't display the form
 		if ($numRows == 0) {
-			echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName2($teamid, $dbh) . "<br>\n";
+			echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName($teamid, $dbconn) . "<br>\n";
 			echo '<a href="/1team/new-user-form.php?' . returnRequiredParams($session) . '">Create a team member</a></p>';
 			echo "\n";
 			$bOkForm = false;
@@ -135,7 +135,7 @@ if ($numOrders > 0){
 
 		// GEt payment methods for this team
 		$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ?";
-		$paymenttypeResults = executeQuery($dbconn, $strSQL, array($teamid));
+		$paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountPM	  = count( $paymenttypeResults);
 
 		// Display paymentmethods for this team
@@ -176,7 +176,7 @@ if ($numOrders > 0){
 <?php
 		// GEt skus once for use in the selector used in the loop
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$skuResults = executeQuery($dbconn, $strSQL, array($teamid));
+		$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountS = count( $skuResults);
 		$amountTotal = 0.00;
 		$feeTotal = 0.00;
@@ -489,9 +489,8 @@ function onNewItemChanged(skuindex){
 <?php
 		// Get skus and build javascript array mapping skus to amounts
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$pdostatementS = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementS->execute(array($teamid));
-		$skuResults = $pdostatementS->fetchAll();
+		$dbconn = getConnection();
+		$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountS = count( $skuResults);
 
 		// Display skus for this team

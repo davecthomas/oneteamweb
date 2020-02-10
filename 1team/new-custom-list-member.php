@@ -44,7 +44,7 @@ if (isset($_POST["listitemorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	$strSQL = "INSERT INTO customlistdata VALUES (DEFAULT, ?, ?, ?, ? );";
 	$pdostatement = $dbh->prepare($strSQL);

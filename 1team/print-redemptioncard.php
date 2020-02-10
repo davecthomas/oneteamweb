@@ -64,7 +64,7 @@ if (strlen($session["teamimageurl"]) > 0) {
 
 $returnErrString = "";
 if (!$bError) {
-	$dbh = getDBH($session);
+	
 	$returnString = "";
 	// Get team terms gracefully handles the case where app admin has no team
 	$teamterms = getTeamTerms(getTeamID($session), getDBH($session));

@@ -107,7 +107,7 @@ if (isset($_POST["isrefunded"])) {
 }
 $discount = 0.00;
 
-$dbh = getDBH($session);  
+  
 
 if ( !$bError) {
 

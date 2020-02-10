@@ -36,7 +36,7 @@ if (isset($_REQUEST["id"])) {
 }
 
 
-$dbh = getDBH($session);  
+  
 
 // Verify this epayment exists
 if (!$bError) {

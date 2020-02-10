@@ -9,7 +9,7 @@ if ((! isset($attendanceDate)) || (! isset($eventid)) ||(! isset($teamid)) || (!
 	$bError = true;
 } else {
 	$canLogAttendance = false;
-	$dbh = getDBH($session);  
+	  
 
 	$userid = $redemptioncard->getUserID();
 

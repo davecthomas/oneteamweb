@@ -94,10 +94,10 @@ $orderid = array();
 if ( !$bError) {
 	if (is_null($duedate)) {
 		$strSQL = "INSERT INTO orders VALUES (DEFAULT, ?, ?, ?, NULL, ?, ?, ?) RETURNING id;";
-		$orderid = executeQueryFetchColumn($dbconn, $strSQL, array($userid, $teamid, $orderdate, $discount, $ispaidsql, $paymentmethod)));
+		$orderid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $teamid, $orderdate, $discount, $ispaidsql, $paymentmethod)));
 	} else {
 		$strSQL = "INSERT INTO orders VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?) RETURNING id;";
-		$orderid = executeQueryFetchColumn($dbconn, $strSQL, array($userid, $teamid, $orderdate, $duedate, $discount, $ispaidsql, $paymentmethod)));
+		$orderid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $teamid, $orderdate, $duedate, $discount, $ispaidsql, $paymentmethod)));
 	}
 
 	if (!$bError){
@@ -110,7 +110,7 @@ if ( !$bError) {
 
 			// get the programid and numclassesfrom the sku, for each orderitem in the order
 			$strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";
-			$resultsSku = executeQuery($dbconn, $strSQL, array($skuid, $teamid)));
+			$resultsSku = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid)));
 
 			$numSkus = count($resultsSku );
 			if ($numSkus == 1) {
@@ -126,7 +126,7 @@ if ( !$bError) {
 			if (!$bError){
 				// Store the orderitem (FALSE is for isrefunded field)
 				$strSQL = "insert into orderitems VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FALSE, ?);";
-				executeQuery($dbconn, $strSQL, array($programid, $orderdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $orderid ));
+				executeQuery($dbconn, $strSQL, $bError, array($programid, $orderdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $orderid ));
 			}
 
 		}
@@ -135,7 +135,7 @@ if ( !$bError) {
 		if ((isset($_GET["epayid"])) && (!$bError)){
 			$epayid = $_GET["epayid"];
 			$strSQL = "UPDATE epayments set reconciled = TRUE WHERE id = ? and teamid = ?;";
-			executeQuery($dbconn, $strSQL, array($epayid, $teamid));
+			executeQuery($dbconn, $strSQL, $bError, array($epayid, $teamid));
 			// Success
 			if (!$bError){
 				redirect( "payment-history.php?". returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $userid . "&done=1");

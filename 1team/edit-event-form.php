@@ -1,15 +1,15 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title = "Edit Meeting Types";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session); 
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 $bError = false;
 $teamid = NotFound;
@@ -31,13 +31,11 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM events WHERE id = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($eventid));
-
-$eventResults = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$eventResults = executeQuery($dbconn, $strSQL, $bError, array($eventid));
 
 if (count($eventResults) > 0) { ?>
-<h4>Modify an event for <?php echo getTeamName2($teamid, $dbh)?></h4>	
+<h4>Modify an event for <?php echo getTeamName($teamid, $dbconn)?></h4>
 <div class="indented-group-noborder">
 <form action="/1team/edit-event.php" method="post"/>
 <input type="hidden" name="id" value="<?php echo $eventid ?>"/>
@@ -52,10 +50,7 @@ if (count($eventResults) > 0) { ?>
 <td>
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-
-	$programResults = $pdostatement->fetchAll();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($programResults);
@@ -91,8 +86,8 @@ if (count($eventResults) > 0) { ?>
 </div><input type="submit" value="Modify meeting" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-events-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid?>'"/>
 </form>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

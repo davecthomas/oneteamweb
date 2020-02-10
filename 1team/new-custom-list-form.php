@@ -29,7 +29,7 @@ if (isset($_POST["name"])) {
 } else {
 	$bCreate = false;
 }
-$dbh = getDBH($session);  
+  
 	
 if ($bCreate) { 
 
@@ -66,7 +66,7 @@ if (!$bError) {
 	if ($loopMax > 0) { 
 		$name = $customlistResults[0]["name"]; 
 		?>
-<h4><?php echo $title ?> &quot;<?php echo $name?>&quot; for <?php echo getTeamName2($teamid, $dbh);?></h4>
+<h4><?php echo $title ?> &quot;<?php echo $name?>&quot; for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <?php	
 		$strSQL = "SELECT * FROM customlistdata WHERE customlistid = ? AND teamid = ? ORDER BY listorder;";
 		$pdostatement = $dbh->prepare($strSQL);

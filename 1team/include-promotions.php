@@ -20,7 +20,7 @@ if ($pagemode == "standalone") {
 if (isset($_GET["id"])) {
 	$userid = $_GET["id"];
 	if (!isset($username)) {
-		$username = getUserName($userid);
+		$username = getUserName( $userid, $dbconn);
 	} 
 } 
 if (!isset($teamid)) {
@@ -69,7 +69,7 @@ if (($whomode == "team") && (!isAnyAdminLoggedIn($session))) {
 	$errStr = Error;
 }	
 if (!$bError ) {
-	$dbh = getDBH($session);  
+	  
 	// User mode: make sure they can adminster this user
 	if ($whomode == "user") {
 		$objid = $userid;	
@@ -78,7 +78,7 @@ if (!$bError ) {
 	} else {
 		$sqlwhere = " promotions.teamid = ?";
 		$objid = $teamid;
-		$objname = getTeamName2($teamid, $dbh);
+		$objname = getTeamName($teamid, $dbconn);
 	}
 
 	if ($pagemode == "standalone"){?>

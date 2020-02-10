@@ -42,7 +42,7 @@ if (isset($_POST["location"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	if ($eventdate == 0) {
 		$strSQL = "INSERT INTO events VALUES (DEFAULT, ?, NULL, ?, NULL, ?);";

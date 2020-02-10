@@ -28,15 +28,15 @@ if (isset($_GET["id"])){
 	// This setting will force select list to be uninitialized
 	$userid = 0;
 } 
-$dbh = getDBH($session); 
+ 
 $bDisplayUserSelector = true;
 // Conditionally include user name in title
 if ( $userid >= UserID_Base ) { 
 	// $bDisplayUserSelector = false;?>
-<h3><?php echo $title?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo getUserName($userid)?></a></h3>
+<h3><?php echo $title?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo getUserName( $userid, $dbconn)?></a></h3>
 <?php
 } else { 
-	echo '<h3>' . $title . ' for ' . getTeamName2($teamid, $dbh) . ' ' . $teamterms["termmember"] . '</h3>';
+	echo '<h3>' . $title . ' for ' . getTeamName($teamid, $dbconn) . ' ' . $teamterms["termmember"] . '</h3>';
 } 
 
 $bOkForm = true;
@@ -60,7 +60,7 @@ if ($bDisplayUserSelector) {
 	
 	// If no members, tell them so and don't display the form
 	if ($numRows == 0) { 
-		echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName2($teamid, $dbh) . "<br>\n";
+		echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName($teamid, $dbconn) . "<br>\n";
 		echo '<a href="/1team/new-user-form.php?' . returnRequiredParams($session) . '">Create a team member</a></p>';
 		echo "\n";
 		$bOkForm = false;

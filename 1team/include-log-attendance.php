@@ -8,7 +8,7 @@ if ((! isset($attendanceDate)) || (! isset($eventid)) ||(! isset($teamid)) ||(! 
 <?php
 	$bError = true;
 } else {
-	$dbh = getDBH($session);  
+	  
 	$strSQL = "SELECT COUNT(*) FROM users WHERE users.id = ? AND users.teamid = ?;";
 	$pdostatement = $dbh->prepare($strSQL);
 	$pdostatement->execute(array( $memberID, $teamid));

@@ -44,7 +44,7 @@ if (isset($_POST["hasdisplaycondition"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	$strSQL = "INSERT INTO customfields VALUES (DEFAULT, ?, ?, ?, NULL, NULL, NULL, NULL, " . $hasdisplaycondition . ", NULL, NULL);";
 	$pdostatement = $dbh->prepare($strSQL);

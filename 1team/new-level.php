@@ -37,7 +37,7 @@ if (isset($_POST["name"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	$strSQL = "INSERT INTO levels VALUES (DEFAULT, ?, ?, NULL, ?);";
 	$pdostatement = $dbh->prepare($strSQL);

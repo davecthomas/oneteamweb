@@ -3,18 +3,16 @@
 $isadminrequired = true;
 $title= " Edit Promotion " ;
 include('header.php'); ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 </script>
 
 <?php
-$bError = FALSE;
-
 $bError = false;
 
 if (!isUser( $session, Role_ApplicationAdmin )) {
 	$teamid = $session["teamid"];
-} else { 
+} else {
 	if (isset($_GET["teamid"])) {
 		$teamid = $_GET["teamid"];
 	} else {
@@ -40,25 +38,24 @@ if ( isset($_GET["pagemode"])) {
 	$pagemode = getCleanInput($_GET["pagemode"]);
 } else {
 	$pagemode = "standalone";
-} 
-$dbh = getDBH($session); 
-$teamname = getTeamName2($teamid, $dbh);
+}
+
+$teamname = getTeamName($teamid, $dbconn);
+$dbconn = getConnection();
 ?>
-<h3><?php echo $title . " for " . $teamname . " " . $teamterms["termmember"] . " " . getUserName2($memberid, $dbh);?></h3>	
+<h3><?php echo $title . " for " . $teamname . " " . $teamterms["termmember"] . " " . getUserName($memberid, $dbconn);?></h3>
 <?php
 if (!$bError) {
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, promotions.id as promotionid, promotions.*, images.*, levels.* FROM levels, users, promotions LEFT OUTER JOIN images ON (images.objid = promotions.id AND images.type = ?) WHERE promotions.newlevel = levels.id AND promotions.memberid = users.id AND memberid = ? AND promotions.id = ? AND promotions.teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array(ImageType_Promotion, $memberid, $promotionid, $teamid));
-	
-	$promoResults = $pdostatement->fetchAll();
+	$promoResults = executeQuery($dbconn, $strSQL, $bError, array(ImageType_Promotion, $memberid, $promotionid, $teamid));
+
 	if (count($promoResults) == 1) { ?>
 <form action="/1team/edit-promotion.php" method="post">
 <?php buildRequiredPostFields($session) ?>
 <input type="hidden" name="promotionid" value="<?php echo $promotionid ?>"/>
 <input type="hidden" name="teamid" value="<?php echo $teamid ?>"/>
-<input type="hidden" name="id" value="<?php echo $memberid?>" />	
+<input type="hidden" name="id" value="<?php echo $memberid?>" />
 <p>
 <table class="noborders">
 <tr>
@@ -66,13 +63,12 @@ if (!$bError) {
 <td><input type="text" name="date" id="date" value="<?php echo $promoResults[0]["promotiondate"]?>" dojoType="dijit.form.DateTextBox" required="true" promptMessage="mm/dd/yyyy"/>
 </td>
 <td class="bold">Promotion Level</td>
-<td><select name="level"> 
+<td><select name="level">
 <?php
 	$strSQL = "SELECT * FROM levels WHERE teamid = ? ORDER BY programid, listorder;";
-	$pdostatementlevel = $dbh->prepare($strSQL);
-	$pdostatementlevel->execute(array($teamid));		
-		
-	foreach ($pdostatementlevel as $rowlevel) { 
+	$levels = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+
+	foreach ($levels as $rowlevel) {
 		echo "<option value='";
 		echo $rowlevel["id"];
 		echo "'";
@@ -81,12 +77,12 @@ if (!$bError) {
 		}
 		echo ">";
 		echo $rowlevel["name"];
-		echo "</option>\n"; 
+		echo "</option>\n";
 	} ?>
 </select>
 </td>
 </tr>
-</table>		   
+</table>
 <input type="submit" class="btn" value="Update" name="promote" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'include-promotions.php<?php buildRequiredParams($session) ?>&whomode=user&id=<?php echo $memberid?>&teamid=<?php echo $teamid?>&pagemode=standalone'"/>
 </form>
@@ -98,32 +94,32 @@ if (!$bError) {
 		// promo image
 		if ((!is_null($promoResults[0]["filename"])) && ($promoResults[0]["filename"] != ImageID_Undefined)) { ?>
 <img src="<?php echo $promoResults[0]["filename"]?>" id="" border=0">
-<?php 	} 
+<?php 	}
 		// Conditionally display image
 		if ((!is_null($promoResults[0]["url"])) && (strlen($promoResults[0]["url"]) > 0)) {?>
 <img src="<?php echo $promoResults[0]["url"]?>" id="" border=0">
-<?php		
+<?php
 		} ?>
 <p>Select an existing image by URL</p><form action="image-upload.php" method="post" enctype="multipart/form-data">
 <!--<input type="file" name="image" name="image" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>-->
 <?php buildRequiredPostFields($session) ?>
-<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>	
-<input type="hidden" name="type" value="<?php echo ImageType_Promotion?>"/>	
-<input type="hidden" name="objid" value="<?php echo  $promotionid ?>"/>	
-<input type="hidden" name="teamname" value="<?php echo $teamname ?>" />	
+<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>
+<input type="hidden" name="type" value="<?php echo ImageType_Promotion?>"/>
+<input type="hidden" name="objid" value="<?php echo  $promotionid ?>"/>
+<input type="hidden" name="teamname" value="<?php echo $teamname ?>" />
 <p class="strong">Image URL&nbsp;<input type="text" value="<?php echo htmlspecialchars($promoResults[0]["url"] )?>" name="url"></p>
-<input type="submit" value="Save Picture" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/> 
+<input type="submit" value="Save Picture" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 </form>
 <?php	// End image div ?>
 </div></div></div>
 <?php
-	} 
+	}
 }
 if ( $bError ) { ?>
 <h4 class="usererror">Error: <?php echo errorStr?></h4>
 <p><a href="javascript:void(0);" onclick="history.go(-1)">Back</a></p>
 <?php
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

@@ -5,7 +5,7 @@ ob_start(); 	// This caches non-header output, allowing us to redirect after hea
 
 $title = "Who Hasn't Purchased ";
 include('header.php');
-$dbh = getDBH($session);  
+  
 
 $rowCount = 0;
 // Set up teamid from session or input

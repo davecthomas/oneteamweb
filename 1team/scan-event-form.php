@@ -9,7 +9,7 @@ dojo.require("dijit.form.DateTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session);
+
 $bError = false;
 $teamid = NotFound;
 
@@ -36,7 +36,7 @@ if ($isTeamAttendanceConsole){?>
 <?php buildRequiredPostFields($session) ?>
 <table class="noborders">
 <tr><td class="strong">Event</td><td><?php
-$dbh = getDBH($session);  
+  
 	$strSQL = "SELECT * FROM events WHERE teamid = ? and scannable = TRUE ORDER by listorder;";
 	$pdostatement = $dbh->prepare($strSQL);
 	$pdostatement->execute(array($teamid ));

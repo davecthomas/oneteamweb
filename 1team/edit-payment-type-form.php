@@ -1,9 +1,9 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Edit Payment Type"; 
+$title = "Edit Payment Type";
 include('header.php');
-$dbh = getDBH($session);
+
 $bError = false;
 $teamid = NotFound;
 $err = "";
@@ -26,13 +26,11 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? AND id = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($teamid, $paymenttypeid));
-
-$paymenttypeResults = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid, $paymenttypeid));
 
 if (count($paymenttypeResults) > 0) { ?>
-<h3>Modify a payment method for <?php echo getTeamName2($teamid, $dbh)?></h3>	
+<h3>Modify a payment method for <?php echo getTeamName($teamid, $dbconn)?></h3>
 <div class="indented-group-noborder">
 <form action="/1team/edit-payment-type.php" method="post">
 <input type="hidden" name="id" value="<?php echo $paymenttypeid ?>"/>
@@ -45,8 +43,8 @@ if (count($paymenttypeResults) > 0) { ?>
 </div>
 <input type="submit" value="Modify paymenttype" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/></form>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-payment-types-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid?>'"/>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

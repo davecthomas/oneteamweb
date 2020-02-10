@@ -36,7 +36,7 @@ if (isset($_POST["paymenttypeorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	for ($i = 0; $i < count($paymenttypeorder); $i++){	
 		$strSQL = "UPDATE paymentmethods SET listorder = ? WHERE id = ? AND teamid = ?;";

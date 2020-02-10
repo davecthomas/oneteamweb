@@ -53,8 +53,9 @@ if (isset($_REQUEST["id"])){
 }
 
 if (!$bError){
-	$dbh = getDBH($session);
-     if (strlen($session["teamimageurl"]) > 0) {
+	$dbconn = getConnection();
+
+  if (strlen($session["teamimageurl"]) > 0) {
 		$teamlogo = $session["teamimageurl"];
 	} else {
 	     $teamlogo = "/1team/img/1teamweb-logo-200.png";
@@ -76,15 +77,11 @@ if (!$bError){
 			$strSQL .= " ORDER BY firstname;";
 		}
 		if (!$bError){
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array( ImageType_Team, $teamid));
-			$userprops = $pdostatement->fetchAll();
+			$userprops = executeQuery($dbconn, $strSQL, $bError, array( ImageType_Team, $teamid));
 		}
 	} else if ($command == userList ){
 		$strSQL = "SELECT teams.id as id_team, teams.*, users.firstname, users.lastname, users.teamid, users.id as userid, useraccountinfo.status, useraccountinfo, images.* FROM users, useraccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE users.id IN (" . implode(",", $useridList) . ") AND users.teamid = teams.id AND (users.roleid & " . Role_Member  . ") = " . Role_Member . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> " . UserAccountStatus_Inactive ;
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array( ImageType_Team, $teamid));
-		$userprops = $pdostatement->fetchAll();
+		$userprops = executeQuery($dbconn, $strSQL, $bError, array( ImageType_Team, $teamid));
 	} else {
 		$bError = true;
 		$err = "com";

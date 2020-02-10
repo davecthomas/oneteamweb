@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -11,14 +11,14 @@ if (! isValidSession($session )){
 }
 // Only admins can execute this script
 redirectToLoginIfNotAdmin( $session);
- 
+
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
@@ -40,7 +40,7 @@ if (isset($_POST["eventdate"])) {
 	$eventdate = date("m-d-Y");
 }
 if (isset($_POST["name"])) {
-	$eventname = $_POST["name"]; 
+	$eventname = $_POST["name"];
 } else {
 	$bError = true;
 }
@@ -61,17 +61,15 @@ if (isset($_POST["scannable"])){
 	$scannable = "FALSE";
 }
 if (!$bError) {
-	$dbh = getDBH($session);  
-	
+	$dbconn = getConnection();
+
 	if 	($eventdate == 0) {
 		$strSQL = "UPDATE events SET name = ?, location = ?, scannable = " . $scannable . ", programid = ? WHERE id = ? AND teamid = ? ;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($eventname, $location, $programid, $eventid, $teamid));
-		
+		executeQuery($dbconn, $strSQL, $bError, array($eventname, $location, $programid, $eventid, $teamid));
+
 	} else {
 		$strSQL = "UPDATE events SET name = ?, eventdate = ?, location = ?, scannable = " . $scannable . ", programid = ?  WHERE id = ? AND teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($eventname, $eventdate, $location, $programid, $eventid, $teamid));
+		xecuteQuery($dbconn, $strSQL, $bError, array($eventname, $eventdate, $location, $programid, $eventid, $teamid));
 	}
 	redirect("manage-events-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 } else {

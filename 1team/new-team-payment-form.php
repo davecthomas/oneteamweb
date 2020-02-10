@@ -9,7 +9,7 @@ dojo.require("dijit.form.CurrencyTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session);
+
 $strSQL = "SELECT * FROM teams, teamaccountinfo WHERE isbillable = true and status <> " . TeamAccountStatus_Inactive . " and teams.teamaccountinfo = teamaccountinfo.id ORDER BY names;";
 $pdostatement = $dbh->prepare($strSQL);
 $bError = ! $pdostatement->execute();

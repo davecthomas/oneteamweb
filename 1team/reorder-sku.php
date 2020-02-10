@@ -37,7 +37,7 @@ if (isset($_POST["skuorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	for ($i = 0; $i < count($skuorder); $i++){	
 		$strSQL = "UPDATE skus SET listorder = ? WHERE id = ? AND teamid = ?;";

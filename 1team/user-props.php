@@ -35,7 +35,7 @@ if (!isUser($session, Role_ApplicationAdmin)){
 }
 
 if ( !$bError) {
-	$dbh = getDBH($session);  
+	  
 	
 	$strSQL = "SELECT * FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? AND users.teamid = ?;";
 	$pdostatement = $dbh->prepare($strSQL);

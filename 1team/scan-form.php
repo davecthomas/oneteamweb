@@ -34,7 +34,7 @@ if (isset($_REQUEST["eventname"])){
 
 if (!$bError){
 	$userid_login = getUserID();
-	$dbh = getDBH($session);
+	
 	
 	if (AttendanceConsole::isAttendanceConsole($session)){
 		$teamterms = getTeamTerms($teamid, getDBH($session));

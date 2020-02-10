@@ -60,11 +60,11 @@ if (!$bError ) {
 	if ((!isset($userid)) && ($whomode == "user")) {
 		$userid = $_GET["id"];
 		if (!isset($username)) {
-			$username = getUserName($userid);
+			$username = getUserName( $userid, $dbconn);
 		} 
 	} 
 	
-	$dbh = getDBH($session);  
+	  
 	// User mode: make sure they can adminster this user
 	if ($whomode == "user") {
 		$objid = $userid;	
@@ -73,7 +73,7 @@ if (!$bError ) {
 	} else {
 		$sqlwhere = "attendance.teamid = " . $teamid;
 		$objid = $teamid;
-		$objname = getTeamName2($teamid, $dbh);
+		$objname = getTeamName($teamid, $dbconn);
 	}
 	// Standalone page needs some formatting that embedded version doesn't require
 	if ($pageMode == "standalone") { ?>

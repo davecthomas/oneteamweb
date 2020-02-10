@@ -39,7 +39,7 @@ if (!$bError) {
 	//$strSQL = "SELECT teamaccountinfo.status as teamstatus, users.teamid as team_id, users.id as userid, users.* FROM users, useraccountinfo, teamaccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND teamaccountinfo.teamid = users.teamid and useraccountinfo.status = " . UserAccountStatus_Active . " AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . " AND login = ?;";
 	$strSQL = "SELECT users.salt, users.passwd FROM users WHERE id = ?;";
 	$dbconn = getConnection();
-	$loginResults = executeQuery($dbconn, $strSQL, array($uid));
+	$loginResults = executeQuery($dbconn, $strSQL, $bError, array($uid));
 	$rowCount = count( $loginResults);
 	if ($rowCount != 1) {
 		$bError = true;

@@ -8,7 +8,7 @@ if (!isUser( $session, Role_ApplicationAdmin)){
 	$bError = true;
 }
 
-$dbh = getDBH($session);  
+  
 
 if (!$bError){ ?>
 <h3><?php echo $title?></h3>

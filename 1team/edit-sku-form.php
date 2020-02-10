@@ -1,17 +1,17 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Edit SKU"; 
+$title = "Edit SKU";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.NumberSpinner");
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.CurrencyTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session); 
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 $bError = false;
 $teamid = NotFound;
@@ -35,13 +35,10 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM skus WHERE id = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($levelid));
-
-$skuResults = $pdostatement->fetchAll();
-
+$dbconn = getConnection();
+$skuResults = executeQuery($dbconn, $strSQL, $bError, array($levelid));
 if (count($skuResults) > 0) { ?>
-<h4>Modify a SKU for <?php echo getTeamName2($teamid, $dbh)?></h4>	
+<h4>Modify a SKU for <?php echo getTeamName($teamid, $dbconn)?></h4>
 <div class="indented-group-noborder">
 <form name="modifysku" action="/1team/edit-sku.php" method="post"/>
 <input type="hidden" name="id" value="<?php echo $levelid ?>"/>
@@ -55,28 +52,24 @@ if (count($skuResults) > 0) { ?>
 <td>
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$programResults = $pdostatement->fetchAll();
-
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCount = 0;
 	$loopMax = count($programResults);
 
 	if (count($loopMax ) > 0) { ?>
 
 <select name="programid" onchange="if (this.selectedIndex.value != <?php echo Program_Undefined?>) document.all.programnamelabel.innerText = this.options[this.selectedIndex].text">
-<?php 
+<?php
 		if ((empty($skuResults[0]["programid"])) || ($skuResults[0]["programid"] == Program_Undefined)) {?>
 <option value="<?php echo Program_Undefined?>" selected>Select Program...</option>
 <?php
 		}
-		while ($rowCount < $loopMax) { 
-			echo  "<option "; 
+		while ($rowCount < $loopMax) {
+			echo  "<option ";
 			echo  'value="' . $programResults[$rowCount]["id"] . '"';
 			if ($programResults[$rowCount]["id"] == $skuResults[0]["programid"]) {
 				echo " selected ";
-				$programname = $programResults[$rowCount]["name"]; 
+				$programname = $programResults[$rowCount]["name"];
 			}
 			echo  ">";
 			echo $programResults[$rowCount]["name"];
@@ -84,7 +77,7 @@ if (count($skuResults) > 0) { ?>
 			$rowCount++;
 		}?>
 </select>
-<?php 
+<?php
 	}  else {
 		echo 'No programs are defined for ' . $teamname . '. <a href="/1team/manage-programs-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define Programs</a>.';
 	} ?>
@@ -92,15 +85,15 @@ if (count($skuResults) > 0) { ?>
 <tr><td class="strong">Number of <div id="programnamelabel"><?php echo $programname?></div> events</td>
 <td>
 <div class="
-<?php 
-	if ($skuResults[0]["numevents"] == Expiration_Never) { 
+<?php
+	if ($skuResults[0]["numevents"] == Expiration_Never) {
 		echo "hideit";
 	} else {
 		echo "showit";
 	} ?>
 " id="numeventsdiv">
 <input dojoType="dijit.form.NumberSpinner"
-				value="<?php 
+				value="<?php
 	if ((empty($skuResults[0]["numevents"])) || ($skuResults[0]["numevents"] == Sku::NumEventsUndefined)) {
 		echo "1";
 	} else {
@@ -117,7 +110,7 @@ if (count($skuResults) > 0) { ?>
 </td></tr>
 <tr><td class="strong">This SKU expires</td>
 <td><input dojoType="dijit.form.NumberSpinner"
-				value="<?php 
+				value="<?php
 	if ((empty($skuResults[0]["expires"])) || ($skuResults[0]["expires"] == skuExpiration_Undefined)) {
 		echo "1";
 	} else {
@@ -141,8 +134,8 @@ if (count($skuResults) > 0) { ?>
 <input type="submit" value="Modify SKU" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-skus-form.php<?php buildRequiredParams($session) ?>'"/>
 </form>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 <script type="text/javascript">

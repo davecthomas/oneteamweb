@@ -41,14 +41,14 @@ if ($bError != true) {
 	// Find out if this custom list item is in use anywhere. If so, fail the delete
 	$strSQL = "SELECT name FROM customdata, customfields WHERE customfields.id = customdata.customfieldid AND customlistid = ? AND valuelist = ? AND customfields.teamid = ?;";
 	$dbconn = getConnection();
-	$customfieldsResults = executeQuery($dbconn, $strSQL, array($customlistid, $customlistitemid, $teamid));
+	$customfieldsResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $customlistitemid, $teamid));
 	if (count($customfieldsResults) > 0) {
 		// error, redirect with name
 		redirect("manage-custom-lists-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&errlistitem=" . $customfieldsResults[0]["name"]);
 	} else {
 		// Delete any custom list data so we have no orphans
 		$strSQL = "DELETE FROM customlistdata WHERE id = ? AND teamid = ?;";
-		$results = executeQuery($dbconn, $strSQL, array($customlistitemid, $teamid));
+		$results = executeQuery($dbconn, $strSQL, $bError, array($customlistitemid, $teamid));
 
 		redirect("edit-custom-list-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $customlistid);
 	}

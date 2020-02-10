@@ -44,7 +44,7 @@ if (isset($_GET["email"])) {
 
 if (!$bError){
 	$teaminfo = getTeamInfo($teamid );
-	$dbh = getDBH($session);
+	
 	if ($email){
 		ob_start();
 		include 'include-order-details.php';

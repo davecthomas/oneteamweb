@@ -1,4 +1,4 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title = "Redemption Card";
@@ -35,10 +35,10 @@ dojo.require("dijit.form.CurrencyTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session);
+
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
@@ -103,20 +103,19 @@ purchased or gifted services.</p>
 </td></tr>
 <tr><td class="bold">Description</td><td><input type="text" id="description" name="description" value="<?php echo $description?>" maxlength="128" size="64"/></td></tr>
 <tr><td class="bold">Redeem this card for SKU</td><td>
-<?php 
-	// GEt payment methods for this team 
+<?php
+	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-	$pdostatementS = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementS->execute(array($teamid));
-	$skuResults = $pdostatementS->fetchAll();
+	$dbconn = getConnection();
+	$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountS = count( $skuResults);
-	
+
 	// Display skus for this team
-	if ($rowCountS > 0) { 
-		$countRowsS = 0; ?>		
+	if ($rowCountS > 0) {
+		$countRowsS = 0; ?>
 <select name="skuid" onchange="onSkuChanged(this.selectedIndex);">
 <option value="<?php echo Sku::SkuID_Undefined?>" <?php if ($skuid == Sku::SkuID_Undefined) echo ' selected'?>>Select SKU...</option>
-<?php 
+<?php
 		while ($countRowsS < $rowCountS) {
 			echo "<option value=\"";
 			echo $skuResults[$countRowsS]["id"];
@@ -129,8 +128,8 @@ purchased or gifted services.</p>
 			echo "</option>\n";
 			$countRowsS ++;
 		} ?>
-</select>				
-<?php 
+</select>
+<?php
 	}  else {
 		echo 'No SKUs are defined for ' . $teamname . '. <a href="/1team/manage-skus-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define SKUs</a>.';
 	} ?>
@@ -193,9 +192,7 @@ function onTypeClicked( elm){
 <?php
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? ORDER BY listorder;";
-	$pdostatementPM = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementPM->execute(array($teamid));
-	$paymentmethodResults = $pdostatementPM->fetchAll();
+	$paymentmethodResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountPM	  = count( $paymentmethodResults);
 
 	// Display paymentmethods for this team
@@ -462,9 +459,7 @@ function getSelectList( srcList){
 		}
 
 		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? ORDER BY firstname;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
-		$results = $pdostatement->fetchAll();?>
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 <div id="rosterdiv">
 <h4>Select From List</h4>
 <p>Selected <?php echo $teamterms["termmember"]?>s.</p>
@@ -493,7 +488,7 @@ function getSelectList( srcList){
 			} ?>
 </select>
 <?php	} else {?>
-<p>No <?php echo $teamterms["termmember"]?>s exist in the team <br>"
+<p>No <?php echo $teamterms["termmember"]?>s exist in the team <br>
 <a href="/1team/new-user-form.php?'<?php echo returnRequiredParams($session) ?>">Create a <?php echo $teamterms["termmember"]?></a></p>
 <?php	}?>
 </td>
@@ -522,7 +517,7 @@ function getSelectList( srcList){
 </tr>
 </table>
 </div>
-<?php 
+<?php
 		// End roster div
 	}
 	// This is the conditionally displayed div for the program selector list ?>
@@ -544,8 +539,7 @@ function getSelectList( srcList){
 <td class="strong">Program</td>
 <td><?php
 		$strSQL = "SELECT * FROM programs WHERE teamid = ? ORDER BY name;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamid));
+		$executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 		$programsResults = $pdostatement->fetchAll();
 
@@ -576,14 +570,14 @@ function getSelectList( srcList){
 <input type="button" value="<?php if ($mode == EditCard) echo "Save"; else echo "Create"?>" name="submitform" id="submitform" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" <?php if ($mode == NewCard) echo " disabled"?> onclick="doSubmit('redemptioncardform')"/>&nbsp;<input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = '<?php echo $_SERVER["HTTP_REFERER"]?>'"/>
 </form>
 </div>
-<?php 
-} 
+<?php
+}
 if ($bError) {
 	echo '<p class="error">' . $err . '</p>';
 }
 if (isset($_GET["err"])){
 	showError("Error", "Redemption cards not created.  ".$_GET["err"], "");
-} 
+}
 
 // Start footer section
 include('footer.php'); ?>

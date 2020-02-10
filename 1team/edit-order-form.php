@@ -1,10 +1,10 @@
-<?php  
+<?php
 ob_start(); 	// This caches non-header output, allowing us to redirect after header.php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title= " Order or Invoice" ;
 include('header.php'); ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.CurrencyTextBox");
 </script>
@@ -18,15 +18,15 @@ if (isset($_GET["id"])) {
 	$bError = true;
 	$err = "i";
 	$orderid = 0;
-} 	
+}
 
 if (isset($_GET["uid"])) {
 	$userid = $_GET["uid"];
 } else {
 	$userid = User::UserID_Undefined;
-} 	
+}
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
@@ -44,11 +44,10 @@ if (isUser($session, Role_TeamAdmin)){
 }
 
 if (!$bError){
-	$dbh = getDBH($session);
+	$dbconn = getConnection();
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods RIGHT OUTER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($userid, $orderid, $teamid));
-	$orderResults = $pdostatement->fetchAll();
+	$orderResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $orderid, $teamid));
+
 	$countOrders = 0;
 	$numOrders = count($orderResults);
 
@@ -57,41 +56,38 @@ if (!$bError){
 		// Conditionally include user name in title
 		if ( $userid >= UserID_Base ) {
 			$bDisplayUserSelector = false;
-			$username = getUserName($userid); ?>
+			$username = getUserName( $userid, $dbconn); ?>
 <h3><?php echo invoiceOrOrder($ispaid) ?>&nbsp;for&nbsp;<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a></h3>
 <?php
 		} else {
 			$bDisplayUserSelector = true;
 			$username = "";?>
-<h3><?php echo invoiceOrOrder($ispaid) ?>&nbsp;for &nbsp;<?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
-<?php 
+<h3><?php echo invoiceOrOrder($ispaid) ?>&nbsp;for &nbsp;<?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms["termmember"]?></h3>
+<?php
 		}
-	
+
 		$bOkForm = true;
-	
+
 		// If invalid userID, Build a select list of all billable and active students to allow selection
 		if ($bDisplayUserSelector) {
 			// Team admin must get team id from session
 			if (isUser( $session, Role_TeamAdmin)) {
 				$teamid = $session["teamid"];
 				$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = ! ($pdostatement->execute(array($teamid)));
+				$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 				if ($bError) $err = "s";
 			// App Admin query isn't team specific
 			} else {
 				$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = ! ($pdostatement->execute());
+				$userResults = executeQuery($dbconn, $strSQL, $bError));
 				if ($bError) $err = "s";
 			}
-			$userResults = $pdostatement->fetchAll();
 			$countRows = 0;
 			$numRows = count($userResults);
 
 			// If no members, tell them so and don't display the form
 			if ($numRows == 0) {
-				echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName2($teamid, $dbh) . "<br>\n";
+				echo "<p>No " . $teamterms["termmember"]. "s exist in the team " .getTeamName($teamid, $dbconn) . "<br>\n";
 				echo '<a href="/1team/new-user-form.php?' . returnRequiredParams($session) . '">Create a team member</a></p>';
 				echo "\n";
 				$bOkForm = false;
@@ -139,18 +135,16 @@ if (!$bError){
 					$countRows ++;
 				} ?>
 </select>
-<?php 
+<?php
 			}?>
 </td></tr>
 <tr><td class="bold">Date</td>
 <td><input type="text" name="orderdate" id="orderdate" value="<?php echo $orderResults[0]["orderdate"]?>" dojoType="dijit.form.DateTextBox" required="true" /></td></tr>
-<?php 
-	
+<?php
+
 			// GEt payment methods for this team
 			$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ?";
-			$pdostatementPM = $dbh->prepare($strSQL);
-			$bError = ! $pdostatementPM->execute(array($teamid));
-			$paymenttypeResults = $pdostatementPM->fetchAll();
+			$paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountPM	  = count( $paymenttypeResults);
 
 			// Display paymentmethods for this team
@@ -158,7 +152,7 @@ if (!$bError){
 				$countRowsPM = 0; ?>
 <tr><td class="bold">Method</td><td>
 <select name="paymentmethod">
-<option value="<?php echo PaymentMethod_Undefined?>">Select a payment method...</option><?php 
+<option value="<?php echo PaymentMethod_Undefined?>">Select a payment method...</option><?php
 				while ($countRowsPM < $rowCountPM) {
 					echo "<option value=\"";
 					echo $paymenttypeResults[$countRowsPM]["id"];
@@ -170,9 +164,9 @@ if (!$bError){
 					echo "</option>\n";
 					$countRowsPM ++;
 				} ?>
-</select>				
+</select>
 </td></tr>
-<?php 
+<?php
 			} ?>
 <tr><td class="bold">Paid?</td><td><input type="checkbox" name="ispaid" id="ispaid" onchange="isPaidChanged()" <?php if ($orderResults[0]["ispaid"]) echo "checked";?>/></td><tr>
 </table>
@@ -182,7 +176,7 @@ if (!$bError){
 </table>
 </div>
 <table class="noborders" width="65%" id="ordertable">
-<thead class="head"> 
+<thead class="head">
 <th width="5%" >#</th>
 <th width="45%" style="text-align:left">SKU</th>
 <th width="20%" style="text-align:left">Amount ($US)</th>
@@ -191,9 +185,7 @@ if (!$bError){
 <?php
 			// GEt skus once for use in the selector used in the loop
 			$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-			$pdostatementS = $dbh->prepare($strSQL);
-			$bError = ! $pdostatementS->execute(array($teamid));
-			$skuResults = $pdostatementS->fetchAll();
+			$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountS = count( $skuResults);
 			$amountTotal = 0.00;
 			$feeTotal = 0.00;
@@ -202,12 +194,12 @@ if (!$bError){
 			while ($countOrders < $numOrders){ ?>
 <tr id="orderitem<?php echo $orderResults[$countOrders]["orderitemid"]?>" class="<?php if ((bool)( ($countOrders) % 2 )) echo("even"); else echo("odd") ?>">
 <td width="5%"><?php echo $countOrders+1?></td>
-<td width="45%"><?php 
-			
+<td width="45%"><?php
+
 				// Display skus for this team
 				if ($rowCountS > 0) {
 					$countRowsS = 0; ?>
-<?php 
+<?php
 					while ($countRowsS < $rowCountS) {
 //						echo "<option value=\"";
 //						echo $skuResults[$countRowsS]["id"];
@@ -218,14 +210,14 @@ if (!$bError){
 						echo $skuResults[$countRowsS]["name"];
 //						echo "</option>\n";
 						$countRowsS ++;
-					} 
+					}
 				}  else {
 					echo 'No SKUs are defined for ' . $teamname . '. <a href="/1team/manage-skus-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define SKUs</a>.';
 				} ?>
 </td>
 <td width="20%"><?php echo $orderResults[$countOrders]["amount"]?><!--<input type="text" id="amount<?php echo $countOrders?>" name="amount<?php echo $countOrders?>" value="<?php echo $orderResults[$countOrders]["amount"]?>" style="width: 8em" dojoType="dijit.form.CurrencyTextBox" required="true" constraints="{fractional:true}" currency="USD" invalidMessage="Invalid amount.  Include dollars and cents." />--></td>
 <td width="20%"<?php if ($orderResults[$countOrders]["fee"] < 0) echo 'class="debit"';?>><?php echo $orderResults[$countOrders]["fee"]?><!--<input type="text" id="fee<?php echo $countOrders?>" name="fee<?php echo $countOrders?>" value="<?php echo $orderResults[$countOrders]["fee"]?>" style="width: 6em" dojoType="dijit.form.CurrencyTextBox" required="false" constraints="{max:0,fractional:true}" currency="USD" />--></td>
-<?php 
+<?php
 				$amountTotal += $orderResults[$countOrders]["amount"];
 				$feeTotal += $orderResults[$countOrders]["fee"];
 				$countOrders++;
@@ -264,14 +256,14 @@ if (!$bError){
 <table class="noborders" width="65%">
 <tr><td width="5%"></td>
 <td width="45%">
-<?php 
+<?php
 			// Add new item to order
 			// Display skus for this team in selector
 			if ($rowCountS > 0) {
 				$countRowsS = 0; ?>
 <select id="skuid" name="skuid" onchange="onNewItemChanged(this.selectedIndex);">
 <option value="<?php echo Sku::SkuID_Undefined?>" <?php if ((empty($paymentResults["skuid"])) || ($paymentResults["skuid"] == Sku::SkuID_Undefined) ) echo ' selected'?>>Select SKU purchased with this payment...</option>
-<?php 
+<?php
 				while ($countRowsS < $rowCountS) {
 					echo "<option value=\"";
 					echo $skuResults[$countRowsS]["id"];
@@ -281,8 +273,8 @@ if (!$bError){
 					echo "</option>\n";
 					$countRowsS ++;
 				} ?>
-</select>				
-<?php 
+</select>
+<?php
 			}  else {
 				echo 'No SKUs are defined for ' . $teamname . '. <a href="/1team/manage-skus-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define SKUs</a>.';
 			} ?>
@@ -290,7 +282,7 @@ if (!$bError){
 <script type="text/javascript">
 var skuID=new Array();
 var skuAmount=new Array();
-<?php 
+<?php
 			// build array for javascript
 			if ($rowCountS > 0) {
 				$countRowsS = 0;
@@ -308,7 +300,7 @@ var skuAmount=new Array();
 </table>
 </div>
 </div>
-<?php 
+<?php
 			if ($userid == User::UserID_Undefined) {
 				$objid = $teamid;
 				$whomode = "team";
@@ -339,7 +331,7 @@ order[<?php echo $countOrders?>][<?php echo Order::OrderItemArrayIndex_Fee?>] = 
 order[<?php echo $countOrders?>][<?php echo Order::OrderItemArrayIndex_Orderitemid?>] = <?php echo $orderResults[$countOrders]["orderitemid"]?>;
 
 updateTotals(order[<?php echo $countOrders?>][1], order[<?php echo $countOrders?>][2]);
-<?php		
+<?php
 				$countOrders ++;
 			}
 ?>
@@ -353,43 +345,43 @@ var orderitemidx = <?php echo $countOrders-1?>;
 // Update the totals of the order
 function updateTotals(amount, fee){
 	total += amount;
-	
+
 	// Add decimals to make it look pretty
-	if (Math.round(total) == total) deci = ".00"; else deci = ""; 
+	if (Math.round(total) == total) deci = ".00"; else deci = "";
 	totalamtdiv.innerHTML = "$ " + total + deci;
-	
+
 	totalfee += fee;
 	totalfee = Math.round(totalfee*100)/100
 	// Add decimals to make it look pretty
-	if (Math.round(totalfee) == totalfee) deci = ".00"; else deci = ""; 
-	if (totalfee < 0) { 	
+	if (Math.round(totalfee) == totalfee) deci = ".00"; else deci = "";
+	if (totalfee < 0) {
 		totalfeediv.innerHTML = "$ (" + (-totalfee) + deci + ")";
 	}else {
 		totalfeediv.innerHTML = "$ " + totalfee + deci;
 	}
-	
-	// Keep a running total 
+
+	// Keep a running total
 	totalnet = total + totalfee;
 	// Add decimals to make it look pretty
-	if (Math.round(totalnet) == totalnet) deci = ".00"; else deci = ""; 
+	if (Math.round(totalnet) == totalnet) deci = ".00"; else deci = "";
 	totalnetdiv.innerHTML = "<?php echo invoiceOrOrder($ispaid) ?> Total: $ " + totalnet + deci;
-	
+
 }
 
 // Add an item to the order, add a row to the order table using DOM methods
 function addrow(tableid, tablerow, skuformid, amtformid, feeformid, orderitemid){
 	var table = document.getElementById(tableid);
-	// Insert a row in the table 
+	// Insert a row in the table
 	var newrow   = table.insertRow(tablerow);
 	var rowclass;
-	
+
 debugOrder('before add');
 	// New order array element
 	order[++orderitemidx] = new Array(<?php echo Order::OrderItemArraySize_Edit?>);
-	
-	// Alternate odd/even class for visual appeal. 
-	if (Boolean( orderitemidx % 2 )) 
-		rowclass = "even"; 
+
+	// Alternate odd/even class for visual appeal.
+	if (Boolean( orderitemidx % 2 ))
+		rowclass = "even";
 	else
 		rowclass = "odd";
 
@@ -413,7 +405,7 @@ debugOrder('before add');
 	newrow.appendChild( skucell );
 	// Store the skuid in the order
 	order[orderitemidx][<?php echo Order::OrderItemArrayIndex_SKU?>] = elmsku.options[elmsku.selectedIndex].value;
-	
+
 	var amtcell = newrow.insertCell(0);
 	amtcell.setAttribute('width','20%');
 	var elmamt = document.getElementById(amtformid);
@@ -421,7 +413,7 @@ debugOrder('before add');
 	var nodeamt = document.createTextNode(txtamt);
 	amtcell.appendChild( nodeamt );
 	newrow.appendChild( amtcell );
-	// Keep a running total 
+	// Keep a running total
 	var floatamt = parseFloat(txtamt.substring(1)) + 0.00;
 	// Store the amount in the order
 	order[orderitemidx][<?php echo Order::OrderItemArrayIndex_Amount?>] = floatamt;
@@ -431,7 +423,7 @@ debugOrder('before add');
 	var elmfee = document.getElementById(feeformid);
 	var txtfee = elmfee.value;
 	var nodefee = document.createTextNode(txtfee);
-	// Keep a running total 
+	// Keep a running total
 	var floatfee = parseFloat(txtfee.substring(txtfee.indexOf('$')+1)) + 0.00;
 	floatfee = floatfee.toPrecision(2);
 	if (floatfee > 0) floatfee = -floatfee;
@@ -450,21 +442,21 @@ debugOrder('before add');
 	a.setAttribute('onClick','deleteRowNewItemTable( "ordertablenewitems", "neworderitem'+tablerow+'", '+orderitemidx+')');
 	var img = document.createElement("img");
 	img.setAttribute('src', 'img/delete.png');
-	img.setAttribute('alt', 'Delete item');	
-	img.setAttribute('border', '0');	
+	img.setAttribute('alt', 'Delete item');
+	img.setAttribute('border', '0');
 	a.appendChild(img);
 	actioncell.appendChild(a);
 	newrow.appendChild( actioncell );
 
-	// Update the totals in the 3 totals divs	
+	// Update the totals in the 3 totals divs
 	updateTotals(floatamt, floatfee);
 
 	// Finally, store the order into the form
 	document.editorderform.order.value = order.toString();
 	document.editorderform.numorderitems.value = ++numorderitems;
-	
+
 debugOrder('after add');
-	
+
 }
 
 function debugOrder(str){
@@ -480,12 +472,12 @@ function deleteRow( table, rowid, orderidx){
 	amount = order[orderidx][<?php echo OrderItemArrayIndex_Amount?>];
 	fee = order[orderidx][<?php echo OrderItemArrayIndex_Fee?>];
 	updateTotals(-amount, -fee);
-	
+
 	var el = document.getElementById(rowid);
 	el.parentNode.removeChild(el);
 //	document.getElementById(table).deleteRow(rownum);
 	order.splice(orderidx, 1);
-//	neworderitem_tablerowid--;	
+//	neworderitem_tablerowid--;
 }
 
 // Delete the row from the table
@@ -494,20 +486,20 @@ function deleteRowNewItemTable( table, rowid, orderidx){
 	amount = order[orderidx][<?php echo OrderItemArrayIndex_Amount?>];
 	fee = order[orderidx][<?php echo OrderItemArrayIndex_Fee?>];
 	updateTotals(-amount, -fee);
-	
+
 	var el = document.getElementById(rowid);
 	el.parentNode.removeChild(el);
 //	document.getElementById(table).deleteRow(rownum);
 	order.splice(orderidx, 1);
 debugOrder('after del');
-	neworderitem_tablerowid--;	
+	neworderitem_tablerowid--;
 }
-// Set the amount value automatically based on the entered amount. 
+// Set the amount value automatically based on the entered amount.
 function onSkuChanged(skuindex, orderid){
 	if (skuAmount instanceof Array) {
 		price = skuAmount[skuindex-1];
 		dojo.byId('amount'+orderid).value = price;
-	}	
+	}
 	// This is a hack to get the dojo widget to pretty up the auto-entered value
 	dojo.byId('amount'+orderid).focus();
 	// Now put focus back to the select list
@@ -516,25 +508,23 @@ function onSkuChanged(skuindex, orderid){
 
 // show the add item button if there is a sku selected
 function onNewItemChanged(skuindex){
-	if (skuindex != 0) 
-		showit('additembuttondiv'); 
+	if (skuindex != 0)
+		showit('additembuttondiv');
 	else hideit('additembuttondiv');
 	if (skuAmount instanceof Array) {
 		price = skuAmount[skuindex-1];
 		dojo.byId('amount').value = price;
-	}	
+	}
 	// This is a hack to get the dojo widget to pretty up the auto-entered value
 	dojo.byId('amount').focus();
 	// Now put focus back to the select list
 	document.editorderform.skuid.focus();
 }
 
-<?php 
+<?php
 			// Get skus and build javascript array mapping skus to amounts
 			$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-			$pdostatementS = $dbh->prepare($strSQL);
-			$bError = ! $pdostatementS->execute(array($teamid));
-			$skuResults = $pdostatementS->fetchAll();
+			$skuResults = $executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountS = count( $skuResults);
 
 			// Display skus for this team
@@ -542,7 +532,7 @@ function onNewItemChanged(skuindex){
 				$countRowsS = 0; ?>
 var skuID=new Array();
 var skuAmount=new Array();
-<?php 
+<?php
 				// build array for javascript
 				if ($rowCountS > 0) {
 					$countRowsS = 0;
@@ -552,7 +542,7 @@ var skuAmount=new Array();
 						$countRowsS ++;
 					}
 				}?>
-<?php 
+<?php
 			}
 ?>
 function isPaidChanged(){

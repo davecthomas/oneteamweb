@@ -42,7 +42,7 @@ if (isset($_POST["customlistid"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	for ($i = 0; $i < count($customlistorder); $i++){	
 		$strSQL = "UPDATE customlistdata SET listorder = ? WHERE id = ? AND customlistid = ? AND teamid = ?;";

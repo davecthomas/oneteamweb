@@ -38,7 +38,7 @@ if (isUser($session, Role_TeamAdmin)){
 if ( $bError) { 
 	displayErrorPage("Set Custom User Properties", "Error", "home.php");
 } else {
-	$dbh = getDBH($session);  
+	  
 	$strSQL = "SELECT * FROM users WHERE id = ? AND teamid = ?;"; 
 	$pdostatement = $dbh->prepare($strSQL);  
 	$pdostatement->execute(array($userid, $teamid));	

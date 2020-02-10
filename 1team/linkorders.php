@@ -4,7 +4,7 @@ $isadminrequired = true;
 $title= " Make an Order" ;
 include('header.php'); 
 
-$dbh = getDBH($session);  
+  
 $strSQL = "SELECT * from orderitems;";
 $pdostatement = $dbh->prepare($strSQL);
 $bError = ! $pdostatement->execute();

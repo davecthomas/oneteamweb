@@ -1,23 +1,22 @@
-<?php  
+<?php
 $title = "Home";
 include('header.php');
 
-$dbh = getDBH($session);
+
 $username = getCurrentUserName($session);
 $userid = getSessionUserID($session);
 $canlogattendance = false;
 // TeamID is passed in for application admin,  else it's in the session
-if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) { 
+if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) {
 	$teamid = $session["teamid"];
-} else { 
+} else {
 	if (isset($_GET["teamid"])) $teamid = $_GET["teamid"];
 	else $teamid = 0;
 }
 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($userid, $teamid));
-$userprops = $pdostatement->fetch(PDO::FETCH_ASSOC);
+$dbconn = getConnection();
+$userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 echo "<h3>" .$title . " of " . roleToStr($session["roleid"], $teamterms) . " " . $username . " with " . $teaminfo["teamname"] ."</h3>\n";
 
@@ -28,24 +27,22 @@ if (isset($userprops["id"])) {
 	$isBillable = $userprops["isbillable"];
 	$teamname = $teaminfo["teamname"];
 	$fullname = $userprops["firstname"] . " " . $userprops["lastname"];
-	
-	$accountStatus = $userprops["status"]; 
-	
+
+	$accountStatus = $userprops["status"];
+
 	$todaysDate = date("m/d/Y");
 	// Member who is paying
 	if (isUser( $session,Role_Member) && $isBillable) {
 		// This is to allow emailing me if necessary
-		$flagEmailMgmt = False;		
+		$flagEmailMgmt = False;
 		// Figure out if their payment is late
 		// Get all unexpired orderitems, and their events
-		$strSQL = "SELECT programs.name as programname, skus.*, skus.name as skuname, events.id as eventid, events.name as eventname, orderitems.id as payid, orderitems.* FROM events INNER JOIN (programs INNER JOIN (users INNER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on events.id = programs.eventid WHERE users.id = orderitems.userid AND userid = ? AND orderitems.teamid = ? and (paymentdate + expires >= current_date) ORDER BY paymentdate DESC;";
-		$pdostatementPayment = $dbh->prepare($strSQL);
-		$pdostatementPayment->execute(array($userid, $teamid));
-		$paymentResults = $pdostatementPayment->fetchAll();
-		
+		$strSQL = "SELECT programs.name as programname, skus.*, skus.name as skuname, events.id as eventid, events.name as eventname, orderitems.id as payid, orderitems.* FROM events INNER JOIN (programs INNER JOIN (users INNER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on events.id = programs.eventid WHERE users.id = orderitems.userid AND userid = ? AND orderitems.teamid = ? and (paymentdate expires >= current_date) ORDER BY paymentdate DESC;";
+		$paymentResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+
 		// If they have unexpired events, show attendance button, with event selector (only events they can record)
 		if (count($paymentResults) > 0){
-			// Only enable attendance logging from the Admin IP address stored for this team 
+			// Only enable attendance logging from the Admin IP address stored for this team
 			if ($runningOnAdminConsole) { ?>
 <form name="logattendanceform" action="/1team/log-attendance.php" method="post">
 <?php buildRequiredPostFields($session) ?>
@@ -55,35 +52,35 @@ if (isset($userprops["id"])) {
 				$loopMax = count($paymentResults);?>
 <select name="eventid" onchange="document.logattendanceform.eventname.value = this.options[this.selectedIndex].text">
 <?php
-				while ($rowCount < $loopMax) { 
+				while ($rowCount < $loopMax) {
 					// Only include events where they have a payment that has > 0 events left
 					if ($paymentResults[$rowCount]["numeventsremaining"] > 0){
-						echo  "<option "; 
+						echo  "<option ";
 						echo  'value="' . $paymentResults[$rowCount]["eventid"] . '"';
 						if ($rowCount == 0) {
 							echo " selected ";
 						}
 						echo  ">";
-						echo $paymentResults[$rowCount]["eventname"] . " (" . $paymentResults[$rowCount]["numeventsremaining"] . " remaining events to be used within " . 
-							getNextPaymentDueDate2($userid, $paymentResults[$rowCount]["payid"], $paymentResults[$rowCount]["expires"], $dbh) . ")"; 
+						echo $paymentResults[$rowCount]["eventname"] . " (" . $paymentResults[$rowCount]["numeventsremaining"] . " remaining events to be used within " .
+							getNextPaymentDueDate2($userid, $paymentResults[$rowCount]["payid"], $paymentResults[$rowCount]["expires"], $dbconn) . ")";
 						echo  "</option>\n";
 					}
 					$rowCount++;
 				}?>
 </select>
-<input type="hidden" name="eventname" value="<?php echo $paymentResults[0]["name"]?>"/>	
+<input type="hidden" name="eventname" value="<?php echo $paymentResults[0]["name"]?>"/>
 <input type="submit" value="Here <?php echo $todaysDate?>" name="log-attendance" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/></p>
 </form>
 <?php
 			}
 		}
-	// End Billable Member 
-	} 
+	// End Billable Member
+	}
 
 	// Active Non billable members can log attendance if they are at the admin console
-	if ((($accountStatus == UserAccountStatus_Active) && $runningOnAdminConsole && isUser( $session,Role_Member) && ($isBillable == 0))) { 
-		// Only enable attendance logging from the Admin IP address stored for this team 
-		if ($runningOnAdminConsole) { 
+	if ((($accountStatus == UserAccountStatus_Active) && $runningOnAdminConsole && isUser( $session,Role_Member) && ($isBillable == 0))) {
+		// Only enable attendance logging from the Admin IP address stored for this team
+		if ($runningOnAdminConsole) {
 ?>
 <form action="/1team/log-attendance.php" method="post">
 <?php buildRequiredPostFields($session) ?>
@@ -93,16 +90,16 @@ if (isset($userprops["id"])) {
 				$strSQL = "SELECT * FROM events WHERE teamid = ? and scannable = TRUE ORDER by listorder;";
 				$pdostatement = $dbh->prepare($strSQL);
 				$pdostatement->execute(array($teamid ));
-				
+
 				$eventResults = $pdostatement->fetchAll();
-			
+
 				$rowCount = 0;
 				$loopMax = count($eventResults);
 ?>
 <select name="eventid" onchange="document.scaneventform.eventname.value = this.options[this.selectedIndex].text">
 <?php
-				while ($rowCount < $loopMax) { 
-					echo  "<option "; 
+				while ($rowCount < $loopMax) {
+					echo  "<option ";
 					echo  'value="' . $eventResults[$rowCount]["id"] . '"';
 					if ($rowCount == 0) {
 						echo " selected ";
@@ -111,21 +108,21 @@ if (isset($userprops["id"])) {
 					echo $eventResults[$rowCount]["name"];
 					echo  "</option>\n";
 					$rowCount++;
-				} 
+				}
 ?>
 </select>
-<input type="hidden" name="eventname" value="<?php echo $eventResults[0]["name"]?>"/>	
+<input type="hidden" name="eventname" value="<?php echo $eventResults[0]["name"]?>"/>
 <input type="submit" value="Here <?php echo $todaysDate?>" name="log-attendance" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 </form>
 
 <?php
 		}
-	} 
+	}
 	// Conditionally display image
 	if ((!is_null($userprops["url"])) && (strlen($userprops["url"]) > 0)) {?>
 <img src="<?php echo $userprops["url"]?>" id="" border=0" alt="user">
-<?php		
-	} 
+<?php
+	}
 ?>
 <form name="userprops" action="/1team/user-props.php" method="post">
 <?php buildRequiredPostFields($session) ?>
@@ -196,7 +193,7 @@ if (isset($userprops["id"])) {
 <td class="strong">Email Address</td>
 <td><input type="text" value="<?php echo $userprops["email"]?>" name="email"></td>
 </tr>
-<?php  
+<?php
 	// Member
 	if (isUser($session, Role_Member )) {?>
 <tr>
@@ -211,7 +208,7 @@ if (isset($userprops["id"])) {
 <td class="strong">EC Phone 2</td>
 <td ><input type="text" value="<?php echo $userprops["ecphone2"]?>" name="ecphone2"></td>
 </tr>
-<?php 
+<?php
 	} ?>
 <tr>
 <td></td><td>
@@ -221,8 +218,8 @@ if (isset($userprops["id"])) {
 </div>
 </div>
 </form>
-<?php 
-} 
+<?php
+}
 
 // Admins don't need this
 if (! isUser( $session,Role_ApplicationAdmin) ) {
@@ -236,7 +233,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 <td><?php echo $teamname?></td></tr>
 <tr>
 <td class="strong">Member Since</td>
-<?php 
+<?php
 	if (! is_null($userprops["startdate"])) {
 		$startdate = $userprops["startdate"];
 	} else {
@@ -248,7 +245,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 </table>
 </div>
 </div>
-<?php 
+<?php
 	if (isUser( $session,Role_Member)) {
 		$pageMode = "embedded";
 		$whomode = "user";
@@ -267,14 +264,14 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 		// Attendance toggle ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglerender('attendanceshist', 'attendancehistory','include-attendance-table.php<?php echo buildRequiredParams($session)?>&whomode=<?php echo $whomode?>&pagemode=<?php echo $pageMode?>&id=<?php echo $userid?>&teamid=<?php echo $teamid?>&startdate=<?php echo htmlspecialchars($startdate)?>' )">Attendance History<img src="img/a_expand.gif" alt="expand section" id="attendancehist_img" border="0"></a></h4>
 <div class="hideit" id="attendanceshist">
-<iframe src=""	
+<iframe src=""
 	id="attendancehistory" name="attendancehistory"
 	style="width: 800px;
 	height: 200px;
 	border:none"
 ></iframe>
 </div>
-<?php	// Promotions toggle 
+<?php	// Promotions toggle
 		if (isTeamUsingLevels($session, $teamid)) { ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglerender('promotionshist', 'promotionshistory','include-promotions.php?whomode=<?php echo $whomode?>&pagemode=<?php echo $pageMode?>&id=<?php echo $userid?>&teamid=<?php echo $teamid . buildRequiredParamsConcat($session)?>' )">Promotions History<img src="img/a_expand.gif" alt="expand section" id="promotionshist_img" border="0"></a></h4>
 <div class="hideit" id="promotionshist">
@@ -285,7 +282,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 	border:none"
 ></iframe>
 </div>
-<?php 
+<?php
 		}
 
 		// Custom fields support - see if we have any defined for this team
@@ -298,15 +295,15 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 <div class="hideit" id="custominfo">
 <div class="indented-group-noborder">
 <table class="noborders">
-<?php 
+<?php
 			$strSQL = "SELECT customfields.name as customfieldname, * FROM customfields LEFT OUTER JOIN customdata ON (customdata.customfieldid = customfields.id and customdata.memberid = ? AND customfields.teamid = ?) ;";
 			$pdostatementcustomdata = $dbh->prepare($strSQL);
 			$pdostatementcustomdata->execute(array($userid, $teamid));
 			$customdataResults = $pdostatementcustomdata->fetchAll();
-			$loopMax = count( $customdataResults); 
+			$loopMax = count( $customdataResults);
 
 			$rowCount = 0;
-			
+
 			while ($rowCount < $loopMax) {
 				// Get the data type of the custom field so you know how to display it
 				$datatype = $customdataResults[$rowCount]["customdatatypeid"];
@@ -315,7 +312,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 					$dcField = $customdataResults[$rowCount]["displayconditionfield"];
 					$dcOperator = $customdataResults[$rowCount]["displayconditionoperator"];
 					$dcValue = $customdataResults[$rowCount]["displayconditionvalue"];
-					
+
 					if ($dcObject == DisplayConditionObject_User) {
 						$strSQL = "SELECT " . $dcField . " FROM " . $dcObject . " WHERE id = ?;";
 					} else {
@@ -326,8 +323,8 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 					$dcResult = $pdostatementdc->fetchColumn();
 					// Assume we can't until condition proves we can
 					$displayCustomField = false;
-					
-					switch ($dcOperator) { 
+
+					switch ($dcOperator) {
 						case DisplayConditionOperator_EQ:
 							if ($dcResult == $dcValue) $displayCustomField = true;
 							break;
@@ -341,11 +338,11 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 							if ($dcResult != $dcValue) $displayCustomField = true;
 							break;
 					}
-					
+
 					// Skip the rest of this loop iteration if we don't display field
-					if (!$displayCustomField) { 
+					if (!$displayCustomField) {
 						$rowCount++;
-						continue;					
+						continue;
 					}
 				}
 				echo "<tr>\n";
@@ -377,29 +374,29 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 						break;
 					case CustomDataType_List:
 						$customdataValue = $customdataResults[$rowCount]["valuelist"];
-						
+
 						// if the datatype is a list, build the select (and conditionally select the item)
 						$strSQL = "SELECT listitemname FROM customlists, customlistdata WHERE customlistdata.customlistid = customlists.id and customlists.id = ? and customlists.teamid = ? AND customlistdata.id = ? ORDER BY listorder;";
-						
+
 						$pdostatementcustomlist = $dbh->prepare($strSQL);
 						$pdostatementcustomlist->execute(array($customdataResults[$rowCount]["customlistid"], $teamid, $customdataValue ));
 						$customlistItemName = $pdostatementcustomlist->fetchColumn();
 						echo $customlistItemName;
 						break;
-					default: 
+					default:
 						$customdataValue = Error;
 						echo $customdataValue;
 						break;
 				}
 				if ((CustomDataType_Bool != $datatype) && (strlen($customdataValue < 1))) echo 'Contact your ' . $teamterms["termadmin"] . ' to set ' . $customdataResults[$rowCount]["customfieldname"];
 				echo "</td></tr>\n";
-				
+
 				$rowCount ++;
 			} ?>
-</table>		   
-</div> 
+</table>
 </div>
-<?php 						
+</div>
+<?php
 			// End if there are any custom fields defined for this team (block 5 ln 524)
 			}
 	// member
@@ -411,7 +408,7 @@ if (isset($_GET["err"])){
 	showError("Error", "Not saved successfully: " . $_GET["err"], "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "Saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 <script type="text/javascript">

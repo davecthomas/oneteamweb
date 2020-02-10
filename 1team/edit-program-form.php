@@ -1,9 +1,9 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Edit Program"; 
+$title = "Edit Program";
 include('header.php');
-$dbh = getDBH($session);
+
 $teamid = NotFound;
 $bError = false;
 // teamid depends on who is calling
@@ -24,13 +24,11 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM programs WHERE id = ?;";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($programid));
-
-$programResults = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$programResults = executeQuery($dbconn, $strSQL, $bError, array($programid));
 
 if (count($programResults) > 0) { ?>
-<h3>Modify a program for <?php echo getTeamName2($teamid, $dbh)?></h3>	
+<h3>Modify a program for <?php echo getTeamName($teamid, $dbconn)?></h3>
 <div class="indented-group-noborder">
 <form action="/1team/edit-program.php" method="post">
 <input type="hidden" name="id" value="<?php echo $programid ?>"/>
@@ -42,26 +40,23 @@ if (count($programResults) > 0) { ?>
 	// Event selector
 	if ( isUser($session, Role_ApplicationAdmin) ) {
 		$strSQL = "SELECT * FROM events order by listorder;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute();		
+		$eventResults = executeQuery($dbconn, $strSQL, $bError);
 	} else {
 		$strSQL = "SELECT * FROM events WHERE teamid = ? order by listorder;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($session["teamid"]));		
-	} 
-	$eventResults = $pdostatement->fetchAll();
+		$eventResults = executeQuery($dbconn, $strSQL, $bError, array($session["teamid"]));
+	}
 	$numEvents = count($eventResults);
 	$rowCount = 0;
 	if ($numEvents > 0){ ?>
 <select name="eventid">
-<?php 
+<?php
 		if ((is_null($programResults[0]["eventid"])) || ($programResults[0]["eventid"] == eventidUndefined)) { ?>
 <option value="<?php echo eventidUndefined?>">Associate an attendance event with this program...</option>
 <?php
-		} 
-		while ($rowCount < $numEvents) { 
+		}
+		while ($rowCount < $numEvents) {
 			$eventdate = $eventResults[$rowCount]["eventdate"];
-			if (( strlen($eventdate) < 1 ) || ( is_null($eventdate) )) { 
+			if (( strlen($eventdate) < 1 ) || ( is_null($eventdate) )) {
 				$eventdate = "any date";
 			}
 			$location = $eventResults[$rowCount]["location"];
@@ -78,8 +73,8 @@ if (count($programResults) > 0) { ?>
 			$rowCount++;
 		} ?>
 </select>
-<?php 
-	} else { 
+<?php
+	} else {
 		echo 'No events have been defined. <a href="/1team/manage-events-form.php?' . returnRequiredParams($session) . '">Define events</a> to associate with programs.';
 	}?>
 </td></tr>
@@ -89,8 +84,8 @@ if (count($programResults) > 0) { ?>
 <input type="submit" value="Modify program" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <input type="button" value="Cancel" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = 'manage-programs-form.php?<?php echo returnRequiredParams($session) . "&teamid=" . $teamid?>'"/>
 </form>
-<?php 
-} 
+<?php
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

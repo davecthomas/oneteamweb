@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,11 +14,11 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
@@ -26,7 +26,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
- 
+
 if (isset($_POST["id"])) {
 	$skuid = $_POST["id"];
 } else {
@@ -34,17 +34,17 @@ if (isset($_POST["id"])) {
 }
 
 if (isset($_POST["name"])) {
-	$skuname = $_POST["name"]; 
+	$skuname = $_POST["name"];
 } else {
 	$bError = true;
 }
 if (isset($_POST["price"])) {
-	$price = $_POST["price"]; 
+	$price = $_POST["price"];
 } else {
 	$bError = true;
 }
 if (isset($_POST["description"])) {
-	$description = $_POST["description"]; 
+	$description = $_POST["description"];
 } else {
 	$bError = true;
 }
@@ -60,7 +60,7 @@ if (isset($_POST["programid"])) {
 }
 // This is a checkbox. If it's set, it's on
 if (isset($_POST["unlimitednumevents"])) {
-	$numevents = Sku::NumEventsUnlimited;	 
+	$numevents = Sku::NumEventsUnlimited;
 }
 // This may not be set since it may not be visible (in unlimited case)
 else if (isset($_POST["numevents"])) {
@@ -69,7 +69,7 @@ else if (isset($_POST["numevents"])) {
 		$bError = true;
 	}
 } else {
-	$numevents = Sku::NumEventsUndefined;	 
+	$numevents = Sku::NumEventsUndefined;
 }
 if (isset($_POST["expirationnum"])) {
 	$expirationnum = $_POST["expirationnum"];
@@ -88,12 +88,12 @@ if (isset($_POST["expirationnum"])) {
 $expires = createExpirationSQL($expirationnum, $expirationunits);
 
 if (!$bError) {
-	$dbh = getDBH($session);  
-	
+
+
 	$strSQL = "UPDATE skus SET name = ?, price = ?, description = ?, programid = ?, numevents = ?, expires = ? WHERE id = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($skuname, $price, $description, $programid, $numevents, $expires, $skuid, $teamid));
-	
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($skuname, $price, $description, $programid, $numevents, $expires, $skuid, $teamid));
+
 	redirect("manage-skus-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 } else {
 	redirect("manage-skus-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");
@@ -101,23 +101,22 @@ if (!$bError) {
 
 function createExpirationSQL($expirationnum, $expirationunits){
 	switch ($expirationunits){
-		case skuExpirationUnits_Days: 
+		case skuExpirationUnits_Days:
 			$retval = $expirationnum . " " . skuSQL_Days;
 			break;
-		case skuExpirationUnits_Weeks: 
+		case skuExpirationUnits_Weeks:
 			$retval = $expirationnum . " " . skuSQL_Weeks;
 			break;
-		case skuExpirationUnits_Months: 
+		case skuExpirationUnits_Months:
 			$retval = $expirationnum . " " . skuSQL_Months;
 			break;
-		case skuExpirationUnits_Years: 
+		case skuExpirationUnits_Years:
 			$retval = $expirationnum . " " . skuSQL_Years;
 			break;
 		default:
 			$retval = "1 day";
 			break;
-			
+
 	}
 	return $retval;
 }
- 

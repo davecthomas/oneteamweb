@@ -10,7 +10,7 @@ dojo.require("dijit.form.DateTextBox");
 
 <?php 
 $bError = false;
-$dbh = getDBH($session);
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $teamid = NotFound;
@@ -25,7 +25,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
-$objname = getTeamName2($teamid, $dbh);
+$objname = getTeamName($teamid, $dbconn);
 
 // set up sort order
 $sortRequest = "firstname";
@@ -55,7 +55,7 @@ if ((isset($_REQUEST["year"])) && (is_numeric($_REQUEST["year"]))) {
 $disablenextyearlink = ($paymentyear+1 > (int)date("Y"));
 
 if (!$bError){
-	$teamname = getTeamName2($teamid, $dbh);
+	$teamname = getTeamName($teamid, $dbconn);
 	
 	// All new orderitems
 	if ($programid != Program_Undefined){
@@ -87,7 +87,7 @@ function updateProgramID() {
 <input type="hidden" name="year" value="<?php echo $paymentyear?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-			$dbh = getDBH($session);
+			
 			// GEt payment methods for this team
 			$strSQL = "SELECT * FROM programs WHERE teamid = ?";
 			$pdostatementP = $dbh->prepare($strSQL);

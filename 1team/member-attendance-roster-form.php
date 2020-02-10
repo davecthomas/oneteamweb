@@ -4,7 +4,7 @@ $isadminorcoachrequired = true;
 
 $title = "Member Attendance Roster";
 include_once('header-minimal.php');
-$dbh = getDBH($session);  
+  
 ?>
 <div id="userbanner">
 Signed in as <?php echo roleToStr($session["roleid"],$teamterms)?>&nbsp;<?php echo $session["fullname"]?>. <a href="/1team/logout.php<?php buildRequiredParams($session)?>">Sign out</a><br />
@@ -281,7 +281,7 @@ href="member-roster.php<?php buildRequiredParams($session) ?>&teamid=<?php echo 
 // If only one result, go to props page for that user
 	} else { ?>
 <div id="bodycontent">
-<h3><?php echo $title?> for <?php echo getTeamName2($teamid, $dbh)?></h3>
+<h3><?php echo $title?> for <?php echo getTeamName($teamid, $dbconn)?></h3>
 <form action="/1team/member-attendance-roster.php" method="post" name="memberattendancerosterform" id="memberattendancerosterform">
 <?php buildRequiredPostFields($session) ?>
 <input type="hidden" name="teamid" value="<?php echo $teamid ?>"/>

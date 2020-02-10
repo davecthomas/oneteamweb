@@ -8,7 +8,7 @@ $title = "New " . $teamterms["termmember"];
 $bError = false;
 $bAllowAdd = false;
 
-$dbh = getDBH($session);  
+  
 
 if (!$bError){ 
 	if ( isset($_GET["roleid"])) {

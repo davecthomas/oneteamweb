@@ -13,7 +13,7 @@ if (isset($_REQUEST["str"])) {
 }
 $title .= "'" . $strSearch . "'";
 
-$dbh = getDBH($session);  
+  
 
 $rowCount = 0;
 // Set up teamid from session or input

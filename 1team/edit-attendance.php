@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,11 +14,11 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
@@ -39,7 +39,7 @@ if (isset($_POST["objname"])) {
 	$bError = true;
 }
 if (isset($_POST["attendanceid"])) {
-	$attendanceid = $_POST["attendanceid"]; 
+	$attendanceid = $_POST["attendanceid"];
 } else {
 	$bError = true;
 }
@@ -56,14 +56,14 @@ if (isset($_POST["eventid"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+
 
 	$strSQL = "UPDATE attendance SET attendancedate = ?, eventid = ? WHERE id = ? AND memberid = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($attendancedate, $eventid, $attendanceid, $userid, $teamid));
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($attendancedate, $eventid, $attendanceid, $userid, $teamid));
 
 	$datetimeevent = new DateTime($attendancedate);
-	
+
 	redirect("include-attendance-table.php?" . returnRequiredParams($session) . "&mode=user&teamid=" . $teamid . "&id=" . $userid . "&pagemode=standalone&name=" . urlencode($objname) . "&EventDate=01-" . $datetimeevent->format("m") . "-" . $datetimeevent->format("Y") . "&done=1");
 } else {
 	redirect("include-attendance-table.php?" . returnRequiredParams($session) . "&mode=user&teamid=" . $teamid . "&id=" . $userid . "&pagemode=standalone&name=" . urlencode($objname) . "&EventDate=01-" . $datetimeevent->format("m") . "-" . $datetimeevent->format("Y") . "&err=1");

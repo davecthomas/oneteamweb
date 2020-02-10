@@ -1,19 +1,19 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Edit Order Item"; 
+$title = "Edit Order Item";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.CurrencyTextBox");
 </script>
 
 <?php
-$dbh = getDBH($session);
+
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
@@ -42,13 +42,11 @@ if (isset($_GET["uid"])) {
 
 if (!$bError) {
 	$strSQL = "SELECT * FROM orderitems WHERE id = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($paymentid, $teamid));
-	
-	$paymentResults = $pdostatement->fetch();
-	
+	$dbconn = getConnection();
+	$paymentResults = executeQuery($dbconn, $strSQL, $bError, array($paymentid, $teamid));
+
 	if (count($paymentResults) > 0) { ?>
-<h3><?php echo $title . " for " . getTeamName2($teamid, $dbh) . " " . $teamterms["termmember"] . " " . getUserName2($userid, $dbh);?></h3>	
+<h3><?php echo $title . " for " . getTeamName($teamid, $dbconn) . " " . $teamterms["termmember"] . " " . getUserName($userid, $dbconn);?></h3>
 <form name="orderitemform" action="/1team/edit-orderitem.php" method="post">
 <input type="hidden" name="paymentid" value="<?php echo $paymentid ?>"/>
 <input type="hidden" name="uid" value="<?php echo $userid ?>"/>
@@ -59,20 +57,18 @@ if (!$bError) {
 <tr><td class="bold">Amount ($US)</td><td><input type="text" id="amount" name="amount" value="<?php echo $paymentResults["amount"]?>" dojoType="dijit.form.CurrencyTextBox" required="true" constraints="{fractional:true}" currency="USD" invalidMessage="Invalid amount.  Include dollars and cents." /></td></tr>
 <tr><td class="bold">Fee ($US)</td><td><input type="text" id="fee" name="fee" value="<?php echo $paymentResults["fee"]?>" dojoType="dijit.form.CurrencyTextBox" required="false" constraints="{max:0}" currency="USD" invalidMessage="Invalid amount.  Must be a negative number. Include dollars and cents." /></td></tr>
 <tr><td class="bold">SKU</td><td>
-<?php 
-	// GEt payment methods for this team 
+<?php
+	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-	$pdostatementS = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementS->execute(array($teamid));
-	$skuResults = $pdostatementS->fetchAll();
+	$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountS = count( $skuResults);
-	
+
 	// Display programs for this team
-	if ($rowCountS > 0) { 
-		$countRowsS = 0; ?>		
+	if ($rowCountS > 0) {
+		$countRowsS = 0; ?>
 <select name="skuid" onchange="onSkuChanged(this.selectedIndex);">
 <option value="<?php echo Sku::SkuID_Undefined?>" <?php if ((empty($paymentResults["skuid"])) || ($paymentResults["skuid"] == Sku::SkuID_Undefined) ) echo ' selected'?>>Select SKU purchased with this payment...</option>
-<?php 
+<?php
 		while ($countRowsS < $rowCountS) {
 			echo "<option value=\"";
 			echo $skuResults[$countRowsS]["id"];
@@ -85,8 +81,8 @@ if (!$bError) {
 			echo "</option>\n";
 			$countRowsS ++;
 		} ?>
-</select>				
-<?php 
+</select>
+<?php
 	}  else {
 		echo 'No SKUs are defined for ' . $teamname . '. <a href="/1team/manage-skus-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define SKUs</a>.';
 	} ?>
@@ -94,18 +90,16 @@ if (!$bError) {
 <tr><td class="bold">Number of events remaining</td><td><input type="text" id="numeventsremaining" name="numeventsremaining" value="<?php echo $paymentResults["numeventsremaining"]?>" /></td></tr>
 <tr><td class="bold">Payment for program</td><td>
 <?php
-	// GEt programs for this team 
+	// GEt programs for this team
 	$strSQL = "SELECT * FROM programs WHERE teamid = ? ORDER BY listorder";
-	$pdostatementP = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementP->execute(array($teamid));
-	$programResults = $pdostatementP->fetchAll();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountP	  = count( $programResults);
-	
+
 	// Display programs for this team
-	if ($rowCountP > 0) { 
+	if ($rowCountP > 0) {
 		$countRowsP = 0; ?>
 <select name="programid">
-<?php 
+<?php
 		while ($countRowsP < $rowCountP) {
 			echo "<option value=\"";
 			echo $programResults[$countRowsP]["id"];
@@ -118,26 +112,24 @@ if (!$bError) {
 			echo "</option>\n";
 			$countRowsP ++;
 		} ?>
-</select>				
-<?php 
+</select>
+<?php
 	} else {
 		echo 'No programs are defined for ' . $teamname . '. <a href="/1team/manage-programs-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define programs</a>.';
 	} ?>
 </td></tr>
 <tr><td class="bold">Method</td><td>
-<?php	 
-	// GEt payment methods for this team 
+<?php
+	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? ORDER BY listorder;";
-	$pdostatementPM = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementPM->execute(array($teamid));
-	$paymentmethodResults = $pdostatementPM->fetchAll();
+	$paymentmethodResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountPM	  = count( $paymentmethodResults);
-	
+
 	// Display paymentmethods for this team
-	if ($rowCountPM > 0) { 
+	if ($rowCountPM > 0) {
 		$countRowsPM = 0; ?>
 <select name="paymentmethod">
-<?php 
+<?php
 		while ($countRowsPM < $rowCountPM) {
 			echo "<option value=\"";
 			echo $paymentmethodResults[$countRowsPM]["id"];
@@ -150,8 +142,8 @@ if (!$bError) {
 			echo "</option>\n";
 			$countRowsPM ++;
 		} ?>
-</select>				
-<?php 
+</select>
+<?php
 	} else {
 		echo 'No payment methods are defined for ' . $teamname . '. <a href="/1team/manage-payment-types-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define payment methods</a>.';
 	} ?>
@@ -196,7 +188,7 @@ function onSkuChanged( idx){
 }
 </script>
 </form>
-<?php 
+<?php
 	$pageMode = "expand"; ?>
 <h4><a class="linkopacity" href="javascript:togglerender('paymenthist', 'paymenthistory','include-payment-history.php?<?php echo returnRequiredParams($session)?>&id=<?php echo $userid?>&teamid=<?php echo $teamid?>&pagemode=embedded' )">Payment History<img src="img/a_expand.gif" alt="expand section" id="paymenthist_img" border="0"></a></h4>
 <div class="hideit" id="paymenthist">
@@ -208,8 +200,8 @@ function onSkuChanged( idx){
 ></iframe>
 </div>
 	<?php
-	} 
-} 
+	}
+}
 if ($bError) {
 }
 // Start footer section

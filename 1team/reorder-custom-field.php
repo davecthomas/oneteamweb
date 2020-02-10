@@ -36,7 +36,7 @@ if (isset($_POST["customfieldorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 //	print_r($customfieldorder);
 	for ($i = 0; $i < count($customfieldorder); $i++){	
 		$strSQL = "UPDATE customfields SET listorder = ? WHERE id = ? AND teamid = ?;";

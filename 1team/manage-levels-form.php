@@ -11,7 +11,7 @@ dojo.require("dojo.dnd.Source");
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
-$dbh = getDBH($session);
+
 $bError = false;
 $teamid = NotFound;
 $err = "";
@@ -27,7 +27,7 @@ if (isUser($session, Role_TeamAdmin)){
 	}
 }
 ?>
-<h4>Levels for <?php echo getTeamName2($teamid, $dbh);?></h4>
+<h4>Levels for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview');">What are Levels?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">
@@ -96,7 +96,7 @@ To reorder the level list, click and drag them, then press the "Reorder levels" 
 <?php
 	} ?>
 <table width="65%">
-<tr class="odd"><td colspan="4"><span class="bigstrong">Add new level for <?php echo getTeamName2($teamid, $dbh)?>&nbsp;<?php echo $teamterms["termmember"]?>s</span></td></tr>
+<tr class="odd"><td colspan="4"><span class="bigstrong">Add new level for <?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms["termmember"]?>s</span></td></tr>
 <tr class="even">
 <td width="50%"><form name="newlevel" action="/1team/new-level.php" method="post">
 <?php buildRequiredPostFields($session) ?>

@@ -36,7 +36,7 @@ if (isset($_POST["eventorder"])) {
 }
 
 if (!$bError) {
-	$dbh = getDBH($session);  
+	  
 
 	for ($i = 0; $i < count($eventorder); $i++){	
 		$strSQL = "UPDATE events SET listorder = ? WHERE id = ? AND teamid = ?;";

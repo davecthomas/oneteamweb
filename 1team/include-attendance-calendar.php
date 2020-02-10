@@ -51,7 +51,7 @@ if (isset($_REQUEST["EventDate"])) {
 } else {
 	$eventdatetime = new DateTime();
 }
-$dbh = getDBH($session);  
+  
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
 	$objid = $userid;
@@ -62,7 +62,7 @@ if ($whomode == "user") {
 } else {
 	$sqlwhere = "attendance.teamid";
 	$objid = $teamid;
-	$objname = getTeamName2($teamid, $dbh); ?>
+	$objname = getTeamName($teamid, $dbconn); ?>
 <h5>Attendance for <a target="_top" href="team-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $teamid?>" target="_top"><?php echo $objname?></a> for <?php echo $eventdatetime->format("F")?>, <?php echo $eventdatetime->format("Y")?></h5>
 <?php
 }
@@ -97,7 +97,7 @@ function updateProgramID() {
 <input type="hidden" name="id" value="<?php echo $id ?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-	$dbh = getDBH($session);  
+	  
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?";
 	$pdostatementP = $dbh->prepare($strSQL);
@@ -129,7 +129,7 @@ function updateProgramID() {
 </form>
 <?php
 	} else {
-		echo '<p>There are no programs defined for the team ' . getTeamName2($teamid, $dbh). '. <a href="/1team/manage-programs-form.php?' . returnRequiredParams($session) . '&teamid=' . $teamid .'">Define programs</a>.';
+		echo '<p>There are no programs defined for the team ' . getTeamName($teamid, $dbconn). '. <a href="/1team/manage-programs-form.php?' . returnRequiredParams($session) . '&teamid=' . $teamid .'">Define programs</a>.';
 	} ?>
 <div class="push"></div>
 <div class="indented-group-noborder">
