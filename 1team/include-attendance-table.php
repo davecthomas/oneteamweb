@@ -29,9 +29,9 @@ if (isset($_REQUEST["pagemode"])) {
 if ($pagemode == "standalone") {
 	ob_start();
 	$title= " Attendance History " ;
-	include('header.php'); 
+	include('header.php');
 	$expandimg = "collapse";
-	$expandclass = "showit"; 
+	$expandclass = "showit";
 	// id is required and you must be able to admin this id
 	if (isset($_REQUEST["id"])){
 		if ($whomode == "user")	{
@@ -62,7 +62,7 @@ if ($pagemode == "standalone") {
 		}
 	}
 ?>
-	
+
 <h4>Filter Attendance Results</h4>
 <div class="indented-group-noborder">
 <script type="text/javascript">
@@ -76,12 +76,11 @@ function updateProgramID() {
 <input type="hidden" name="id" value="<?php echo $id ?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-	  
+
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?";
-	$pdostatementP = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementP->execute(array($teamid));
-	$programResults = $pdostatementP->fetchAll();
+	$dbconn = getConnection();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountP = count( $programResults);
 
 	// Display programs for this team
@@ -111,16 +110,16 @@ function updateProgramID() {
 		echo '<p>There are no programs defined for the team ' . $teaminfo["teamname"] . '. <a href="/1team/manage-programs-form.php?' . returnRequiredParams($session) . '&teamid=' . $teamid .'">Define programs</a>.';
 	}
 
-	
-	
-	
-	
+
+
+
+
 // Embedded mode: userid is required for user mode. Teamid is required for team mode
 } else { ?>
 <link rel="stylesheet" type="text/css" href="1team.css"/>
-<?php 
+<?php
 	$session = getSession();
-	
+
 	$expandimg = "expand";
 	$expandclass = "hideit";
 
@@ -149,25 +148,25 @@ function updateProgramID() {
 		} else {
 			$userid = getSessionUserID($session);
 		}
-	
+
 	}
-} 
+}
 
 // Team mode must be admin
 if ( $whomode == "team") {
-	redirectToLoginIfNotAdmin( $session); 
+	redirectToLoginIfNotAdmin( $session);
 } else {
 	if (! isset($userid)){
 		redirectToLogin();
 	}
 }
 
-  
+
 
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
-	$objid = $userid;	
-	$objname = getUserName2($userid, $dbh);
+	$objid = $userid;
+	$objname = getUserName($userid, $dbconn);
 	$sqlwhere = "attendance.memberid = " . $userid;
 } else {
 	$sqlwhere = "attendance.teamid = " . $teamid;
@@ -183,7 +182,7 @@ if (isset($_REQUEST["EventDate"])) {
 } else {
 	// Default event date
 	$EventDate = new DateTime(date("01-m-Y"));
-}	 
+}
 $CurMonth = $EventDate->format("m");
 $CurMonthName =$EventDate->format("F");
 $CurYear = $EventDate->format("Y");
@@ -210,13 +209,13 @@ if ((isUser( $session, Role_ApplicationAdmin)) && ($whomode == "user")) { ?>
 <p></p>
 <div class="navtop">
 <ul id="nav">
-<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session)?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>	
+<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session)?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>
 <li><a class="linkopacity" href="user-props-form.php?id=<?php echo($userid+1) . buildRequiredParamsConcat($session)?>">Next member<img src="img/a_next.gif" border="0" alt="next"></a></li>
 </ul>
 </div><p></p>
-<?php 
+<?php
 }?>
-<h5>Attendance for 
+<h5>Attendance for
 <?php
 if ($whomode == "user") { ?>
 <a target="_top" href="user-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $objid ?>" target="_top"><?php echo $objname?></a>
@@ -236,7 +235,7 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 	$EventDatePrevYear->modify("-1 year");
 	$EventDateNextMonth->modify("+1 month");
 	$EventDatePrevMonth->modify("-1 month");
- 
+
 	// Don't display the month/year if input has specified start or end point
 	if (strlen($lastdaydatereq) == 0) { ?>
 <tr>
@@ -279,13 +278,11 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 	// end if event dates not entered
 	}
 	// Prepare to count rows for totals at the bottom of table
-	$rowCountAttendance = 0; 
+	$rowCountAttendance = 0;
 	// See if there are any events for this date range
 	$strSQL = "SELECT COUNT(*) FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid) WHERE " . $sqlwhere . " AND (attendancedate >= ? and attendancedate < ?)" . $sqlprogram . " ;";
-	
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
-	$rowCount = $pdostatement->fetchColumn();
+
+	$rowCount = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
 	if ($rowCount > 0) { ?>
 <tr>
 <th style="text-align:left">Date</th>
@@ -296,10 +293,10 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 ?>
 <th>Member</th>
 <?php
-		} 
-	
+		}
+
 		// Display the action column header here since we may have skipped it above
-		if ((isset($_REQUEST["EventDateEnd"])) && ($_REQUEST["EventDateEnd"] != "")) { 
+		if ((isset($_REQUEST["EventDateEnd"])) && ($_REQUEST["EventDateEnd"] != "")) {
 			if (isAnyAdminLoggedIn($session)) { ?>
 <th width="30">Actions</th></tr>
 <?php
@@ -307,10 +304,9 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 		}
 	}
 	$strSQL = "SELECT attendance.id as attendanceid, attendance.memberid as attendancememberid, attendance.teamid as attendanceteamid, attendance.*, events.*, users.* FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid) WHERE " . $sqlwhere . " AND (attendancedate >= ? and attendancedate < ?) " . $sqlprogram . " ORDER BY attendance.attendancedate DESC;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
+	$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
 
-	foreach ($pdostatement as $row) { 
+	foreach ($attendance_records as $row) {
 ?>
 </thead>
 <tbody>
@@ -323,7 +319,7 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 		if (isAnyAdminLoggedIn($session)) { ?>
 <a title="View attendance detail on this date" href="attendance-on-date.php<?php buildRequiredParams($session)?>&date=<?php echo urlencode($attendancedate->format("Y-m-d"))?>&teamid=<?php echo $row["teamid"]?>">
 		<?php
-		} 
+		}
 		echo $attendancedate->format("m-d-Y");
 		if (isAnyAdminLoggedIn($session)) { ?>
 </a>
@@ -333,8 +329,8 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 <td><?php echo $row["name"]?></td>
 <td><?php echo $row["location"]?></td>
 <?php	if ($whomode == "team") {
-			echo '<td><a target="_top" href="user-props-form.php?' . buildRequiredParamsConcat($session) . '&id=' . $row["attendancememberid"] . '">' . $row["firstname"] . ' ' . $row["lastname"] . '</a></td>'; 
-		} 
+			echo '<td><a target="_top" href="user-props-form.php?' . buildRequiredParamsConcat($session) . '&id=' . $row["attendancememberid"] . '">' . $row["firstname"] . ' ' . $row["lastname"] . '</a></td>';
+		}
 		if (isAnyAdminLoggedIn($session)) { ?>
 <td>
 <a href="delete-attendance.php<?php buildRequiredParams($session)?>&whomode=<?php echo $whomode?>&id=<?php echo $row["attendancememberid"]?>&attendanceid=<?php echo $row["attendanceid"]?>&date=<?php echo urlencode($attendancedate->format("d-m-Y"))?>" title="Delete"><img src="img/delete.gif" alt="Delete" border="0"></a>&nbsp;
@@ -342,7 +338,7 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 </td>
 <?php 	} ?>
 </tr>
-<?php		
+<?php
 	}	?>
 <tbody>
 </table>
@@ -351,29 +347,29 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 if ($whomode == "user") {
 ?>
 <p><a title="View <?php echo $teamterms["termuser"]?> details" target="_top" href="user-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $objid?>" target="_top"><?php echo $objname?></a>  attended <?php echo $rowCount?> event<?php
-	if ($rowCount != 1) { 
+	if ($rowCount != 1) {
 		echo("s");
 	}
 ?>
 &nbsp;from <?php echo $FirstDayDate->format("F j, Y")?> to <?php echo $lastdaydate->format("F j, Y") ?>.</p>
-<?php	
+<?php
 } else {
 // Display team total
 ?>
 <p><a title="View <?php echo $teamterms["termteam"]?> details" target="_top" href="team-props-form.php<?php buildRequiredParams($session)?>&teamid=<?php echo $objid?>" target="_top"><?php echo $objname?></a> had <?php echo $rowCount?> event<?php
-	if ($rowCount != 1) { 
+	if ($rowCount != 1) {
 		echo("s");
 	} ?>
 &nbsp;from <?php echo $FirstDayDate->format("F j, Y")?> to <?php echo $lastdaydate->format("F j, Y") ?>.</p>
 <?php
 }
 
-if ($pagemode == "standalone" ) { 
+if ($pagemode == "standalone" ) {
 	// Start footer section
 	include('footer.php'); ?>
 </body>
 </html>
-<?php 
+<?php
 	ob_end_flush();
 
 } ?>

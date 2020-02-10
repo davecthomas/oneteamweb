@@ -176,17 +176,17 @@ function getNextPaymentDueDate2($userid, $payid, $expires, $dbconn = null){
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $payid, $expires));
 }
 
-function dateDiffString($dbh, $date1 , $date2){
+function dateDiffString($date1 , $date2, $dbconn = null){
 	$strSQL = "select age(?, ?)";
-	$dbconn = getConnection();
+	if ($dbconn == null) $dbconn = getConnection();
 	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
 	if (strcmp($diff, "00:00:00") == 0) $diff = "0 days";
 	return $diff;
 }
 
-function dateDiffNumDays($dbh, $date1 , $date2){
+function dateDiffNumDays($date1 , $date2, $dbconn = null){
 	$strSQL = "select ?::date - ?::date;";
-  $dbconn = getConnection();
+  if ($dbconn == null) $dbconn = getConnection();
 	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
 	return $diff;
 }
@@ -210,17 +210,15 @@ function dateDiffNumDays($dbh, $date1 , $date2){
 	$$
 	LANGUAGE 'plpgsql';
  */
-function dateDiffNumMonths($dbh, $date1 , $date2){
+function dateDiffNumMonths($date1 , $date2, $dbconn= null){
 	$strSQL = "select count(*) from every_what( ?, ?::date, 1, 'months' );";
-  $dbconn = getConnection();
+  if ($dbconn==null) $dbconn = getConnection();
 	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date1, $date2));
 }
-function getMembershipDuration( $dbh, $id) {
+function getMembershipDuration( $id, $dbconn= null) {
 	$strSQL = "select age(current_date, (select startdate from users where id = ?))";
-	$pdostatement = $dbh->prepare($strSQL);
-
-	$pdostatement->execute(array($id));
-	return $pdostatement->fetchColumn();
+  if ($dbconn==null) $dbconn = getConnection();
+	return executeQueryFetchColumn($dbconn, $strSQL, $bError);
 }
 
 // Get the custom value from the recordset
@@ -393,10 +391,8 @@ function subdueInactive( $accountStatus){
 }
 
 // Figure out when the next payment is due
-function getLastTeamPaymentDate( $teamid, $isbillable, $dbh){
-	if (!isset($dbh)){
-
-	}
+function getLastTeamPaymentDate( $teamid, $isbillable, $dbconn = null){
+  if ($dbconn == null) $dbconn = getConnection();
 
 	if (!$isbillable) {
 		return "Not Billable";
@@ -406,7 +402,6 @@ function getLastTeamPaymentDate( $teamid, $isbillable, $dbh){
 
 	// Figure out if (their payment is late
 	$strSQL = "select max(paymentdate) from teampayments where teamid = ? ;";
-  $dbconn = getConnection();
   $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
   foreach($results as $row) {
 		$lastPaymentDate = $row["max"];
@@ -417,20 +412,17 @@ function getLastTeamPaymentDate( $teamid, $isbillable, $dbh){
 // Get next team payment date
 // Get the date the next payment is due
 // TO DO: this has never been tested on a paying customer!!!
-function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbh){
+function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbconn = null){
 	if (!$isbillable) {
 		return "never - not billable";
 	}
-	if (!isset($dbh)){
-
-	}
+  if ($dbconn == null) $dbconn = getConnection();
 
 	if (! is_numeric( $planduration)) {
 		return "Error";
 	}
 
 	$strSQL = "select ((select max(paymentdate) from teampayments where teamid = ?) + cast('" . $planduration . " months' as interval)) as duedate;";
-  $dbconn = getConnection();
   $dueDate =executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid));
 	if (strlen($dueDate) < 1) {
 		$dueDate = "in " . $planduration . " month";
@@ -439,34 +431,21 @@ function getNextTeamPaymentDate($teamid, $planduration, $isbillable, $dbh){
 	return $dueDate;
 }
 
-function getUserStatus( $userid, $dbh){
-	if (!isset($dbh)){
-
-	}
-
+function getUserStatus( $userid, $dbconn = null){
+  if ($dbconn == null) $dbconn = getConnection();
 	$strSQL = "SELECT status FROM useraccountinfo WHERE userid = ?";
-
-  $dbconn = getConnection();
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 }
 
-function getProgramName($programid, $dbh) {
-	if (!isset($dbh)){
-
-	}
-
+function getProgramName($programid, $dbconn = null) {
+  if ($dbconn == null) $dbconn = getConnection();
 	$strSQL = "SELECT name FROM programs WHERE id = ?";
-  $dbconn = getConnection();
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($programid));
 }
 
 function getCustomListName($customlistid, $dbh) {
-	if (!isset($dbh)){
-
-	}
-
+  if ($dbconn == null) $dbconn = getConnection();
 	$strSQL = "SELECT name FROM customlists WHERE id = ?";
-  $dbconn = getConnection();
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($customlistid));
 }
 
@@ -477,13 +456,12 @@ function normalizeGender( $gender){
 //return Gender_Female;
 }
 
-function isTeamUsingPrograms($session, $teamid, $dbh) {
+function isTeamUsingPrograms($session, $teamid, $dbconn = null) {
 	// We cache this in the session
 	if (isset($session["isteamusingprograms"])) return $session["isteamusingprograms"];
 
-	if (!isset($dbh)){
+  if ($dbconn == null) $dbconn = getConnection();
 
-	}
 	// Ignore teamid except for App Admin
 	if (!isUser($session, Role_ApplicationAdmin)){
 		$teamid = $session["teamid"];
@@ -493,7 +471,6 @@ function isTeamUsingPrograms($session, $teamid, $dbh) {
 
 	$strSQL = "SELECT id FROM programs WHERE teamid = ?";
 
-  $dbconn = getConnection();
   $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	if (count($results) > 0) $session["isteamusingprograms"] = true;
 	else $session["isteamusingprograms"] = false;
@@ -504,8 +481,6 @@ function isTeamUsingPrograms($session, $teamid, $dbh) {
 function isTeamUsingLevels($session, $teamid) {
 	// We cache this in the session
 	if (isset($session["isteamusinglevels"])) return $session["isteamusinglevels"];
-
-
 
 	// Ignore teamid except for App Admin
 	if (!isUser($session, Role_ApplicationAdmin)){
@@ -524,29 +499,25 @@ function isTeamUsingLevels($session, $teamid) {
 	return $session["isteamusinglevels"];
 }
 
-function getMemberCount( $session, $teamid, $dbh) {
+function getMemberCount( $session, $teamid, $dbconn = null) {
 	// We cache this in the session
 	if (isset($session["membercount"])) return $session["membercount"];
 
-	if (!isset($dbh)){
-
-	}
+  if ($dbconn == null) $dbconn = getConnection();
 
 	// Count the number of teams. Only used in one place, but handy to have around
 	$strSQL = "SELECT COUNT(*) AS ROW_COUNT FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = ? AND users.teamid = ?";
-
-  $dbconn = getConnection();
   $session["membercount"] =executeQueryFetchColumn($dbconn, $strSQL, $bError, array(UserAccountStatus_Active, $teamid));
 
 	return $session["membercount"];
 }
 
-function getUserProgram( $session, $userid, $dbh) {
+function getUserProgram( $session, $userid, $dbconn = null) {
 
 	// Count the number of teams. Only used in one place, but handy to have around
 	$strSQL = "select programid from users where id = ?";
 
-  $dbconn = getConnection();
+  if ($dbconn == null) $dbconn = getConnection();
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 }
 

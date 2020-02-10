@@ -88,11 +88,7 @@ if (isset($userprops["id"])) {
 <p class="attention">Click the button to register your attendance at <?php echo $teamname?> today at&nbsp;
 <?php
 				$strSQL = "SELECT * FROM events WHERE teamid = ? and scannable = TRUE ORDER by listorder;";
-				$pdostatement = $dbh->prepare($strSQL);
-				$pdostatement->execute(array($teamid ));
-
-				$eventResults = $pdostatement->fetchAll();
-
+				$eventResults = executeQuery($dbconn, $strSQL, $bError, array($teamid ));
 				$rowCount = 0;
 				$loopMax = count($eventResults);
 ?>
@@ -239,7 +235,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 	} else {
 		$startdate =  date("m/d/Y");
 	}
-	$timeIn = getMembershipDuration($dbh, $userid);?>
+	$timeIn = getMembershipDuration($userid, $dbconn);?>
 <td  valign="top"><?php echo $startdate?> (<?php echo $timeIn ?>)</td>
 </tr>
 </table>
@@ -287,9 +283,8 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 
 		// Custom fields support - see if we have any defined for this team
 		$strSQL = "SELECT COUNT(*) FROM customfields where teamid = ?;";
-		$pdostatementcustomdata = $dbh->prepare($strSQL);
-		$pdostatementcustomdata->execute(array($teamid));
-		if ($pdostatementcustomdata->fetchColumn() > 0) {?>
+		$numcustomfields = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid));
+		if ($numcustomfields > 0) {?>
 <?php buildRequiredPostFields($session) ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglevis('custominfo')">Custom Information<img src="img/a_expand.gif" alt="expand section" id="custominfo_img" border="0"></a></h4>
 <div class="hideit" id="custominfo">
@@ -297,9 +292,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 <table class="noborders">
 <?php
 			$strSQL = "SELECT customfields.name as customfieldname, * FROM customfields LEFT OUTER JOIN customdata ON (customdata.customfieldid = customfields.id and customdata.memberid = ? AND customfields.teamid = ?) ;";
-			$pdostatementcustomdata = $dbh->prepare($strSQL);
-			$pdostatementcustomdata->execute(array($userid, $teamid));
-			$customdataResults = $pdostatementcustomdata->fetchAll();
+			$customdataResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 			$loopMax = count( $customdataResults);
 
 			$rowCount = 0;
@@ -318,9 +311,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 					} else {
 						$strSQL = "SELECT " . $dcField . " FROM " . $dcObject . " WHERE userid = ?;";
 					}
-					$pdostatementdc = $dbh->prepare($strSQL);
-					$pdostatementdc->execute(array($userid));
-					$dcResult = $pdostatementdc->fetchColumn();
+					$dcResult = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 					// Assume we can't until condition proves we can
 					$displayCustomField = false;
 
@@ -378,9 +369,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 						// if the datatype is a list, build the select (and conditionally select the item)
 						$strSQL = "SELECT listitemname FROM customlists, customlistdata WHERE customlistdata.customlistid = customlists.id and customlists.id = ? and customlists.teamid = ? AND customlistdata.id = ? ORDER BY listorder;";
 
-						$pdostatementcustomlist = $dbh->prepare($strSQL);
-						$pdostatementcustomlist->execute(array($customdataResults[$rowCount]["customlistid"], $teamid, $customdataValue ));
-						$customlistItemName = $pdostatementcustomlist->fetchColumn();
+						$customlistItemName = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($customdataResults[$rowCount]["customlistid"], $teamid, $customdataValue ));
 						echo $customlistItemName;
 						break;
 					default:

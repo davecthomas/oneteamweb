@@ -18,9 +18,9 @@ if (isset($_GET["pagemode"])) {
 // Standalone: init the session
 if ($pagemode == "standalone") {
 	$title= " Attendance Trendline " ;
-	include('header.php'); 
+	include('header.php');
 	$expandimg = "collapse";
-	$expandclass = "showit"; 
+	$expandclass = "showit";
 	// id is required and you must be able to admin this id
 	if (isUser($session, Role_TeamAdmin)) {
 		$teamid = $session["teamid"];
@@ -41,26 +41,26 @@ if ($pagemode == "standalone") {
 	$expandimg = "expand";
 	$expandclass = "hideit";
 
-	// These are required in embedded mode	
+	// These are required in embedded mode
 	if (($whomode == "user") && (!isset($userid))) {
 		redirectToLogin();
-	} 
+	}
 	if (($whomode == "team") && (!isset($teamid))) {
 		redirectToLogin();
-	} 
-} 
+	}
+}
 
 // Team mode must be admin
 if ( $whomode == "team") {
-	redirectToLoginIfNotAdmin( $session); 
+	redirectToLoginIfNotAdmin( $session);
 }
 
-  
+$dbconn = getConnection();
 
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
-	$objid = $userid;	
-	$objname = getUserName2($userid, $dbh);
+	$objid = $userid;
+	$objname = getUserName2($userid, $dbconn);
 } else {
 	$objid = $teamid;
 	$objname = getTeamName($teamid, $dbconn);
@@ -74,13 +74,11 @@ if (isset($_GET["EventDate"])) {
 	// Base event date on start date of team or user (depends on whomode)
 	if ($whomode == "user")	$strSQL = "SELECT users.startdate FROM users where users.id = ?";
 	else $strSQL = "SELECT teams.name, teams.startdate FROM teams where teams.id = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($objid));
-	$startdatearray = $pdostatement->fetch(PDO::FETCH_ASSOC);
+	$startdatearray = executeQuery($dbconn, $strSQL, $bError, array($objid));
 	$eventdatetime = new DateTime($startdatearray["startdate"]);
-}	
+}
 
-// Get the date of the first day of the month. 
+// Get the date of the first day of the month.
 $FirstDayofMontharray = explode("-",$eventdatetime->format("m-d-Y"));
 $FirstDayofMonthdatetime = new DateTime("01-" . $FirstDayofMontharray[0] . "-" . $FirstDayofMontharray[2]);
 $CurMonthdatetime = $FirstDayofMonthdatetime;
@@ -93,14 +91,14 @@ $graphTitle = $objname . " attendance since " . $eventdatetime->format("m-d-Y");
 // these magic numbers refer to the xml settings file, and drive title, color, etc
 if ($whomode == "user") {
 	$graphGID= "3";
-} else { 
+} else {
 	$graphGID = "0";
 }
 
 // Count the number of months we need to track attendance. This will be from EventDate to today
-$numMonths  = dateDiffNumMonths($dbh, $eventdatetime->format("m/d/Y"), date("m/d/Y"));
+$numMonths  = dateDiffNumMonths($eventdatetime->format("m/d/Y"), date("m/d/Y"), $dbconn);
 if ($numMonths == 0) $numMonths = 1;	// Tweak on first months (zero months counts as 1)
-$attendancespan_str = dateDiffString($dbh, $eventdatetime->format("m/d/Y"), date("m/d/Y"));
+$attendancespan_str = dateDiffString($eventdatetime->format("m/d/Y"), date("m/d/Y"), $dbconn);
 
 if (isset($_GET["EventDateEnd"])) {
 	$lastdaydateReqdatetime = new DateTime($_GET["EventDateEnd"]);
@@ -117,17 +115,17 @@ if ((isUser( $session, Role_ApplicationAdmin)) && ($whomode == "user")) { ?>
 <p></p>
 <div class="navtop">
 <ul id="nav">
-<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session)?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>	
+<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session)?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>
 <li><a class="linkopacity" href="user-props-form.php?id=<?php echo($userid+1) . buildRequiredParamsConcat($session)?>">Next member<img src="img/a_next.gif" border="0" alt="next"></a></li>
 </ul>
 </div><p></p>
-<?php 
+<?php
 }
 
 if ($whomode == "user") { ?>
 <h5>Attendance for <a target="_top" href="user-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $userid?>" target="_top"><?php echo $objname?></a> since <?php echo $eventdatetime->format("F")?>, <?php echo $eventdatetime->format("Y")?></h5>
 <p>Each point on the graph represents the number of events attended in that month.</p>
-<?php 
+<?php
 } else { ?>
 <h5>Attendance for <a target="_top" href="team-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $teamid?>" target="_top"><?php echo $objname?></a> since <?php echo $eventdatetime->format("F")?>, <?php echo $eventdatetime->format("Y")?></h5>
 <p>This graph shows:
@@ -136,8 +134,8 @@ if ($whomode == "user") { ?>
 <li>The average number of <?php echo $teamterms["termmember"]?>s attending each <?php echo $teamterms["termclass"]?>.</li>
 </ol>
 </p>
-<?php 
-} 
+<?php
+}
 
 $sqlBase = "SELECT COUNT(DISTINCT(attendance.attendancedate)) as classesinmonth,COUNT( attendance.memberid) as attendancecount, COUNT( DISTINCT(attendance.memberid)) as uniquemembers FROM attendance where teamid = ?";
 if ( $whomode == "user" ) {
@@ -152,16 +150,15 @@ $attendanceArrayUniqueMember = array();
 for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (attendance.attendancedate >= ? and attendance.attendancedate < ?)";
-	$pdostatement = $dbh->prepare($strSQL);
 	if ( $whomode == "team" ) {
-		$pdostatement->execute(array($teamid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
-	} else { 
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($teamid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+	} else {
 		if (!isset($teamid)) $teamid = $session["teamid"];
-		$pdostatement->execute(array($teamid, $objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, (array($teamid, $objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
 	}
-	
+
 	// Get the team attendance
-	foreach ($pdostatement as $row) {
+	foreach ($attendance_records as $row) {
 		if ( $whomode == "team" ) {
 			if ( $row["classesinmonth"] > 0 ) {
 				$attendanceArrayAvgPerClass[$attendanceLoop] = round($row["attendancecount"]/$row["classesinmonth"]);
@@ -174,7 +171,7 @@ for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
 			$attendanceArrayAvgPerClass[$attendanceLoop] = $row["attendancecount"];
 		}
 	}
-	
+
 	$FirstDayofMonthdatetime->modify("+1 month");
 	$lastDayofMonthdatetime->modify("+1 month");
 }
@@ -216,7 +213,7 @@ $datastring = $datastring . "</chart>";
 <strong>You need to upgrade your Flash Player</strong>
 </div>
 <script type="text/javascript">
-// <![CDATA[		
+// <![CDATA[
 var flashvars = {
   path: "amline/",
   settings_file: escape("amline/amline_settings.xml"),
@@ -229,11 +226,11 @@ swfobject.embedSWF("amline/amline.swf", "altcontent", "520", "400", "8.0.0", "am
 // ]]>
 </script>
 <!-- end of amline script -->
-<?php 
-if ($pagemode == "standalone" ) { 
+<?php
+if ($pagemode == "standalone" ) {
 	// Start footer section
 	include('footer.php'); ?>
 </body>
 </html>
-<?php 
+<?php
 } ?>

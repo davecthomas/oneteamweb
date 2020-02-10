@@ -52,28 +52,27 @@ $nextmonth = new DateTime($startdatetime->format("d-m-Y"));
 
 // Only looking for a count with this query
 $sqlBase = "SELECT COUNT(*) AS ROW_COUNT FROM users where teamid = ?";
+$dbconn = getConnection();
 
 for ($enrollmentLoop = 0; $enrollmentLoop < $numMonths; $enrollmentLoop++){
 	$thismonth = $nextmonth->format("m-d-Y");
 	$nextmonth->modify("+1 month");
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (startdate >= '" . $thismonth . "' and startdate < '" . $nextmonth->format("m-d-Y") . "');";
-	$pdostatementStart = $dbh->prepare($strSQL);
-	if ($pdostatementStart->execute(array($teamid))){
-	     $enrollmentArrayStarted[$enrollmentLoop] = $pdostatementStart->fetchColumn();
+  $results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid))
+  if (!$bError)){
+	     $enrollmentArrayStarted[$enrollmentLoop] = $results;
 	} else {
 	     $enrollmentArrayStarted[$enrollmentLoop] = 0;
-	     $bError = true;
 	}
 
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (stopdate >= '" . $thismonth . "' and stopdate < '" . $nextmonth->format("m-d-Y") . "');";
-	$pdostatementStop = $dbh->prepare($strSQL);
-	if ($pdostatementStop->execute(array($teamid))){
-	     $enrollmentArrayStopped[$enrollmentLoop] = $pdostatementStop->fetchColumn();
+	$results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid))
+	if (! $bError)){
+	     $enrollmentArrayStopped[$enrollmentLoop] = $results;
 	} else {
 	     $enrollmentArrayStopped[$enrollmentLoop] = 0;
-	     $bError = true;
 	}
 }
 

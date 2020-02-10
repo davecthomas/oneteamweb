@@ -51,11 +51,11 @@ if (isset($_REQUEST["EventDate"])) {
 } else {
 	$eventdatetime = new DateTime();
 }
-  
+$dbconn = getConnection();
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
 	$objid = $userid;
-	$objname = getUserName2($userid, $dbh);
+	$objname = getUserName2($userid, $dbconn);
 	$sqlwhere = "attendance.memberid"; ?>
 <h5>Attendance for <a target="_top" href="user-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $userid?>" target="_top"><?php echo $objname?></a> for <?php echo $eventdatetime->format("F")?>, <?php echo $eventdatetime->format("Y")?></h5>
 <?php
@@ -72,7 +72,7 @@ if ($whomode == "user") {
 // Standalone: init the session
 if ($pagemode == "standalone") {
 	$expandimg = "collapse";
-	$expandclass = "showit"; 
+	$expandclass = "showit";
 
 	// Display previous and next links at the top of the table
 	// Only display prev/next for app admin, since this data spans teams
@@ -97,12 +97,10 @@ function updateProgramID() {
 <input type="hidden" name="id" value="<?php echo $id ?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-	  
+
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?";
-	$pdostatementP = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementP->execute(array($teamid));
-	$programResults = $pdostatementP->fetchAll();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountP = count( $programResults);
 
 	// Display programs for this team
@@ -140,19 +138,19 @@ function updateProgramID() {
 	$expandimg = "expand";
 	$expandclass = "hideit";
 
-	// These are required in embedded mode	
+	// These are required in embedded mode
 	if (($whomode == "user") && (!isset($userid))) {
 		redirectToLogin();
-	} 
+	}
 	if (($whomode == "team") && (!isset($teamid))) {
 		redirectToLogin();
-	} 
-} 
+	}
+}
 
 // Team mode must be admin
 if ( $whomode == "team") {
 
-	redirectToLoginIfNotAdmin( $session); 
+	redirectToLoginIfNotAdmin( $session);
 }
 
 $urlencodedName = htmlspecialchars($objname);
@@ -168,7 +166,7 @@ $CurYearNum = $eventdatetime->format("Y");
 // Number of days in month
 $numDaysInMonth = $eventdatetime->format("t");
 
-// Get the date of the first day of the month. 
+// Get the date of the first day of the month.
 $FirstDayofMontharray = explode("-",$eventdatetime->format("m-d-Y"));
 $FirstDayofMonthdatetime = new DateTime("01-" . $FirstDayofMontharray[0] . "-" . $FirstDayofMontharray[2]);
 $CurDayNumdatetime = $FirstDayofMonthdatetime;
@@ -201,11 +199,9 @@ if (isset($_REQUEST["EventDateEnd"])) {
 
 $strSQL = "SELECT attendance.*, events.* FROM events INNER JOIN attendance on events.id = attendance.eventid WHERE " . $sqlwhere . " = ? AND (attendancedate >= ? and attendancedate < ?)" . $sqlprogram . " ORDER BY attendancedate;";
 
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+$attendanceDates = executeQuery($dbconn, $strSQL, $bError, array($objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
 
 // Get all attendances in one array and store them as DateTime objects in another array
-$attendanceDates = $pdostatement->fetchAll( PDO::FETCH_COLUMN, 1);
 $numAttendances = count($attendanceDates );
 $attendanceDatetimes = array();
 $daysWithAttendance = array_unique($attendanceDates);
@@ -250,13 +246,13 @@ $CorrectMonth = true;
 // Outside of loop, check number of rows, which is the total number of attended events for all members
 // Loop each day in the month
 for ($dayLoop = 1; $dayLoop <= $numDaysInMonth; $dayLoop++) {
-	
+
 	if (( $dayLoop == $todaysDayOfMonth ) && ($CurMonthNum == $todaysMonthNum)) {
-		echo("<td class=\"today\">") ;	
+		echo("<td class=\"today\">") ;
 	} else {
 		echo("<td class=\"day" . $DayCounter . "\">");
-	} 
-	
+	}
+
 	if (in_array($CurDayNumdatetime->format("Y-m-d"), $daysWithAttendance)){
 		if ($whomode == "team") {
 			echo('<a href="attendance-on-date.php?whomode=' . $whomode . '&pagemode=' . $pagemode . '&id=' . $objid . '&date=' . $CurDayNumdatetime->format("d-m-Y") . buildRequiredParamsConcat($session) . '" target="_top" title="View attendance detail on this date">');
@@ -266,9 +262,9 @@ for ($dayLoop = 1; $dayLoop <= $numDaysInMonth; $dayLoop++) {
 		echo($dayLoop);
 		if ($whomode == "team") {
 			echo "</a>";
-			echo("<br><div id=\"datedetail\">" . $membersOnDates[$CurDayNumdatetime->format("Y-m-d")] . "</div>");	
-		} else { 
-			echo '</a>'; 
+			echo("<br><div id=\"datedetail\">" . $membersOnDates[$CurDayNumdatetime->format("Y-m-d")] . "</div>");
+		} else {
+			echo '</a>';
 		}
 	} else {
 		echo($dayLoop);
@@ -297,36 +293,36 @@ echo("</tr>" . "\n" . "</table>" . "\n");
 // Display user total
 if ( $whomode == "user" ) {
 ?>
-<p><?php echo $objname?>  attended events on <?php echo count($daysWithAttendance)?> day<?php 
-	if ( count($daysWithAttendance) != 1 ) { 
+<p><?php echo $objname?>  attended events on <?php echo count($daysWithAttendance)?> day<?php
+	if ( count($daysWithAttendance) != 1 ) {
 		echo("s</p>") ;
 	}
 // Display team total
 } else {
 ?>
-<p><?php echo $objname?> had events on <?php echo count($daysWithAttendance)?> day<?php 
-	if ( count($daysWithAttendance) != 1 ) { 
-		echo("s."); 
+<p><?php echo $objname?> had events on <?php echo count($daysWithAttendance)?> day<?php
+	if ( count($daysWithAttendance) != 1 ) {
+		echo("s.");
 	}
-	
+
 // Average is the number of attended events for every member divided by the number of days we had events.
 // Avoid div by zero
 	if ( count($daysWithAttendance) > 0 ) {
 ?>
-<br>Average per event: <?php echo round($numAttendances / count($daysWithAttendance))?> member<?php 
-		if ( count($daysWithAttendance) != 1 ) { 
-			echo("s.</p>"); 
+<br>Average per event: <?php echo round($numAttendances / count($daysWithAttendance))?> member<?php
+		if ( count($daysWithAttendance) != 1 ) {
+			echo("s.</p>");
 		}
 	}
-} ?> 
+} ?>
 <p><a href="include-attendance-table.php<?php buildRequiredParams($session) ?>&whomode=<?php echo $whomode ?>&EventDate=<?php echo $temp->format("d-m-Y")?>&pagemode=standalone&id=<?php echo $objid?>" title="Click for details on attendance during this period">Click for details on attendance during this period</a>.
 </p>
 </div>
-<?php 
-if ($pagemode == "standalone" ) { 
+<?php
+if ($pagemode == "standalone" ) {
 	// Start footer section
 	include('footer.php'); ?>
 </body>
 </html>
-<?php 
+<?php
 } ?>
