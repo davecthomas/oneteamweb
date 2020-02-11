@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -16,19 +16,19 @@ redirectToLoginIfNotAdmin( $session);
 $bError = false;
 $errno = 0;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["id"])){
 		$teamid = $_POST["id"];
 	} else {
-		$bError = true; 
+		$bError = true;
 		$errno = "teamid";
 	}
-}     
+}
 
 // The checkbox for accepted must be selected.
 if (isset($_REQUEST["accepted"])) {
@@ -39,22 +39,21 @@ if (isset($_REQUEST["accepted"])) {
 }
 
 if (!$bError) {
-	  
-	
+
+
 	// First, make sure the team is actually currently TeamAccountStatus_PendingLicense. Otherwise, this could create a status reset back door for overdue customers!
 	$strSQL = "SELECT COUNT(*) FROM teamaccountinfo WHERE status = ? AND id = ?";
-	$pdostatementCount = $dbh->prepare($strSQL);
-	$pdostatementCount->execute(array(TeamAccountStatus_PendingLicense, $teamid));	
+	$dbconn = getConnection();
+	$count_results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array(TeamAccountStatus_PendingLicense, $teamid));
 	// Update the teamaccountinfo to make the team active
-	if ($pdostatementCount->fetchColumn() == 1) {
+	if ($count_results == 1) {
 		$strSQL = "UPDATE teamaccountinfo SET status = ? WHERE id = ?";
-		$pdostatementUpdate = $dbh->prepare($strSQL);
-		$pdostatementUpdate->execute(array(TeamAccountStatus_Active, $teamid));	
+		executeQuery($dbconn, $strSQL, $bError, array(TeamAccountStatus_Active, $teamid));
 		redirect("home.php?".returnRequiredParams($session));
 	} else {
 		redirect($_SERVER['HTTP_REFERER']."&err=s");
 	}
-} 
+}
 
 if ($bError) {
 	redirect($_SERVER['HTTP_REFERER']."&err=".$errno);

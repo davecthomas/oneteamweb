@@ -5,7 +5,7 @@
 	}
 	redirectToLoginIfNotAdminOrCoach( $session);
 
-	
+
 	$teamname = getTeamName($teamid, $dbconn);
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname,
 		orderitems.id as orderitemid, orderitems.*,
@@ -19,9 +19,8 @@
 				on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id)
 			ON orderitems.orderid = orders.id)
 		WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($userid, $orderid, $teamid));
-	$orderResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$orderResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $orderid, $teamid));
 	$countOrders = 0;
 	$numOrders = count($orderResults);
 
@@ -32,12 +31,12 @@
 		// Check for overdue
 		$isoverdue = false;
 		if (!$ispaid){
-			$daysDue = dateDiffNumDays($dbh, date("m/d/Y"), $duedate);
+			$daysDue = dateDiffNumDays(date("m/d/Y"), $duedate, $dbconn);
 		}
 		if ( $userid >= UserID_Base ) {
 			$bDisplayUserSelector = false;
 			$username = getUserName( $userid, $dbconn); ?>
-<h3><?php if ($ispaid) echo "Receipt for payment from "; 
+<h3><?php if ($ispaid) echo "Receipt for payment from ";
 		else echo "Invoice for payment due from ";
 		if ($email) echo '<a href="user-props-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $userid?>"><?php echo $username?></a>';
 		echo '&nbsp;to '. $teamname ?></h3>
@@ -48,11 +47,9 @@
 		}
 		// Get team name, address, and logo
 		$strSQL = "SELECT teams.id as id_team, teams.*, teamaccountinfo.*, images.* FROM teamaccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE teamaccountinfo.teamid = teams.id AND teams.id = ?";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array(ImageType_Team, $teamid, $teamid));
-		$teamresults = $pdostatement->fetch(PDO::FETCH_ASSOC);
+		$teamresults = executeQuery($dbconn, $strSQL, $bError, array(ImageType_Team, $teamid, $teamid));
 		// Print team logo, etc
-		if (!$bError ){ 
+		if (!$bError ){
 
 			if ((!is_null($teamresults["url"])) && (is_url($teamresults["url"]))) {?>
 <tr valign="top"><td><img src="<?php echo $teamresults["url"]?>" id="" border=0" height ="200"></td>
@@ -93,24 +90,22 @@
 </tr>
 </thead>
 <?php
-		// GEt skus once for use in the selector used in the loop 
+		// GEt skus once for use in the selector used in the loop
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$pdostatementS = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementS->execute(array($teamid));
-		$skuResults = $pdostatementS->fetchAll();
+		$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountS = count( $skuResults);
 		$amountTotal = 0.00;
 		$feeTotal = 0.00;
 		$grandTotal = 0.00;
 
-		// One set of edit controls per orderitem 
+		// One set of edit controls per orderitem
 		while ($countOrders < $numOrders){ ?>
 <tr id="orderitem<?php echo $orderResults[$countOrders]["orderitemid"]?>" class="<?php if ((bool)( ($countOrders) % 2 )) echo("even"); else echo("odd") ?>">
 <td width="5%"><?php echo $countOrders+1?></td>
 <td width="45%"><?php echo $orderResults[$countOrders]["skuname"]?></td>
 <td width="20%"><?php echo $orderResults[$countOrders]["amount"]?></td>
 <td width="20%"<?php if ($orderResults[$countOrders]["fee"] < 0) echo 'class="debit"';?>><?php echo $orderResults[$countOrders]["fee"]?></td>
-<?php 
+<?php
 			$amountTotal += $orderResults[$countOrders]["amount"];
 			$feeTotal += $orderResults[$countOrders]["fee"];
 			$grandTotal += $orderResults[$countOrders]["amount"] + $orderResults[$countOrders]["fee"];

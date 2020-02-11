@@ -21,12 +21,12 @@ if ($pageMode == "standalone") {
 	$expandclass = "hideit";
 	if (!isset($teamid)) {
 		$userid = $_GET["id"];
-	} 
-} 
+	}
+}
 
 if (!isset($teamid)) {
 	$teamid = $_GET["teamid"];
-} 
+}
 if ((isset($_GET["year"])) && (is_numeric($_GET["year"]))) {
 	$paymentyear = $_GET["year"];
 	$expand = "showit";
@@ -50,25 +50,25 @@ if (!isset($whomode)) $whomode = "user";
 if (($whomode == "user") && (!canIAdministerThisUser( $session, $userid))) {
 	$bError = true;
 	$errStr = Error;
-} 
+}
 
 if (($whomode == "team") && (!isAnyAdminLoggedIn($session))) {
 	$bError = true;
 	$errStr = Error;
-}	
+}
 if (!$bError ) {
 	if ((!isset($userid)) && ($whomode == "user")) {
 		$userid = $_GET["id"];
 		if (!isset($username)) {
 			$username = getUserName( $userid, $dbconn);
-		} 
-	} 
-	
-	  
+		}
+	}
+	$dbconn = getConnection();
+
 	// User mode: make sure they can adminster this user
 	if ($whomode == "user") {
-		$objid = $userid;	
-		$objname = getUserName2($userid, $dbh);
+		$objid = $userid;
+		$objname = getUserName2($userid, $dbconn);
 		$sqlwhere = "attendance.memberid = " . $userid;
 	} else {
 		$sqlwhere = "attendance.teamid = " . $teamid;
@@ -79,13 +79,13 @@ if (!$bError ) {
 	if ($pageMode == "standalone") { ?>
 <h4><?php echo $objname?> Payment History</h4>
 <div class="indented-group-noborder">
-<?php		
-	} 
+<?php
+	}
 	// Tweak query based on whomode
 	if ($whomode == "user")	{
 		if ($userid != User::UserID_Guest)
-			$modquery = " AND users.id = ? "; 
-		else 
+			$modquery = " AND users.id = ? ";
+		else
 			$modquery = " AND orderitems.userid = ? ";
 	} else {
 		$modquery = "";
@@ -95,28 +95,25 @@ if (!$bError ) {
 	// Query may be to list all orderitems of a specific program
 	if ((isset($programid)) && ($programid != Program_Undefined)){
 		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.numeventsremaining <> 0 " . $modquery . " AND orderitems.programid = ? AND orderitems.teamid = ? AND (paymentdate + expires >= current_date) ORDER BY paymentdate DESC;";
-		$pdostatement = $dbh->prepare($strSQL);
 		if ($whomode == "user") {
-			$pdostatement->execute(array($userid, $programid, $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($userid, $programid, $teamid));
 		} else {
-			$pdostatement->execute(array($programid, $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($programid, $teamid));
 		}
 	// Or to list all orderitems, regardless of program
 	} else {
 		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.numeventsremaining <> 0 " . $modquery . " AND orderitems.teamid = ? AND (paymentdate + expires >= current_date) ORDER BY paymentdate DESC;";
-		$pdostatement = $dbh->prepare($strSQL);
 		if ($whomode == "user") {
-			$pdostatement->execute(array($userid, $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 		} else {
-			$pdostatement->execute(array($teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		}
 	}
-	$results = $pdostatement->fetchAll();
 	$numPayments = count($results); ?>
 <h5 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglevis('unexpired');return false">Unexpired Program Payments With Remaining Events<img src="img/a_expand.gif" alt="expand section" id="unexpired_img" border="0"></a></h5>
 <div class="hideit" id="unexpired" name="unexpired">
 <div class="indented-group-noborder">
-<table class="memberlist"> 
+<table class="memberlist">
 <thead class="head">
 <tr>
 <th valign="top">Date</th>
@@ -132,49 +129,49 @@ if (!$bError ) {
 <th valign="top">Gross</th>
 <th valign="top">Fee</th>
 <th valign="top">Net</th>
-<?php 
+<?php
 	if (isAnyAdminLoggedIn($session)) { ?>
 <th valign="top">Actions</th>
 <?php
 	}?>
 </tr>
-</thead>	
+</thead>
 <tbody>
-<?php 
+<?php
 	$rowCountPayments = 0;
 	$sumGross = 0;
 	$sumFees = 0;
 	$sumNet = 0;
-		
+
 	while ($rowCountPayments < $numPayments) {
 		$payment = $results[$rowCountPayments]["amount"];
 		$sumGross = $sumGross + $payment;
-		$fee = $results[$rowCountPayments]["fee"];	
+		$fee = $results[$rowCountPayments]["fee"];
 		$sumFees = $sumFees + $fee;
 		$net = $payment + $fee;
 		$sumNet = $sumNet + $net;
 		$paymentid = $results[$rowCountPayments]["payid"];
 		$orderid = $results[$rowCountPayments]["orderid"];
 ?>
-<tr class="<?php  
-		if ( ($rowCountPayments+1) % 2 ) echo("even"); 
+<tr class="<?php
+		if ( ($rowCountPayments+1) % 2 ) echo("even");
 		else echo("odd");?>">
 <td><?php
 	 	echo $results[$rowCountPayments]["paymentdate"]?></td>
-<?php	
+<?php
 		if ($whomode == "team") {
 			echo "<td>\n";
 			if ($results[$rowCountPayments]["userid"] == User::UserID_Guest)
 				echo User::Username_Guest;
-			else  
+			else
 				echo '<a target="_top" href="user-props-form.php?' . buildRequiredParamsConcat($session) . '&id=' . $results[$rowCountPayments]["userid"] . '">' . $results[$rowCountPayments]["firstname"] . ' ' . $results[$rowCountPayments]["lastname"] . '</a>';
-			echo "</td>\n"; 
-		} ?> 
+			echo "</td>\n";
+		} ?>
 <td><?php
 		echo $results[$rowCountPayments]["skuname"]?></td>
 <td><?php
 		echo $results[$rowCountPayments]["programname"]?></td>
-<td><?php 		
+<td><?php
 		switch ($results[$rowCountPayments]["numevents"]) {
 			case Sku::NumEventsUnlimited:
 				echo "Unlimited";
@@ -189,20 +186,20 @@ if (!$bError ) {
 				echo "Unlimited";
 				break;
 			default:
-				if ($numeventsremaining < 1) echo '<span class="noevents">'; 
+				if ($numeventsremaining < 1) echo '<span class="noevents">';
 				echo $numeventsremaining;
-				if ($numeventsremaining < 1) echo '</span>'; 
+				if ($numeventsremaining < 1) echo '</span>';
 				break;
 		} ?></td>
-<td><?php 	
+<td><?php
 		echo $results[$rowCountPayments]["paymentmethodname"]?></td>
-<td class="<?php echo getMoneyClass($payment)?>"><?php 	
+<td class="<?php echo getMoneyClass($payment)?>"><?php
 		echo formatMoney($payment); ?>
 </td>
-<td class="<?php echo getMoneyClass($fee)?>"><?php 	
+<td class="<?php echo getMoneyClass($fee)?>"><?php
 		echo formatMoney($fee); ?>
 </td>
-<td class="<?php echo getMoneyClass($net)?>"><?php 	
+<td class="<?php echo getMoneyClass($net)?>"><?php
 		echo formatMoney($net); ?>
 </td>
 <?php  	if (isAnyAdminLoggedIn($session)) { ?>
@@ -213,21 +210,21 @@ if (!$bError ) {
 </td>
 <?php  	} ?>
 </tr>
-<?php             
+<?php
 		$rowCountPayments ++;
-	}	
-	// Only show orderitems total if admin 
-	if (($rowCountPayments > 0) && (isAnyAdminLoggedIn( $session))){ 
+	}
+	// Only show orderitems total if admin
+	if (($rowCountPayments > 0) && (isAnyAdminLoggedIn( $session))){
 ?>
-<tr><td class="moneytotal" colspan="<?php 
-	if (isAnyAdminLoggedIn($session)) { 
-		if ($whomode == "team") { 
-			echo "7"; 
-		} else { 
+<tr><td class="moneytotal" colspan="<?php
+	if (isAnyAdminLoggedIn($session)) {
+		if ($whomode == "team") {
+			echo "7";
+		} else {
 			echo "6";
-		} 
+		}
 	} else {
-		echo "4"; 
+		echo "4";
 	}?>">Totals</td>
 <td class="<?php echo getMoneyTotalClass($sumGross)?>"><?php echo formatMoney($sumGross) ?></td>
 <td class="<?php echo getMoneyTotalClass($sumFees)?>"><?php echo formatMoney($sumFees) ?></td>
@@ -237,48 +234,45 @@ if (!$bError ) {
 </tbody>
 </table>
 <?php
-	// Only show orderitems total if admin 
-	if (($sumGross > 0) && (isAnyAdminLoggedIn( $session))) { 
+	// Only show orderitems total if admin
+	if (($sumGross > 0) && (isAnyAdminLoggedIn( $session))) {
 		if ($whomode == "user") { ?>
-<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>"> 
+<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php	} else { ?>
 <p><a href="team-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php	} ?>
 <?php echo $objname?></a>: <?php echo $rowCountPayments?> payments are active and unexpired.</p>
 <?php
-	}  
+	}
 	if ($numPayments == 0) { ?>
 <p class="error">No payments have remaining classes and are unexpired.</p>
-<?php 
+<?php
 	}
 	// Recently expired orderitems, or active orderitems with no remaining events
 	// Query may be to list all orderitems of a specific program
 	if ((isset($programid)) && ($programid != Program_Undefined)){
-		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.programid = ? " . $modquery . " AND orderitems.teamid = ? and (((paymentdate + expires > (current_date - '" . $recentlyexpired . "'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) ORDER BY paymentdate DESC;"; 
-		$pdostatement = $dbh->prepare($strSQL);
+		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.programid = ? " . $modquery . " AND orderitems.teamid = ? and (((paymentdate + expires > (current_date - '" . $recentlyexpired . "'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) ORDER BY paymentdate DESC;";
 		if ($whomode == "user") {
-			$pdostatement->execute(array($programid, $userid, $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($programid, $userid, $teamid));
 		} else {
-			$pdostatement->execute(array($programid, $teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($programid, $teamid));
 		}
 	// Or to list all orderitems, regardless of program
 	} else {
-		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.teamid = ? " . $modquery . " and (((paymentdate + expires > (current_date - '" . $recentlyexpired . "'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) ORDER BY paymentdate DESC;"; 
-		$pdostatement = $dbh->prepare($strSQL);
+		$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE orderitems.teamid = ? " . $modquery . " and (((paymentdate + expires > (current_date - '" . $recentlyexpired . "'::interval)) AND (paymentdate + expires < current_date)) OR ((paymentdate + expires >= current_date) and numeventsremaining = 0)) ORDER BY paymentdate DESC;";
 		if ($whomode == "user") {
-			$pdostatement->execute(array($teamid, $userid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $userid));
 		} else {
-			$pdostatement->execute(array($teamid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		}
 	}
-	$results = $pdostatement->fetchAll();
 	$numPayments = count($results); ?>
 </div></div>
 <h5 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglevis('recentexpired');return false">Recently Expired Program Payments (past <?php echo $recentlyexpired?>) or No Remaining Events<img src="img/a_expand.gif" alt="expand section" id="recentexpired_img" border="0"></a></h5>
 <div class="hideit" id="recentexpired" name="recentexpired">
 <div class="indented-group-noborder">
 <?php if ($numPayments > 0){?>
-<table class="memberlist"> 
+<table class="memberlist">
 <thead class="head">
 <tr>
 <th valign="top">Date</th>
@@ -293,15 +287,15 @@ if (!$bError ) {
 <th valign="top">Method</th>
 <th valign="top">Gross</th>
 <th valign="top">Fee</th>
-<th valign="top">Net</th><?php 
+<th valign="top">Net</th><?php
 		if (isAnyAdminLoggedIn($session)) { ?>
 <th valign="top">Actions</th>
 <?php
 		}?>
 </tr>
-</thead>	
+</thead>
 <tbody>
-<?php 
+<?php
 		$rowCountPayments = 0;
 		$sumGross = 0;
 		$sumFees = 0;
@@ -316,12 +310,12 @@ if (!$bError ) {
 			$sumNet = $sumNet + $net;
 			$paymentid = $results[$rowCountPayments]["payid"];
 			$numeventsremaining = $results[$rowCountPayments]["numeventsremaining"]; ?>
-<tr class="<?php  
+<tr class="<?php
 			if ( ($rowCountPayments+1) % 2 ) echo("even");
 			else echo("odd");?>">
 <td><?php
 			echo $results[$rowCountPayments]["paymentdate"]?></td>
-<?php	
+<?php
 			if ($whomode == "team") {
 				echo "<td>\n";
 				if ($results[$rowCountPayments]["userid"] == User::UserID_Guest)
@@ -334,7 +328,7 @@ if (!$bError ) {
 			echo $results[$rowCountPayments]["skuname"]?></td>
 <td><?php
 			echo $results[$rowCountPayments]["programname"]?></td>
-<td><?php 		
+<td><?php
 			switch ($results[$rowCountPayments]["numevents"]) {
 				case Sku::NumEventsUnlimited:
 					echo "Unlimited";
@@ -351,15 +345,15 @@ if (!$bError ) {
 					echo $numeventsremaining;
 					break;
 			} ?></td>
-<td><?php 	
+<td><?php
 			echo $results[$rowCountPayments]["paymentmethodname"]?></td>
-<td class="<?php echo getMoneyClass($payment)?>"><?php 	
+<td class="<?php echo getMoneyClass($payment)?>"><?php
 			echo formatMoney($payment); ?>
 </td>
-<td class="<?php echo getMoneyClass($fee)?>"><?php 	
+<td class="<?php echo getMoneyClass($fee)?>"><?php
 			echo formatMoney($fee); ?>
 </td>
-<td class="<?php echo getMoneyClass($net)?>"><?php 	
+<td class="<?php echo getMoneyClass($net)?>"><?php
 			echo formatMoney($net); ?>
 </td>
 <?php	  	if (isAnyAdminLoggedIn($session)) { ?>
@@ -369,13 +363,13 @@ if (!$bError ) {
 </td>
 <?php		} ?>
 </tr>
-<?php             
+<?php
 			$rowCountPayments ++;
 		}
-	
+
 		// Only show orderitems total if admin
 		if (($rowCountPayments > 0) && (isAnyAdminLoggedIn( $session))){ ?>
-<tr><td class="moneytotal" colspan="<?php 
+<tr><td class="moneytotal" colspan="<?php
 			if (isAnyAdminLoggedIn($session)) {
 				if ($whomode == "team") {
 					echo "7";
@@ -390,14 +384,14 @@ if (!$bError ) {
 <td class="<?php echo getMoneyTotalClass($sumNet)?>"><?php echo formatMoney($sumNet) ?></td>
 <td class="moneytotal"></td></tr>
 <?php	} ?>
-	
+
 </tbody>
 </table>
 <?php
 		// Only show orderitems total if admin
 		if (($sumGross > 0) && (isAnyAdminLoggedIn( $session))) {
 			if ($whomode == "user") { ?>
-<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>"> 
+<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php		} else { ?>
 <p><a href="team-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php		} ?>
@@ -417,16 +411,16 @@ if (!$bError ) {
 <table class="memberlist">
 <thead class="head">
 <tr>
-<th align="left"><a target="_top" href="payment-history.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>&teamid=<?php echo $teamid?>&year=<?php echo $paymentyear-1?>&sort=<?php echo $sortRequest?>&whomode=<?php echo $whomode?>&programid=<?php echo $programid?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous year</a></th>	
-<th align="center" colspan="<?php 
-	if (isAnyAdminLoggedIn($session)) { 
-		if ($whomode == "user") { 
-			echo "6"; 
-		} else { 
+<th align="left"><a target="_top" href="payment-history.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>&teamid=<?php echo $teamid?>&year=<?php echo $paymentyear-1?>&sort=<?php echo $sortRequest?>&whomode=<?php echo $whomode?>&programid=<?php echo $programid?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous year</a></th>
+<th align="center" colspan="<?php
+	if (isAnyAdminLoggedIn($session)) {
+		if ($whomode == "user") {
+			echo "6";
+		} else {
 			echo "7";
-		} 
+		}
 	} else {
-		echo "5"; 
+		echo "5";
 	}?>"><span class="bigstrong"><?php echo $paymentyear ?></span></th>
 <th align="right"><a target="_top" class="linkopacity" href="payment-history.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>&teamid=<?php echo $teamid?>&year=<?php echo $paymentyear+1?>&sort=<?php echo $sortRequest?>&whomode=<?php echo $whomode?>&programid=<?php echo $programid?>">Next year<img src="img/a_next.gif" border="0" alt="next"></a></th>
 </tr>
@@ -434,23 +428,20 @@ if (!$bError ) {
 	// Query may be to list all orderitems of a specific program
 	if ((isset($programid)) && ($programid != Program_Undefined)){
 		$strSQL = "SELECT orderitems.userid as userid, users.firstname, users.lastname, programs.name as programname, paymentmethods.name as paymentmethodname, skus.name as skuname, orderitems.id as payid, orderitems.* FROM programs INNER JOIN (paymentmethods INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.paymentmethod = paymentmethods.id) ON programs.id = orderitems.programid WHERE orderitems.teamid = ? AND orderitems.programid = ? " . $modquery . " AND paymentdate >= '1/1/" . $paymentyear . "' AND paymentdate <= '12/31/" . $paymentyear . "' ORDER BY " . $sortRequest . ";";
-		$pdostatement = $dbh->prepare($strSQL);
 		if ($whomode == "user") {
-			$pdostatement->execute(array($teamid, $programid, $userid ));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $programid, $userid ));
 		} else {
-			$pdostatement->execute(array($teamid, $programid));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $programid));
 		}
 	// Or to list all orderitems, regardless of program
 	} else {
 		$strSQL = "SELECT orderitems.userid as userid, users.firstname, users.lastname, programs.name as programname, paymentmethods.name as paymentmethodname, skus.name as skuname, orderitems.id as payid, orderitems.* FROM programs INNER JOIN (paymentmethods INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.paymentmethod = paymentmethods.id) ON programs.id = orderitems.programid WHERE orderitems.teamid = ? " . $modquery . " AND paymentdate >= '1/1/" . $paymentyear . "' AND paymentdate <= '12/31/" . $paymentyear . "' ORDER BY " . $sortRequest . ";";
-		$pdostatement = $dbh->prepare($strSQL);
 		if ($whomode == "user") {
-			$pdostatement->execute(array($teamid, $userid ));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $userid ));
 		} else {
-			$pdostatement->execute(array($teamid ));
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid ));
 		}
 	}
-	$results = $pdostatement->fetchAll();
 	$numPayments = count($results);?>
 <tr>
 <th valign="top"><a target="_top" href="payment-history.php<?php buildRequiredParams($session) ?>&id=<?php echo $userid?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("paymentdate",$sortRequest)?>&programid=<?php echo $programid?>&whomode=<?php echo $whomode?>">Date</a></th>
@@ -463,55 +454,55 @@ if (!$bError ) {
 <th valign="top"><a target="_top" href="payment-history.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("paymentmethod",$sortRequest)?>&programid=<?php echo $programid?>&whomode=<?php echo $whomode?>">Method</a></th>
 <th valign="top">Gross</th>
 <th valign="top">Fee</th>
-<th valign="top">Net</th> 
-<?php 
+<th valign="top">Net</th>
+<?php
 	if (isAnyAdminLoggedIn($session)) { ?>
 <th valign="top">Actions</th></tr>
 <?php
 	}?>
-</thead>	
+</thead>
 <tbody>
-<?php 
+<?php
 	$rowCountPayments = 0;
 	$sumGross = 0;
 	$sumFees = 0;
 	$sumNet = 0;
-		
+
 	while ($rowCountPayments < $numPayments) {
 		$payment = $results[$rowCountPayments]["amount"];
 		$sumGross = $sumGross + $payment;
-		$fee = $results[$rowCountPayments]["fee"];	
+		$fee = $results[$rowCountPayments]["fee"];
 		$sumFees = $sumFees + $fee;
 		$net = $payment + $fee;
 		$sumNet = $sumNet + $net;
 		$paymentid = $results[$rowCountPayments]["payid"]; ?>
-<tr class="<?php  
-		if ( ($rowCountPayments+1) % 2 ) echo("even"); 
+<tr class="<?php
+		if ( ($rowCountPayments+1) % 2 ) echo("even");
 		else echo("odd");?>">
 <td><?php
 	 	echo $results[$rowCountPayments]["paymentdate"]?></td>
-<?php	
+<?php
 		if ($whomode == "team") {
 			echo "<td>\n";
 			if ($results[$rowCountPayments]["userid"] == User::UserID_Guest)
 				echo User::Username_Guest;
-			else  
+			else
 				echo '<a target="_top" href="user-props-form.php?' . buildRequiredParamsConcat($session) . '&id=' . $results[$rowCountPayments]["userid"] . '">' . $results[$rowCountPayments]["firstname"] . ' ' . $results[$rowCountPayments]["lastname"] . '</a>';
-			echo "</td>\n"; 
-		} ?> 
+			echo "</td>\n";
+		} ?>
 <td><?php
 		echo $results[$rowCountPayments]["skuname"]?></td>
 <td><?php
 		echo $results[$rowCountPayments]["programname"]?></td>
-<td><?php 	
+<td><?php
 		echo $results[$rowCountPayments]["paymentmethodname"]?></td>
-<td class="<?php echo getMoneyClass($payment)?>"><?php 	
+<td class="<?php echo getMoneyClass($payment)?>"><?php
 		echo formatMoney($payment); ?>
 </td>
-<td class="<?php echo getMoneyClass($fee)?>"><?php 	
+<td class="<?php echo getMoneyClass($fee)?>"><?php
 		echo formatMoney($fee); ?>
 </td>
-<td class="<?php echo getMoneyClass($net)?>"><?php 	
+<td class="<?php echo getMoneyClass($net)?>"><?php
 		echo formatMoney($net); ?>
 </td>
 <?php  	if (isAnyAdminLoggedIn($session)) { ?>
@@ -521,21 +512,21 @@ if (!$bError ) {
 </td>
 <?php  	} ?>
 </tr>
-<?php             
+<?php
 		$rowCountPayments ++;
 	}
-	// Only show orderitems total if admin 
-	if (($rowCountPayments > 0) && (isAnyAdminLoggedIn( $session))){ 
+	// Only show orderitems total if admin
+	if (($rowCountPayments > 0) && (isAnyAdminLoggedIn( $session))){
 ?>
-<tr><td class="moneytotal" colspan="<?php 
-	if (isAnyAdminLoggedIn($session)) { 
-		if ($whomode == "team") { 
-			echo "5"; 
-		} else { 
+<tr><td class="moneytotal" colspan="<?php
+	if (isAnyAdminLoggedIn($session)) {
+		if ($whomode == "team") {
+			echo "5";
+		} else {
 			echo "4";
-		} 
+		}
 	} else {
-		echo "3"; 
+		echo "3";
 	}?>">Totals</td>
 <td class="<?php echo getMoneyTotalClass($sumGross)?>"><?php echo formatMoney($sumGross) ?></td>
 <td class="<?php echo getMoneyTotalClass($sumFees)?>"><?php echo formatMoney($sumFees) ?></td>
@@ -545,33 +536,33 @@ if (!$bError ) {
 </tbody>
 </table>
 <?php
-	// Only show orderitems total if admin 
-	if (($sumGross > 0) && (isAnyAdminLoggedIn( $session))) { 
+	// Only show orderitems total if admin
+	if (($sumGross > 0) && (isAnyAdminLoggedIn( $session))) {
 		if ($whomode == "user") { ?>
-<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>"> 
+<p><a href="user-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php	} else { ?>
 <p><a href="team-props-form.php<?php buildRequiredParams($session) ?>&id=<?php echo $objid?>">
 <?php	} ?>
 <?php echo $objname?></a>: <?php echo $rowCountPayments?> orderitems in <?php echo $paymentyear ?>.</p>
 <?php
-	}  
+	}
 	if ($numPayments == 0) { ?>
 <p class="error">No orderitems made during <?php echo $paymentyear?>.</p>
-<?php 
+<?php
 	} ?>
 </div>
 </div>
-<?php 
+<?php
 	// Standalone page needs some formatting that embedded version doesn't require
 	if ($pageMode == "standalone") { ?>
 </div>
 <?php
 	}
 	// Only show if member is active
-	$teaminfo = getTeamInfo( $session["teamid"]); 
+	$teaminfo = getTeamInfo( $session["teamid"]);
 	// Billable members get a convenience link here
 	if ((isUser($session, Role_Member)) && (utilIsUserBillable($session))) {
 		echo '<a href="' . $teaminfo["paymenturl"] . '">Make a payment</a>';
-	
-	} 
+
+	}
 } ?>

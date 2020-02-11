@@ -257,7 +257,7 @@ function getTeamName( $id, $dbconn = null) {
 		$strSQL = "SELECT * FROM teams WHERE id = ?;";
 
     $bError = false;
-    if ($dbconn == null) $dbconn = getConnection()
+    if ($dbconn == null) $dbconn = getConnection();
   	$results = executeQuery($dbconn, $strSQL, $bError, array($id));
 		$teamname = TeamNameError;
 		if (count($results)>0) {
@@ -342,8 +342,8 @@ function getEmail( $id ){
 		$dbconn = getConnection();
 		$strSQL = "SELECT email FROM useraccountinfo WHERE userid = " . $id . ";";
 		$results = executeQuery($dbconn, $strSQL, $bError);
-		foreach($results as $row) {
-			return $row["email"];
+		if (count($results) > 0) {
+			return $results[0]["email"];
 		} else {
 			return "";
 		}
@@ -443,7 +443,7 @@ function getProgramName($programid, $dbconn = null) {
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($programid));
 }
 
-function getCustomListName($customlistid, $dbh) {
+function getCustomListName($customlistid, $dbconn = null) {
   if ($dbconn == null) $dbconn = getConnection();
 	$strSQL = "SELECT name FROM customlists WHERE id = ?";
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($customlistid));
@@ -741,6 +741,7 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 				$mailok = 0;
 			}
 		}
+  }
 }
 
 

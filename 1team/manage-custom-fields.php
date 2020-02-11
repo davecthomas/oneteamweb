@@ -1,13 +1,13 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Manage Custom Fields"; 
+$title = "Manage Custom Fields";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
-</script> 
+</script>
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
@@ -35,10 +35,8 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT customfields.id as customfieldsid, customdatatypes.id as customdatatypesid, * FROM customfields, customdatatypes WHERE customfields.teamid = ? AND customfields.customdatatypeid = customdatatypes.id ORDER BY listorder;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$customfieldResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$customfieldResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($customfieldResults);?>
@@ -52,37 +50,37 @@ if (isUser($session, Role_TeamAdmin)){
 </tr>
 </thead>
 </table>
-<div dojoType="dojo.dnd.Source" id="customfieldlist" jsId="customfieldlist" class="container"> 
-<script type="dojo/method" event="creator" args="item, hint"> 
+<div dojoType="dojo.dnd.Source" id="customfieldlist" jsId="customfieldlist" class="container">
+<script type="dojo/method" event="creator" args="item, hint">
 
 	// this is custom creator, which changes the avatar representation
 	node = dojo.doc.createElement("div"), s = String(item);
-	
+
 	node.id = dojo.dnd.getUniqueId();
 	node.className = "dojoDndItem";
 	node.innerHTML = s; // "Reordering customfield. Drop in desired order location.";
 	return {node: node, data: item, type: ["text"]};
-</script> 
+</script>
 <?php
 	while ($rowCount < $loopMax) { ?>
-<div class="dojoDndItem"> 
+<div class="dojoDndItem">
 <span id="customfield<?php echo $rowCount?>" style="display:none" class="customfieldorderitem"><?php echo $customfieldResults[$rowCount]["customfieldsid"]?></span>
 <table width="65%"><tr class="even">
 <td width="50%"><?php echo $customfieldResults[$rowCount]["name"]?></td>
 <td width="30%"><?php echo $customfieldResults[$rowCount]["typename"];
 		// If this is a list type, echo the name of the list
 		if ($customfieldResults[$rowCount]["customdatatypeid"] == CustomDataType_List) {
-			echo ' : <a href="/1team/edit-custom-list-form.php?' . returnRequiredParams($session) . '&id=' . $customfieldResults[$rowCount]["customlistid"]. '">' . getCustomListName($customfieldResults[$rowCount]["customlistid"], $dbh) . '</a>';
+			echo ' : <a href="/1team/edit-custom-list-form.php?' . returnRequiredParams($session) . '&id=' . $customfieldResults[$rowCount]["customlistid"]. '">' . getCustomListName($customfieldResults[$rowCount]["customlistid"], $dbconn) . '</a>';
 		}?></td>
 <td width="10%"><?php echo BoolToStr($customfieldResults[$rowCount]["hasdisplaycondition"])?></td>
 <td width="10%"><a href="delete-custom-field.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $customfieldResults[$rowCount]["customfieldsid"]?>" title="Delete"><img src="img/delete.gif" alt="Delete" border="0"></a>&nbsp;
 <a href="edit-custom-field-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $customfieldResults[$rowCount]["customfieldsid"]?>" title="Edit"><img src="img/edit.gif" alt="Edit" border="0"></a></td>
 </tr>
 </table></div>
-<?php 
+<?php
 			$rowCount ++;
 	}	?>
-</div> 
+</div>
 <?php
 	if ($rowCount > 1){?>
 <table width="65%">
@@ -108,18 +106,15 @@ To reorder the customfield list, click and drag them, then press the "Reorder cu
 <input type="text" name="name" size="80" maxlength="80" value="New Custom Field Name"></td>
 <td width="30%"><select name="datatype">
 <option value="<?php echo CustomDataType_Undefined?>" selected>Select a data type...</option>
-<?php 
+<?php
 	$strSQL = "SELECT * FROM customdatatypes ORDER BY typename;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute();
-	
-	$customdatatypesResults = $pdostatement->fetchAll();
+	$customdatatypesResults = executeQuery($dbconn, $strSQL, $bError);
 
 	$rowCount = 0;
 	$loopMax = count($customdatatypesResults);
-	
-	while ($rowCount < $loopMax) { 
-		echo  "<option "; 
+
+	while ($rowCount < $loopMax) {
+		echo  "<option ";
 		echo  'value="' . $customdatatypesResults[$rowCount]["id"] . '"';
 		echo  ">";
 		echo $customdatatypesResults[$rowCount]["typename"];
@@ -127,7 +122,7 @@ To reorder the customfield list, click and drag them, then press the "Reorder cu
 		$rowCount++;
 	}
 ?>
-</select>	
+</select>
 </td>
 <td width="10%"><input type="checkbox" name="hasdisplaycondition" value="0"></td>
 <td width="10%"><a href="#" title="Add Custom Field" onClick="newcustomfield.submit()"><img src="img/add.gif" alt="Add customfield" border="0"></a></td>
@@ -137,23 +132,23 @@ To reorder the customfield list, click and drag them, then press the "Reorder cu
 <script type="text/javascript">
 function getCustomFieldOrder(){
 	dndSource = new dojo.dnd.Source('customfieldlist');
-	// The idea is to get all nodes from the DnD Source 
-	// create an array of node customfield ids where the index of the array+1 is the order 
+	// The idea is to get all nodes from the DnD Source
+	// create an array of node customfield ids where the index of the array+1 is the order
 	// and the content of the array is the customfield id
-	var childnodes = new Array(); 
+	var childnodes = new Array();
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
 	document.reordercustomfield.customfieldorder.value = childnodes.toString();
 }
 </script>
-<?php 
+<?php
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "The custom field was not saved successfully.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The custom field was saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

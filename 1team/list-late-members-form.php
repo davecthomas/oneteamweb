@@ -5,13 +5,13 @@ ob_start(); 	// This caches non-header output, allowing us to redirect after hea
 
 $title = "Who Hasn't Purchased ";
 include('header.php');
-  
+
 
 $rowCount = 0;
 // Set up teamid from session or input
 $bError = FALSE;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -57,8 +57,8 @@ if (!$bError) {?>
 	if (isset($_REQUEST["sort"])) {
 		$sortRequest = trim($_REQUEST["sort"]) . "";
 		$sortRequest = cleanSQL($sortRequest);
-	} 
-	
+	}
+
 	// set up time interval for filter
 	$timeintervalsql = "1 year";
 	$intervalsql = " AND paymentdate >= cast(current_date - cast('" . $timeintervalsql . "' as interval) as date)";
@@ -111,9 +111,8 @@ if (!$bError) {?>
 
 	// GEt skus
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-	$pdostatementS = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementS->execute(array($teamid));
-	$skuResults = $pdostatementS->fetchAll();
+  $dbconn = getConnection();
+  $skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountS = count( $skuResults);
 
 	// Display skus for this team
@@ -172,9 +171,7 @@ function doSkusSelected( ){
 <?php
 		if ((is_array($skuidsposted)) && ($skuidsposted[0] != Sku::SkuID_Undefined)){
 			$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id  WHERE users.id in (SELECT users.id as userid FROM useraccountinfo, teams WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? AND useraccountinfo.isbillable = TRUE and useraccountinfo.status = 1 EXCEPT (SELECT orderitems.userid as userid FROM programs INNER JOIN (paymentmethods INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.paymentmethod = paymentmethods.id) ON programs.id = orderitems.programid WHERE orderitems.teamid = ? AND orderitems.skuid ". $skusql. $intervalsql." )) AND users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid, $teamid));
-			$results = $pdostatement->fetchAll();
+			$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $teamid));
 			// If none found
 			if (count($results) == 0) {
 				echo "<p>No members found.<br>\n";

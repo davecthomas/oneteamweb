@@ -263,40 +263,30 @@ function getTeamID($session){
 }
 
 // On fail return array(RC_PDO_Error)
-function executeQuery($db, $sql, &$bError = false, $array_params = array()){
-	$statement = $db->prepare($sql);
+function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
+	$statement = $dbconn->prepare($sql);
   $bError = ! $statement->execute($array_params);
 	if (!$bError) $items = $statement->fetchAll();
 	return $items;
 }
 
 // On fail return array(RC_PDO_Error)
-function executeQueryFetchColumn($db, $sql, &$bError = false, $array_params = array()){
-	$statement = $db->prepare($sql);
+function executeQueryFetchColumn($dbconn, $sql, &$bError = false, $array_params = array()){
+	$statement = $dbconn->prepare($sql);
   $bError = ! $statement->execute($array_params);
   if (!$bError) $item = $statement->fetchColumn();
 	return $item;
 }
 
-// function getDBH($session = 0){
-// 	$dbconnstr = getenv('CLEARDB_DATABASE_URL');
-// //	if ((isset($session)) && (is_object($session["dbh"])) && (is_a($session["dbh"], 'PDO'))) return $session["dbh"];
-// //	else {
-// 		try{
-// //			$dbh = new PDO('odbc:DRIVER={'.dbdriver.'};UID=' . dbusername. ';SERVER=' . getDBServer() . ';Port='.dbport.';Database=' . dbname . ';PWD=' . getPass1(). ';');
-// 			$dbh = new PDO($dbconnstr);
-// 			if (isStagingServer() || isDevelopmentServer())
-// 				$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-// 			return $dbh;
-// 		} catch( PDOException $Exception ) {
-// 			if (isStagingServer() || isDevelopmentServer()) {
-// 				echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
-// 				exit();
-// 			}
-// 			return null;
-// 		}
-// //	}
-// }
+function getDBH($session = 0){
+	if ($session == 0){
+		return getConnection();
+	} else {
+		if (in_array("dbh", $session)) {
+			return $session["dbh"];
+		}
+	}
+}
 
 function getConnection(){
 	$pdo = null;
@@ -307,15 +297,12 @@ function getConnection(){
 		$cleardb_username = $cleardb_url["user"];
 		$cleardb_password = $cleardb_url["pass"];
 		$cleardb_db       = substr($cleardb_url["path"],1);
-
-	try {
-	    $pdo = new PDO("mysql:host=".$cleardb_server."; dbname=".$cleardb_db, $cleardb_username, $cleardb_password);
-	    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = new PDO("mysql:host=".$cleardb_server."; dbname=".$cleardb_db, $cleardb_username, $cleardb_password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	} catch (PDOException $e) {
 	    print "Error!: " . $e->getMessage() . "<br/>";
 	}
 	return $pdo;
-	// return odbc_connect(getConnName(), getDBName(), getPass());
 }
 
 function utilIsUserBillable($session){
@@ -370,7 +357,7 @@ function startSession( $sessionkey, $userid ){
 		}
 		$session["isbillable"] = (bool) $sessionResults[0]["isbillable"];
 		$session["status"] = (int) $sessionResults[0]["status"];
-//	     $session["dbh"] = $dbh;
+		$session["dbh"] = $dbconn;
 		// This allows a quick and dirty test on the array
 		$session["isvalid"] = true;
 
@@ -412,7 +399,7 @@ function isSessionExpired2($session){
 
 	$expired = $results[0]["expired"];
 	echo "expires= " . $expired;
-	if $expired<1 return true;
+	if ($expired<1) return true;
 	else return false;
 }
 
@@ -568,8 +555,7 @@ function buildRequiredPostFields($session){
 
 // Hash a string with optional salt. No salt creates random salt.
 // Returns one of the RC_Success failure codes on error
-function generateHash($plainText, $salt = null)
-{
+function generateHash($plainText, $salt = null){
     if ($salt === null) {
         $salt = substr(md5(uniqid(rand(), true)), 0, SALT_LENGTH);
     } else {
@@ -617,7 +603,7 @@ function getTeamInfo( $id){
 	$rsTeam = executeQuery($dbconn, $strSQL, $bError);
 
 	if (count($rsTeam)>0) {
-		$team = $rsTeam[0]
+		$team = $rsTeam[0];
 		$teaminfo["teamname"] = $team["name"];
 		$teaminfo["coachid"] = (int) $team["coachid"];
 		$teaminfo["activityname"] = $team["activityname"];
@@ -947,8 +933,7 @@ function roleToStr( $roleid, $teamterms){
 
 
 // Validate an email address
-function isValidEmail($email)
-{
+function isValidEmail($email) {
    $isValid = true;
    $atIndex = strrpos($email, "@");
    if (is_bool($atIndex) && !$atIndex)
@@ -1040,7 +1025,7 @@ function isValidDate($date) {
         } else {
             return FALSE;
         }
-    }else {
+    } else {
         return FALSE;    // more or less 10 chars
     }
 }
@@ -1086,14 +1071,16 @@ function deleteSession($session){
 }
 // returns true if session has expired, else false
 // This should only be called on startSession. The idea is that a false return will cause logout, deletion of session record, and redirect to login page
-function isLockedOut( $dbh, $userid, $teamid){
+function isLockedOut( $userid, $teamid, $dbconn = null){
+	if ($dbconn == null) $dbconn = getConnection();
+
 	$strSQL = "SELECT timelockoutexpires FROM users WHERE id = ? AND teamid = ?";
 	$dbconn = getConnection();
 	$timelockoutexpires = executeQueryFetchColumn($strSQL, $dbconn, $bError, array($userid, $teamid));
 	if (empty($timelockoutexpires)) return false;
 	else {
 		$strSQL = "select ('".$timelockoutexpires."' > current_timestamp );";
-		$isLocked = executeQueryFetchColumn($strSQL, $dbconn, $bError)
+		$isLocked = executeQueryFetchColumn($strSQL, $dbconn, $bError);
 		// If the result is positive, the session is expired
 		return $isLocked;
 	}
