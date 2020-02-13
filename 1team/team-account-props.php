@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -16,29 +16,25 @@ redirectToLoginIfNotAdmin( $session);
 $bError = false;
 $errno = 0;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["id"])){
 		$teamid = $_POST["id"];
 	} else {
-		$bError = true; 
+		$bError = true;
 		$err = "teamid";
 	}
 }
 
 if (!$bError) {
-	  
-	
 	$strSQL = "SELECT * FROM teamaccountinfo WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
+	$dbconn = getConnection();
+	$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
-	$teamResults = $pdostatement->fetchAll();
-	
 	$rowCount = 0;
 	if (count($teamResults) > 0) {
 		if (isset($_POST["status"])) {
@@ -62,21 +58,20 @@ if (!$bError) {
 		// This is backed by a checkbox, which is only set in POST if checked.
 		if (isset($_POST["isbillable"])) {
 			$isbillable = 'TRUE';
-			
+
 		} else {
 			$isbillable = 'FALSE';
 		}
 		if (!$bError){
 			$strSQL = "UPDATE teamaccountinfo SET status = ?, plan = ?, planduration = ?, isbillable = " . $isbillable . " WHERE teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = ! $pdostatement->execute(array($status, $plan, $planduration, $teamid));
-			
+			executeQuery($dbconn, $strSQL, $bError, array($status, $plan, $planduration, $teamid));
+
 			if (!$bError){
 				redirect("team-props-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 			} else {
      			$err = "q";
 			}
-			
+
 		}
 	} else {
 		$bError = true;

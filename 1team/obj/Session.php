@@ -13,11 +13,11 @@ class Session extends DbObject {
 	}
 
 	public static function deleteStaleSessions($session){
-		
+
 		$strSQL = "delete from sessions where timeexpires < current_timestamp";
-		$pdostatement = $dbh->prepare($strSQL);
-		$bError = ! $pdostatement->execute();
-		
+		$dbconn = getConnection();
+		$results = executeQuery($dbconn, $strSQL, $bError);
+
 		if ($bError) return RC_SessionCleanupFail;
 		else return RC_Success;
     }

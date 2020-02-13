@@ -171,6 +171,7 @@ if (isset($userprops["id"])) {
 		<option value="att" <?php if ($smsphonecarrier == "att") echo "selected"?>>AT&T</option>
 		<option value="verizon" <?php if ($smsphonecarrier == "verizon") echo "selected"?>>Verizon</option>
 		<option value="sprint" <?php if ($smsphonecarrier == "sprint") echo "selected"?>>Sprint or Credo</option>
+		<option value="googlefi" <?php if ($smsphonecarrier == "googlefi") echo "selected"?>>Google Fi</option>
 		<option value="tmobile" <?php if ($smsphonecarrier == "tmobile") echo "selected"?>>T-Mobile</option>
 		<option value="cellularone" <?php if ($smsphonecarrier == "cellularone") echo "selected"?>>Cellular One</option>
 		<option value="qwest" <?php if ($smsphonecarrier == "qwest") echo "selected"?>>Qwest</option>

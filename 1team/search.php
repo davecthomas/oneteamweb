@@ -13,7 +13,7 @@ if (isset($_REQUEST["str"])) {
 }
 $title .= "'" . $strSearch . "'";
 
-  
+
 
 $rowCount = 0;
 // Set up teamid from session or input
@@ -41,7 +41,7 @@ if (isset($_REQUEST["filter"])) {
 	$filterRequest = trim($_REQUEST["filter"]) . "";
 	$filterRequest = cleanSQL($filterRequest);
 	if (strlen($filterRequest) > 0 && ! isnumeric($filterRequest) ) {
-		$filterRequestSQL = " AND ?"; 
+		$filterRequestSQL = " AND ?";
 	} else {
 		$filterRequestSQL = "";
 	}
@@ -49,24 +49,21 @@ if (isset($_REQUEST["filter"])) {
 	$filterRequestSQL = "";
 }
 
+$dbconn = getConnection();
 
 if (isUser( $session, Role_ApplicationAdmin) ) {
 	$strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') ORDER BY " . $sortRequest .";";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($strSearch, $strSearch, $strSearch));
+	$results = executeQuery($dbconn, $strSQL, $bError, array($strSearch, $strSearch, $strSearch));
 } else {
 	$strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? and (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') " . $filterRequestSQL . " ORDER BY " . $sortRequest .";";
-	$pdostatement = $dbh->prepare($strSQL);
-	if (strlen($filterRequestSQL) > 0) { 
-		$pdostatement->execute(array($teamid, $strSearch, $strSearch, $strSearch, $filterRequest));
+	if (strlen($filterRequestSQL) > 0) {
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $filterRequest));
 	} else {
-		$pdostatement->execute(array($teamid, $strSearch, $strSearch, $strSearch, $teamid));
+		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $teamid));
 	}
 }
-$results = $pdostatement->fetchAll();
 
-
-// Now that we've done the query, we need to strip the secondary sort column off. 
+// Now that we've done the query, we need to strip the secondary sort column off.
 $sortRequest = substr($sortRequest, 0, strpos($sortRequest, ","));
 
 // If none found
@@ -76,7 +73,7 @@ if (count($results ) == 0) { ?>
 <?php
 	echo "<p>No members found.<br>\n";
 // If only one result, go to props page for that user
-} else if (count($results) == 1){ 
+} else if (count($results) == 1){
 	redirect('user-props-form.php?'.returnRequiredParams($session).'&id='.$results[0]["userid"]);
 // If multiple results show roster
 } else { ?>
@@ -86,10 +83,10 @@ if (count($results ) == 0) { ?>
 	// More than one found, include roster
 	$pagemode = pagemodeSearch;
 	$referrer = "search.php";
-	include('include-member-roster.php'); 
+	include('include-member-roster.php');
 }
 // Start footer section
-include('footer.php'); 
+include('footer.php');
 ob_end_flush(); ?>
 </body>
 </html>

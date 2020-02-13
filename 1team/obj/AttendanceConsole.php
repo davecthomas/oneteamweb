@@ -37,9 +37,7 @@ class AttendanceConsoles extends DbObject{
 
 	private function getRecord( ){
 		$strSQL = "SELECT * FROM attendanceconsoles WHERE teamid = ?;";
-
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = !($pdostatement->execute(array($this->teamid)));
+		executeQuery($this->dbh, $strSQL, $bError, array($this->teamid)));
 		if ($bError) return RC_PDO_Error;
 		else $this->dbrecord = $pdostatement->fetchAll();
 	}
@@ -139,8 +137,7 @@ class AttendanceConsole extends DbObject {
 	function remove(){
 		$strSQL = "DELETE FROM attendanceconsoles WHERE id = ? and teamid = ?;";
 
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = !($pdostatement->execute(array($this->id, $this->teamid)));
+		executeQuery($this->dbh, $strSQL, $bError, array($this->id, $this->teamid)));
 		if ($bError) return RC_PDO_Error;
 		// Invalidate object
 		else $this->id = DbObject::DbID_Undefined;
@@ -148,9 +145,7 @@ class AttendanceConsole extends DbObject {
 
 	private function getRecord( ){
 		$strSQL = "SELECT * FROM attendanceconsoles WHERE id = ? and teamid = ?;";
-
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = !($pdostatement->execute(array($this->id, $this->teamid)));
+		executeQuery($this->dbh, $strSQL, $bError, array($this->id, $this->teamid)));
 		if ($bError) return $this->getDberrinfo();
 		else $this->dbrecord = $pdostatement->fetch();
 	}
@@ -158,14 +153,12 @@ class AttendanceConsole extends DbObject {
 	function commit(){
 		if (($this->isdirty) && ($this->isValid())){
 			$strSQL = "UPDATE attendanceconsoles set name = ?, ip = ? WHERE teamid = ? AND id = ?;";
-			$pdostatement = $this->dbh->prepare($strSQL);
-			$bError = !($pdostatement->execute(array($this->name, $this->ip, $this->teamid, $this->id)));
+			executeQuery($this->dbh, $strSQL, $bError, array($this->name, $this->ip, $this->teamid, $this->id)));
 			if (!$bError) $this->isdirty = false;
 		} else if ($this->id == DbObject::DbID_Undefined){
 			$strSQL = "INSERT INTO attendanceconsoles VALUES(DEFAULT, ?, ?, ?) RETURNING id;";
-			$pdostatement = $this->dbh->prepare($strSQL);
-			$bError = !($pdostatement->execute(array($this->name, $this->ip, $this->teamid)));
-			if (!$bError) $this->id = $pdostatement->fetchColumn();
+			$this->id = executeQueryFetchColumn($this->dbh, $strSQL, $bError, array($this->name, $this->ip, $this->teamid)));
+			if ($bError) $this->id = null;
 			else return $this->getDberrinfo();
 		}
 	}

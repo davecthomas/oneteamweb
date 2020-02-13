@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,15 +14,15 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
-	} 
+	}
 }
 
 if (isset($_POST["programid"])) {
@@ -37,12 +37,12 @@ if (isset($_POST["name"])) {
 }
 
 if (!$bError) {
-	  
-	
+
+
 	$strSQL = "INSERT INTO levels VALUES (DEFAULT, ?, ?, NULL, ?);";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($levelname, $programid, $teamid));
-	
+	$dbconn = getConnection();
+	executeQuery($dbconn, $strSQL, $bError, array($levelname, $programid, $teamid));
+
 	redirect("manage-levels-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 } else {
 	redirect("manage-levels-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");

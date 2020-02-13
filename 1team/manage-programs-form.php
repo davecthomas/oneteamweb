@@ -1,13 +1,13 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Manage Programs"; 
+$title = "Manage Programs";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
-</script> 
+</script>
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
@@ -34,14 +34,12 @@ if (isUser($session, Role_TeamAdmin)){
 <p>Programs are associated with payments. If you would like your <?php echo $teamterms["termmember"]?>s to be able to pay for different types of programs, create and manage them from this page. If you segment your customers based on the amount they pay for the services you provide, you should consider using programs. Programs are required to be set up if payments are tracked.</p>
 <p>If you track attendance, each program can have an event associated with it. This event is the used to track attendance if you have automated attendance scanning in use for your <?php echo $teamterms["termmember"]?>s. For example, if a customer is enrolled in a Masters Swimming program, you may want to have their attendance recorded as a Masters swimming event by default.</p>
 </div></div></div>
-<?php 
-	// Note! This left outer join is necessary to return all programs since events may be null. The side effect of this is that other team programs are returned. These 
+<?php
+	// Note! This left outer join is necessary to return all programs since events may be null. The side effect of this is that other team programs are returned. These
 	// are filtered out below in the loop
 	$strSQL = "SELECT programs.*, events.name as eventname FROM programs LEFT OUTER JOIN events ON programs.eventid = events.id AND programs.teamid = ? ORDER BY listorder;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$programResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($programResults);?>
@@ -54,25 +52,25 @@ if (isUser($session, Role_TeamAdmin)){
 </tr>
 </thead>
 </table>
-<div dojoType="dojo.dnd.Source" id="programlist" jsId="programlist" class="container"> 
-<script type="dojo/method" event="creator" args="item, hint"> 
+<div dojoType="dojo.dnd.Source" id="programlist" jsId="programlist" class="container">
+<script type="dojo/method" event="creator" args="item, hint">
 
 	// this is custom creator, which changes the avatar representation
 	node = dojo.doc.createElement("div"), s = String(item);
-	
+
 	node.id = dojo.dnd.getUniqueId();
 	node.className = "dojoDndItem";
 	node.innerHTML = s; // "Reordering program. Drop in desired order location.";
 	return {node: node, data: item, type: ["text"]};
-</script> 
+</script>
 <?php
-	while ($rowCount < $loopMax) { 
+	while ($rowCount < $loopMax) {
 		// Filter out results not associated with this team
 		if ($programResults[$rowCount]["teamid"] != $teamid) {
 			$rowCount ++;
 			continue;
-		}?>		
-<div class="dojoDndItem"> 
+		}?>
+<div class="dojoDndItem">
 <span id="program<?php echo $rowCount?>" style="display:none" class="programorderitem"><?php echo $programResults[$rowCount]["id"]?></span><table width="65%"><tr class="even">
 <td width="50%"><?php echo $programResults[$rowCount]["name"]?></td>
 <td width="40%"><?php echo $programResults[$rowCount]["eventname"]?></td>
@@ -82,10 +80,10 @@ if (isUser($session, Role_TeamAdmin)){
 </td>
 </tr>
 </table></div>
-<?php 
+<?php
 			$rowCount ++;
 	}	?>
-</div> 
+</div>
 <?php
 	if ($rowCount > 1){?>
 <table width="65%">
@@ -111,23 +109,20 @@ To reorder the program list, click and drag them, then press the "Reorder progra
 	// Event selector
 	if ( isUser($session, Role_ApplicationAdmin) ) {
 		$strSQL = "SELECT * FROM events order by listorder;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute();		
+		$eventResults = executeQuery($dbconn, $strSQL, $bError);
 	} else {
 		$strSQL = "SELECT * FROM events WHERE teamid = ? order by listorder;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($session["teamid"]));		
-	} 
-	$eventResults = $pdostatement->fetchAll();
+		$eventResults =executeQuery($dbconn, $strSQL, $bError, array($session["teamid"]));
+	}
 	$numEvents = count($eventResults);
 	$rowCount = 0;
 	if ($numEvents > 0){ ?>
 <select name="eventid">
 <option value="<?php echo eventidUndefined?>">Select an event to associate with new program...</option>
 <?php
-		while ($rowCount < $numEvents) { 
+		while ($rowCount < $numEvents) {
 			$eventdate = $eventResults[$rowCount]["eventdate"];
-			if (( strlen($eventdate) < 1 ) || ( is_null($eventdate) )) { 
+			if (( strlen($eventdate) < 1 ) || ( is_null($eventdate) )) {
 				$eventdate = "any date";
 			}
 			$location = $eventResults[$rowCount]["location"];
@@ -143,8 +138,8 @@ To reorder the program list, click and drag them, then press the "Reorder progra
 			$rowCount++;
 		} ?>
 </select>
-<?php 
-	} else { 
+<?php
+	} else {
 		echo 'No events have been defined. <a href="/1team/manage-events-form.php?' . returnRequiredParams($session) . '">Define events</a> to associate with programs.';
 	}?>
 </td>
@@ -155,23 +150,23 @@ To reorder the program list, click and drag them, then press the "Reorder progra
 <script type="text/javascript">
 function getProgramOrder(){
 	dndSource = new dojo.dnd.Source('programlist');
-	// The idea is to get all nodes from the DnD Source 
-	// create an array of node program ids where the index of the array+1 is the order 
+	// The idea is to get all nodes from the DnD Source
+	// create an array of node program ids where the index of the array+1 is the order
 	// and the content of the array is the program id
-	var childnodes = new Array(); 
+	var childnodes = new Array();
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
 	document.reorderprogram.programorder.value = childnodes.toString();
 }
 </script>
-<?php 
+<?php
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "The program was not saved successfully.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The program was saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

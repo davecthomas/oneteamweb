@@ -39,7 +39,7 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 <p class="usererror"><?php echo Error ?><br><br>
 <a class="action" href="home.php">Home</a></p>
 </div>
-<?php 
+<?php
 } else {
 	// Assure current user is allowed to work on this user
 	if (!canIAdministerThisUser( $session, $id)){ ?>
@@ -48,7 +48,7 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 <p class="usererror"><?php echo NotAuthorized ?><br><br>
 <a class="action" href="home.php">Home</a></p>
 </div>
-<?php	
+<?php
 	} else {
 	     $intro = FALSE;
 		if (isset($_GET["intro"])) {
@@ -62,12 +62,13 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 		}
 
 		$bError = resetPassword($session, $teamid, $id, $sendemail, $intro);
-		
+
 		if (!$bError){
+			$dbconn = getConnection();
 		  ?>
 <h3>Password Reset</h3>
 <div class="indented-group-noborder">
-<p>Password for <a href="user-props-form.php?id=<?php echo $id . "&" . returnRequiredParams($session) . "&teamid=".$teamid?>"><?php echo getUserName2($id, $dbh)?></a> has been reset
+<p>Password for <a href="user-props-form.php?id=<?php echo $id . "&" . returnRequiredParams($session) . "&teamid=".$teamid?>"><?php echo getUserName($id, $dbconn)?></a> has been reset
 <?php
 //				if (isAnyAdminLoggedIn($session)){
 //					echo "to \"" . $passwd_cleartext . "\".";

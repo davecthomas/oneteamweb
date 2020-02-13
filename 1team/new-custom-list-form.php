@@ -1,12 +1,12 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "New Custom List"; 
+$title = "New Custom List";
 include('header.php');?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
-</script> 
+</script>
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 $teamid = NotFound;
@@ -29,18 +29,17 @@ if (isset($_POST["name"])) {
 } else {
 	$bCreate = false;
 }
-  
-	
-if ($bCreate) { 
+
+$dbconn = getConnection();
+
+if ($bCreate) {
 
 	// First, insert the new list
 	$strSQL = "INSERT INTO customlists VALUES (DEFAULT, ?, ?);";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($listname, $teamid));
+	executeQuery($dbconn, $strSQL, $bError, array($listname, $teamid));
 	// Now get the new list
 	$strSQL = "SELECT * from customlists WHERE name = ? and teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($listname, $teamid));
+	$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($listname, $teamid));
 
 // Not a create case: require id
 } else {
@@ -48,8 +47,7 @@ if ($bCreate) {
 	if (isset($_GET["id"])) {
 		$customlistid = $_GET["id"];
 		$strSQL = "SELECT * from customlists WHERE id = ? and teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($customlistid, $teamid));
+		$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $teamid));
 	} else {
 		$bError = true;
 	}
@@ -57,25 +55,21 @@ if ($bCreate) {
 
 if (!$bError) {
 	// If we get here error free, we have a custom list query we can use
-	$customlistResults = $pdostatement->fetchAll();
 	$customlistid = $customlistResults[0]["id"];
 
 	$rowCount = 0;
 	$loopMax = count($customlistResults );
-	
-	if ($loopMax > 0) { 
-		$name = $customlistResults[0]["name"]; 
+
+	if ($loopMax > 0) {
+		$name = $customlistResults[0]["name"];
 		?>
 <h4><?php echo $title ?> &quot;<?php echo $name?>&quot; for <?php echo getTeamName($teamid, $dbconn);?></h4>
-<?php	
+<?php
 		$strSQL = "SELECT * FROM customlistdata WHERE customlistid = ? AND teamid = ? ORDER BY listorder;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($customlistid, $teamid));
-		
-		$customlistdataResults = $pdostatement->fetchAll();
-	
-		$loopMaxListdata = count($customlistdataResults); 
-		
+		$customlistdataResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $teamid));
+
+		$loopMaxListdata = count($customlistdataResults);
+
 		if ($loopMaxListdata > 0){?>
 <table width="65%">
 <thead>
@@ -85,21 +79,21 @@ if (!$bError) {
 </tr>
 </thead>
 </table>
-<div dojoType="dojo.dnd.Source" id="customlistlist" jsId="customlistlist" class="container"> 
-<script type="dojo/method" event="creator" args="item, hint"> 
+<div dojoType="dojo.dnd.Source" id="customlistlist" jsId="customlistlist" class="container">
+<script type="dojo/method" event="creator" args="item, hint">
 
 	// this is custom creator, which changes the avatar representation
 	node = dojo.doc.createElement("div"), s = String(item);
-	
+
 	node.id = dojo.dnd.getUniqueId();
 	node.className = "dojoDndItem";
 	node.innerHTML = s; // "Reordering customlist. Drop in desired order location.";
 	return {node: node, data: item, type: ["text"]};
-</script> 
+</script>
 <?php
 			$rowCount = 0;
 			while ($rowCount < $loopMaxListdata) { ?>
-<div class="dojoDndItem"> 
+<div class="dojoDndItem">
 <span id="customlist<?php echo $rowCount?>" style="display:none" class="customlistorderitem"><?php echo $customlistdataResults[$rowCount]["id"]?></span><table width="65%"><tr class="even">
 <td width="90%"><?php echo $customlistdataResults[$rowCount]["listitemname"]?></td>
 <td width="10%">
@@ -108,10 +102,10 @@ if (!$bError) {
 </td>
 </tr>
 </table></div>
-<?php 
+<?php
 				$rowCount ++;
 			}	?>
-</div> 
+</div>
 <table width="65%">
 <form name="reordercustomlist" action="/1team/reorder-custom-list.php" method="post"/>
 <?php buildRequiredPostFields($session) ?>
@@ -127,17 +121,17 @@ if (!$bError) {
 <script type="text/javascript">
 function getCustomListOrder(){
 	dndSource = new dojo.dnd.Source('customlistlist');
-	// The idea is to get all nodes from the DnD Source 
-	// create an array of node customlist ids where the index of the array+1 is the order 
+	// The idea is to get all nodes from the DnD Source
+	// create an array of node customlist ids where the index of the array+1 is the order
 	// and the content of the array is the customlist id
-	var childnodes = new Array(); 
+	var childnodes = new Array();
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
 	document.reordercustomlist.customlistorder.value = childnodes.toString();
 }
 </script>
-<?php 
+<?php
 		}
 	} ?>
 <table width="65%">
@@ -154,7 +148,7 @@ function getCustomListOrder(){
 </table>
 </form>
 
-<?php	
+<?php
 // end !bError
 } else {
 	echo "error.";

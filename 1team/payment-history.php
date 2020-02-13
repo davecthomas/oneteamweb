@@ -1,4 +1,4 @@
-<?php 
+<?php
 $title= " Payment History" ;
 include('header.php');
 
@@ -39,40 +39,40 @@ if ($whomode == "user") {
 	}
 	$id = $teamid;
 }
-if (! $bError ) { 
+if (! $bError ) {
 	// Only display prev/next for app admin, since this data spans teams
 	if ((isUser($session, Role_ApplicationAdmin) ) && ($whomode == "user")){ ?>
 <p></p>
 <div class="navtop">
 <ul id="nav">
-<li><a href="<?php if ($userid > 1 ) echo("payment-history.php?id=" . $userid-1 . buildRequiredParamsConcat($session)) ?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>	
+<li><a href="<?php if ($userid > 1 ) echo("payment-history.php?id=" . $userid-1 . buildRequiredParamsConcat($session)) ?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>
 <li><a class="linkopacity" href="payment-history.php?id=<?php echo($userid+1) . buildRequiredParamsConcat($session)?>">Next member<img src="img/a_next.gif" border="0" alt="next"></a></li>
 </ul>
 </div><p></p>
-<?php 
+<?php
 	}
-	
+
 	if (($whomode == "user") && (!canIAdministerThisUser( $session, $userid))) {
 		$bError = true;
 		$errStr = "na";
-	} 
-	
+	}
+
 	if (($whomode == "team") && (!isAnyAdminLoggedIn($session))) {
 		$bError = true;
 		$errStr = "ta";
-	}	
-	if (!$bError ) { 
+	}
+	if (!$bError ) {
 		if (isAnyAdminLoggedIn($session)){
-			// teamid depends on who is calling 
+			// teamid depends on who is calling
 			if (!isset($teamid)){
 				if (isUser($session, Role_TeamAdmin)){
 					if (isset($session["teamid"])){
 						$teamid = $session["teamid"];
-					} 
+					}
 				} else {
 					if (isset($_GET["teamid"])){
 						$teamid = $_GET["teamid"];
-					} 
+					}
 				}
 			}
 		?>
@@ -90,23 +90,22 @@ function updateProgramID() {
 <input type="hidden" name="id" value="<?php echo $id ?>"/>
 <input type="hidden" name="recentlyexpired" value="<?php echo $recentlyexpired?>"/>
 <?php buildRequiredPostFields($session) ?>
-<?php 
-			  
-			// GEt payment methods for this team 
+<?php
+
+			// GEt payment methods for this team
 			$strSQL = "SELECT * FROM programs WHERE teamid = ?";
-			$pdostatementP = $dbh->prepare($strSQL);
-			$bError = ! $pdostatementP->execute(array($teamid));
-			$programResults = $pdostatementP->fetchAll();
+			$dbconn = getConnection();
+			$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountP = count( $programResults);
-			
+
 			// Display programs for this team
-			if ($rowCountP > 0) { 
+			if ($rowCountP > 0) {
 				$countRowsP = 0; ?>
 <table class="noborders">
 <tr><td class="bold">Display payment for program</td><td>
 <select name="programid" onchange="updateProgramID();">
 <option value="<?php echo Program_Undefined?>" <?php if ($programid == Program_Undefined) echo " selected"?>>All programs</option>
-<?php 
+<?php
 				while ($countRowsP < $rowCountP) {
 					echo '<option value="';
 					echo $programResults[$countRowsP]["id"];
@@ -117,14 +116,14 @@ function updateProgramID() {
 					echo "</option>\n";
 					$countRowsP ++;
 				} ?>
-</select>				
+</select>
 </td></tr>
 </table>
 </form>
-<?php 
+<?php
 			} else {
 				echo '<p>There are no programs defined for the team ' . $teamname . '. <a href="/1team/manage-programs-form.php?' . returnRequiredParams($session) . '&teamid=' . $teamid .'">Define programs</a>.';
-			}  
+			}
 		} ?>
 <script type="text/javascript">
 function updateRecentlyExpired() {
@@ -146,30 +145,30 @@ function updateRecentlyExpired() {
 <option value="1 mon" <?php if ($recentlyexpired == "1 mon") echo " selected"?>>1 month</option>
 <option value="3 mon" <?php if ($recentlyexpired == "3 mon") echo " selected"?>>3 months</option>
 <option value="1 year" <?php if ($recentlyexpired == "1 year") echo " selected"?>>1 year</option>
-</select>				
+</select>
 </td></tr>
 </table>
 </form>
 </div>
-<?php 
-		
+<?php
+
 		// Display the payment history
 		$pageMode = "standalone";
-		include('include-payment-history.php'); 
+		include('include-payment-history.php');
 	}
-} 
+}
 
 if ($bError) { ?>
 <h4 class="usererror">Error: <?php echo $errStr?></h4>
 <p><a href="javascript:void(0);" onclick="history.go(-1)">Back</a></p>
-<?php 
+<?php
 }
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "The payment was not saved successfully: " . $_GET["err"], "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The payment was changed successfully.");
-} 
+}
 
 // Start footer section
 include('footer.php'); ?>

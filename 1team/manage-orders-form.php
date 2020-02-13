@@ -1,14 +1,14 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Order Management"; 
+$title = "Order Management";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 </script>
 
-<?php 
+<?php
 $bError = false;
 
 echo "<h3>" . getTitle($session, $title) . "</h3>";
@@ -32,7 +32,7 @@ $sortRequest = "firstname";
 if (isset($_REQUEST["sort"])) {
 	$sortRequest = trim($_REQUEST["sort"]) . "";
 	$sortRequest = cleanSQL($sortRequest);
-} 
+}
 if (isset($_REQUEST["programid"])) {
 	$programid = (int) $_REQUEST["programid"];
 	if (!is_int($programid )){
@@ -56,20 +56,18 @@ $disablenextyearlink = ($paymentyear+1 > (int)date("Y"));
 
 if (!$bError){
 	$teamname = getTeamName($teamid, $dbconn);
-	
+	$dbconn = getConnection();
+
 	// All new orderitems
 	if ($programid != Program_Undefined){
 		$strSQL = "select SUM(amount) as total, SUM(fee) as totalfee, COUNT(amount) as numorderitems, orderteamid, orderid, uid, orderdate, duedate, orderpaid, firstname, lastname from (select orders.userid as uid, orders.ispaid as orderpaid, orders.teamid as orderteamid, * from (users RIGHT OUTER JOIN (orders RIGHT OUTER JOIN orderitems ON (orders.id = orderitems.orderid AND orderitems.programid = ?)) on users.id = orders.userid)) AS orderlist where orderteamid = ? AND orderdate >= '1/1/" . $paymentyear . "' AND orderdate <= '12/31/" . $paymentyear . "' group by orderid, uid, orderteamid, orderdate, orderpaid, duedate, firstname, lastname order by orderdate desc;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($programid, $teamid));
+		$results = executeQuery($dbconn, $strSQL, $bError, array($programid, $teamid));
 	} else {
 		$strSQL = "select SUM(amount) as total, SUM(fee) as totalfee, COUNT(amount) as numorderitems, orderteamid, orderid, uid, orderdate, duedate, orderpaid, firstname, lastname from (select orders.userid as uid, orders.ispaid as orderpaid, orders.teamid as orderteamid, * from (users RIGHT OUTER JOIN (orders LEFT OUTER JOIN orderitems ON (orders.id = orderitems.orderid)) on users.id = orders.userid)) AS orderlist where orderteamid = ? AND orderdate >= '1/1/" . $paymentyear . "' AND orderdate <= '12/31/" . $paymentyear . "' group by orderid, uid, orderteamid, orderdate, orderpaid, duedate, firstname, lastname order by orderdate desc;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array( $teamid));
+		$results = executeQuery($dbconn, $strSQL, $bError, array( $teamid));
 	}
-	$results = $pdostatement->fetchAll();
-	$numOrders = count($results); 
-	
+	$numOrders = count($results);
+
 	// ?>
 
 
@@ -87,12 +85,10 @@ function updateProgramID() {
 <input type="hidden" name="year" value="<?php echo $paymentyear?>"/>
 <?php buildRequiredPostFields($session) ?>
 <?php
-			
+
 			// GEt payment methods for this team
 			$strSQL = "SELECT * FROM programs WHERE teamid = ?";
-			$pdostatementP = $dbh->prepare($strSQL);
-			$bError = ! $pdostatementP->execute(array($teamid));
-			$programResults = $pdostatementP->fetchAll();
+			$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountP = count( $programResults);
 
 			// Display programs for this team
@@ -124,8 +120,8 @@ function updateProgramID() {
 
 <h4>Orders for <?php echo $teamname?></h4>
 <form>
-<table class="memberlist"> 
-<thead class="head"> 
+<table class="memberlist">
+<thead class="head">
 <tr>
 <th align="left"><a target="_top" href="manage-orders-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&year=<?php echo $paymentyear-1?>&sort=<?php echo $sortRequest?>&programid=<?php echo $programid?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous year</a></th>
 <th align="center" colspan="7"><span class="bigstrong"><?php echo $paymentyear ?></span></th>
@@ -146,15 +142,15 @@ function updateProgramID() {
 <th valign="top">Paid?</th>
 <th valign="top">Actions</th>
 </tr>
-</thead>	
+</thead>
 <tbody>
-<?php 
+<?php
 	$rowCountOrders = 0;
 	$sumFees = 0;
 	$sumItems = 0;
 	$sumGross = 0;
 	$sumOwed = 0;
-		
+
 	while ($rowCountOrders < $numOrders) {
 		$orderdate = $results[$rowCountOrders]["orderdate"];
 		$duedate = $results[$rowCountOrders]["duedate"];
@@ -169,8 +165,8 @@ function updateProgramID() {
 			$sumGross += $total;
 		else $sumOwed += $total;
 ?>
-<tr class="<?php  
-		if ( ($rowCountOrders+1) % 2 ) echo("even"); 
+<tr class="<?php
+		if ( ($rowCountOrders+1) % 2 ) echo("even");
 		else echo("odd");?>">
 <td><?php
 	 	echo $orderdate?></td>
@@ -180,7 +176,7 @@ function updateProgramID() {
 		if ($results[$rowCountOrders]["uid"] == User::UserID_Guest) {
 			$username = User::Username_Guest;
 			echo $username;
-		} else { 
+		} else {
 			$username = $results[$rowCountOrders]["firstname"] . ' ' . $results[$rowCountOrders]["lastname"];?>
 <a target="_top" href="user-props-form.php?<?php echo returnRequiredParams($session)?>&id=<?php echo $results[$rowCountOrders]["uid"]?>"><?php echo $username?></a>
 	<?php
@@ -197,13 +193,13 @@ function updateProgramID() {
 <a href="print-order.php<?php buildRequiredParams($session) ?>&uid=<?php echo $uid?>&orderid=<?php echo $results[$rowCountOrders]["orderid"]?>&teamid=<?php echo $teamid?>" title="Print <?php if (!$ispaid) echo "invoice"; else echo "receipt"?>"><img src="img/printer.png" alt="Print" border="0"></a>&nbsp;
 <a href="print-order.php<?php buildRequiredParams($session) ?>&uid=<?php echo $uid?>&orderid=<?php echo $results[$rowCountOrders]["orderid"]?>&teamid=<?php echo $teamid?>&email=1" title="Email <?php if (!$ispaid) echo "invoice"; else echo "receipt"?>"><img src="img/email.png" alt="Email" border="0"></a>&nbsp;
 <a href="#" onClick="confDelete('<?php echo $username?>', '<?php echo $orderdate?>', '<?php echo $total?>',<?php echo $results[$rowCountOrders]["orderid"]?>)" title="Delete order"><img src="img/delete.png" alt="Delete order..." border="0"></a></td></tr>
-<?php             
+<?php
 		$rowCountOrders ++;
 	}
-	//  
+	//
 	if ($numOrders == 0) { ?>
 <tr><td colspan="8">No orders in this time period.</td></tr>
-<?php 
+<?php
 	} else {?>
 <tr>
 <td colspan="3" class="moneytotal"><?php echo ($numOrders)?> orders</td>
@@ -218,15 +214,15 @@ function updateProgramID() {
 </form>
 <p><a href="new-order-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>" title="New order..."><img src="img/add.gif" alt="Add item" border="0">Create a new order...</a></p>
 <?php
-}  
+}
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "There was an error processing this order.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The order was processed successfully.");
-} 
+}
 // Start footer section
-include('footer.php'); 
+include('footer.php');
 ?>
 <script type="text/javascript">
 function confDelete(name, orderdate, total, id) {

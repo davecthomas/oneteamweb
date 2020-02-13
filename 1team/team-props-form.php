@@ -249,6 +249,27 @@ To change <?php echo $teamterms["termcoach"]?>, select another <?php echo $teamt
 		if (isAnyAdminLoggedIn($session)) {
 ?>
 <tr>
+<td class="bold">Payment Provider</td>
+<td >
+	<select id="payment_provider" name="payment_provider">
+		<option value="">Select...</option>
+		<option value="paypal" selected>PayPal</option>
+	</select>
+</td>
+</tr>
+<tr>
+<td><b>Payment Provider API Username</b></td>
+<td><input type="text" value="<?php echo htmlspecialchars($row["api_username"] )?>" name="api_username" <?php echo $enableControlTeamAdmin?>></td>
+</tr>
+<tr>
+<td><b>Payment Provider API Password</b></td>
+<td><input type="text" value="<?php echo htmlspecialchars($row["api_password"] )?>" name="api_password" <?php echo $enableControlTeamAdmin?>></td>
+</tr>
+<tr>
+<td><b>Payment Provider API Signature</b></td>
+<td><input type="text" value="<?php echo htmlspecialchars($row["api_signature"] )?>" name="api_signature" <?php echo $enableControlTeamAdmin?>></td>
+</tr>
+<tr>
 <td><span class="bold">Introductory email body</span><br>Use this field to customize the initial email<br>your <?php echo $teamterms["termmember"]?>s get after you create their<br>account and generate a password.</td><td><textarea rows="5" cols="120" value="" name="introtext" wrap="hard"><?php echo $row["introtext"]?></textarea></td></tr>
 <?php 		// End Admin set of logo, IP Address, and regular class event
 		} ?>

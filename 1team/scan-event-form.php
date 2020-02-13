@@ -1,10 +1,10 @@
-<?php  
+<?php
 // Only admins or coaches can execute this script. Header.php enforces this.
 $isadminorcoachrequired = true;
 $title = " Prepare for Attendance Scanning";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 </script>
 
@@ -13,7 +13,7 @@ dojo.require("dijit.form.DateTextBox");
 $bError = false;
 $teamid = NotFound;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (!isUser($session, Role_ApplicationAdmin)){
 	$teamid = getTeamID($session);
 } else {
@@ -36,20 +36,18 @@ if ($isTeamAttendanceConsole){?>
 <?php buildRequiredPostFields($session) ?>
 <table class="noborders">
 <tr><td class="strong">Event</td><td><?php
-  
+
 	$strSQL = "SELECT * FROM events WHERE teamid = ? and scannable = TRUE ORDER by listorder;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid ));
-	
-	$eventResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$eventResults = executeQuery($dbconn, $strSQL, $bError, array($teamid ));
 
 	$rowCount = 0;
 	$loopMax = count($eventResults);
 ?>
 <select name="eventid" onchange="document.scaneventform.eventname.value = this.options[this.selectedIndex].text">
 <?php
-	while ($rowCount < $loopMax) { 
-		echo  "<option "; 
+	while ($rowCount < $loopMax) {
+		echo  "<option ";
 		echo  'value="' . $eventResults[$rowCount]["id"] . '"';
 		if ($rowCount == 0) {
 			echo " selected ";
@@ -73,4 +71,3 @@ if ($isTeamAttendanceConsole){?>
 }
 // Start footer section
 include('footer.php'); ?>
-

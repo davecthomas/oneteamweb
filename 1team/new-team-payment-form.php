@@ -1,9 +1,9 @@
-<?php  
+<?php
 // Only app admins can execute this script. Header.php enforces this.
 $isappadminrequired = true;
 $title= " New Payment for Team" ;
 include('header.php'); ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.CurrencyTextBox");
 </script>
@@ -11,10 +11,9 @@ dojo.require("dijit.form.CurrencyTextBox");
 <?php
 
 $strSQL = "SELECT * FROM teams, teamaccountinfo WHERE isbillable = true and status <> " . TeamAccountStatus_Inactive . " and teams.teamaccountinfo = teamaccountinfo.id ORDER BY names;";
-$pdostatement = $dbh->prepare($strSQL);
-$bError = ! $pdostatement->execute();
-$teamResults = $pdostatement->fetchAll();
-$countRows = 0;	
+$dbconn = getConnection();
+$teamResults = executeQuery($dbconn, $strSQL, $bError);
+$countRows = 0;
 $numRows = count($teamResults);
 ?>
 <div class="indented-group-noborder">
@@ -49,21 +48,19 @@ $numRows = count($teamResults);
 </tr>
 <tr><td class="bold">Amount ($US)</td><td><input type="text" id="amount" name="amount" value="0.00" dojoType="dijit.form.CurrencyTextBox" required="true" constraints="{fractional:true}" currency="USD" invalidMessage="Invalid amount.  Include dollars and cents." /></td></tr>
 <tr><td class="bold">Fee ($US)</td><td><input type="text" name="fee" value="0.00" dojoType="dijit.form.CurrencyTextBox" required="false" constraints="{max:0,fractional:true}" currency="USD" invalidMessage="Invalid amount.  Must be a negative amount. Include dollars and cents." /></td></tr>
-<?php 
+<?php
 
-	// GEt payment methods for this team 
+	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ?";
-	$pdostatementPM = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementPM->execute(array($teamid));
-	$paymenttypeResults = $pdostatementPM->fetchAll();
+	$paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountPM	  = count( $paymenttypeResults);
-	
+
 	// Display paymentmethods for this team
-	if ($rowCountPM > 0) { 
+	if ($rowCountPM > 0) {
 		$countRowsPM = 0; ?>
 <tr><td class="bold">Method</td><td>
 <select name="paymentmethod">
-<?php 
+<?php
 		while ($countRowsPM < $rowCountPM) {
 			echo "<option value=\"";
 			echo $paymenttypeResults[$countRowsPM]["id"];
@@ -72,9 +69,9 @@ $numRows = count($teamResults);
 			echo "</option>\n";
 			$countRowsPM ++;
 		} ?>
-</select>				
+</select>
 </td></tr>
-<?php 
+<?php
 	} ?>
 <tr><td class="bold">Paid?</td><td><input type="checkbox" name="ispaid"/></td></tr>
 <tr><td class="bold">Refunded?</td><td><input type="checkbox" name="isrefunded"/></td></tr>

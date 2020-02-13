@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -16,7 +16,7 @@ if ( isset($_POST["id"])) {
 } else {
 	$bError = true;
 	$errstr = "i";
-} 	
+}
 // teamid depends on who is calling
 if (!isUser($session, Role_ApplicationAdmin)){
 	if (isset($session["teamid"])){
@@ -29,17 +29,17 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
 	} else {
-		$bError = true; 
+		$bError = true;
 		$errstr = "t";
 	}
 }
 
 if ( !$bError) {
-	  
-	
+
+
 	$strSQL = "SELECT * FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? AND users.teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = !$pdostatement->execute(array($userid, $teamid));
+	$dbconn = getConnection();
+	$userResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 	if ($bError) $errstr = "s";
 	else {
@@ -65,8 +65,7 @@ if ( !$bError) {
 			if (isset($_POST["gender"])) $gender = getCleanInput($_POST["gender"]); else $gender = $userResults[0]["gender"];
 
 			$strSQL = "UPDATE users SET firstname = ?, lastname = ?, address = ?, city = ?, state = ?, postalcode = ?, smsphone = ?, phone2 = ?, emergencycontact = ?, ecphone1 = ?, ecphone2 = ?, gender = ?, smsphonecarrier = ? WHERE id = ?;";
-			$pdostatementUpdate = $dbh->prepare($strSQL);
-			$pdostatementUpdate->execute(array($firstname, $lastname, $address, $city, $state, $postalcode, strval($smsphone), $phone2, $emergencycontact, $ecphone1, $ecphone2, $gender, $smsphonecarrier, $userid));
+			executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address, $city, $state, $postalcode, strval($smsphone), $phone2, $emergencycontact, $ecphone1, $ecphone2, $gender, $smsphonecarrier, $userid));
 
 			// If admin, do another update for those fields
 			// Only admins can change coach, referral, or notes
@@ -78,8 +77,7 @@ if ( !$bError) {
 						$roleid = $roleid | $role;	// Add roles to bitfield
 					}
 					$strSQL = "UPDATE users SET roleid = ? WHERE id = ? AND teamid = ?;";
-					$pdostatementUpdate = $dbh->prepare($strSQL);
-					$pdostatementUpdate->execute(array($roleid, $userid, $teamid));
+					executeQuery($dbconn, $strSQL, $bError, array($roleid, $userid, $teamid));
 				}
 
 				if (( isset($_POST["startdate"])) && (strlen(getCleanInput($_POST["startdate"])) > 5 )) {
@@ -111,12 +109,10 @@ if ( !$bError) {
 					$stopreason = getCleanInput($_POST["stopreason"]);
 					// only store stopdate and stopreason if they are inactive
 					$strSQL = "UPDATE users SET startdate = ?, coachid = ?, referredby = ?, notes = ?, stopdate = '$stopdateSQL', stopreason = ? WHERE id = ?;";
-					$pdostatementUpdate = $dbh->prepare($strSQL);
-					$pdostatementUpdate->execute(array($startdate, $coachid, $referredby, $notes, $stopreason, $userid));
+					executeQuery($dbconn, $strSQL, $bError, array($startdate, $coachid, $referredby, $notes, $stopreason, $userid));
 				} else {
 					$strSQL = "UPDATE users SET startdate = ?, coachid = ?, referredby = ?, notes = ? WHERE id = ?;";
-					$pdostatementUpdate = $dbh->prepare($strSQL);
-					$pdostatementUpdate->execute(array($startdate, $coachid, $referredby, $notes, $userid));
+					executeQuery($dbconn, $strSQL, $bError, array($startdate, $coachid, $referredby, $notes, $userid));
 				}
 			}
 
@@ -127,18 +123,15 @@ if ( !$bError) {
 					// Only update if changed
 					if (strcmp( $login, $userResults[0]["login"]) != 0) {
 						$strSQL = "UPDATE users SET login = ? WHERE id = ?;";
-						$pdostatementUpdate = $dbh->prepare($strSQL);
-						$pdostatementUpdate->execute(array($login, $userid));
+						executeQuery($dbconn, $strSQL, $bError, array($login, $userid));
 					}
 				}
 			}
 
 			// Update account info
 			$strSQL = "SELECT * from useraccountinfo WHERE $userid = ?";
-			$pdostatementAccountinfo = $dbh->prepare($strSQL);
-			$pdostatementAccountinfo->execute(array($userid));
+			$userAccountinfo = executeQuery($dbconn, $strSQL, $bError, array($userid));
 
-			$userAccountinfo = $pdostatementAccountinfo->fetchAll();
 			if (count($userAccountinfo) > 0) {
 				// All of this stuff is for admins only
 				if ( isAnyAdminLoggedIn($session) ) {
@@ -148,21 +141,18 @@ if ( !$bError) {
 
 						if (isset($_POST["isbillable"])) $isbillable = getCleanInput($_POST["isbillable"]); else $isbillable = $userResults[0]["isbillable"];
 						$strSQL = "UPDATE useraccountinfo SET email = ?, isbillable = ?, status = ? WHERE userid = ?;";
-						$pdostatementUpdate = $dbh->prepare($strSQL);
-						$pdostatementUpdate->execute(array($email, $isbillable, $accountStatus, $userid));
+						executeQuery($dbconn, $strSQL, $bError, array($email, $isbillable, $accountStatus, $userid));
 
 						// Else - account status not active so make sure we save status
 					} else {
 						$strSQL = "UPDATE useraccountinfo SET status = ? WHERE userid = ?;";
-						$pdostatementUpdate = $dbh->prepare($strSQL);
-						$pdostatementUpdate->execute(array($accountStatus, $userid));
+						executeQuery($dbconn, $strSQL, $bError, array($accountStatus, $userid));
 					}
 				// members can change email in useraccountinfo
 				} else {
 					$email = getCleanInput($_POST["email"]);
 					$strSQL = "UPDATE useraccountinfo SET email = ? WHERE userid = ?;";
-					$pdostatementUpdate = $dbh->prepare($strSQL);
-					$pdostatementUpdate->execute(array($email, $userid));
+					executeQuery($dbconn, $strSQL, $bError, array($email, $userid));
 				}
 
 			}

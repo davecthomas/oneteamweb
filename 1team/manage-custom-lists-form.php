@@ -1,21 +1,21 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Manage Custom Lists"; 
+$title = "Manage Custom Lists";
 include('header.php');
-  
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $teamid = NotFound;
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_GET["teamid"])){
 		$teamid = $_GET["teamid"];
-	} 
+	}
 }
 
 ?>
@@ -28,10 +28,8 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT * FROM customlists WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$customlistResults = $pdostatement->fetchAll();
+  $dbconn = getConnection();
+	$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($customlistResults);?>
@@ -49,7 +47,7 @@ if (isUser($session, Role_TeamAdmin)){
 <a href="edit-custom-list-form.php<?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&id=<?php echo $customlistResults[$rowCount]["id"]?>" title="Edit"><img src="img/edit.gif" alt="Edit" border="0"></a>
 </td>
 </tr>
-<?php 
+<?php
 			$rowCount ++;
 	}	?>
 </table>
@@ -65,7 +63,7 @@ if (isUser($session, Role_TeamAdmin)){
 </tr>
 </table>
 </form>
-<?php 
+<?php
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["errlistitem"])){
 	showError("Error", 'The custom list item cannot be deleted since it is used in the custom field <a href="manage-custom-fields.php?' . returnRequiredParams($session) . '&teamid=' . $teamid . '">' . $_GET["errname"] . '</a>.', "");
@@ -75,7 +73,7 @@ if (isset($_GET["errlistitem"])){
 	showError("Error", "The custom list was not saved successfully.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The custom list was saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

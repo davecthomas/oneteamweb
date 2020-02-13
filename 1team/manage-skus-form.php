@@ -1,28 +1,28 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
-$title = "Manage SKUs"; 
+$title = "Manage SKUs";
 include('header.php');
 ?>
 <script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
-</script> 
+</script>
 <?php
-  
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $teamid = NotFound;
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_GET["teamid"])){
 		$teamid = $_GET["teamid"];
-	} 
+	}
 }
 
 ?>
@@ -35,10 +35,8 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT programs.name AS programs_name, skus.* FROM programs INNER JOIN skus on programs.id = skus.programid WHERE programs.teamid = ? ORDER BY skus.programid, listorder;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$skuResults = $pdostatement->fetchAll();
+  $dbconn = getConnection();
+  $skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($skuResults);?>
@@ -50,21 +48,21 @@ if (isUser($session, Role_TeamAdmin)){
 <th width="10%">Actions</th>
 </thead>
 </table>
-<div dojoType="dojo.dnd.Source" id="skulist" jsId="skulist" class="container"> 
-<script type="dojo/method" event="creator" args="item, hint"> 
+<div dojoType="dojo.dnd.Source" id="skulist" jsId="skulist" class="container">
+<script type="dojo/method" event="creator" args="item, hint">
 	// this is custom creator, which changes the avatar representation
 	node = dojo.doc.createElement("div");
 	s = String(item);
-	
+
 	node.id = dojo.dnd.getUniqueId();
 	node.className = "dojoDndItem";
 	node.innerHTML = s; // "Reordering SKU. Drop in desired order location.";
 	return {node: node, data: item, type: ["text"]};
-</script> 
+</script>
 <?php
 	while ($rowCount < $loopMax) { ?>
-				
-<div class="dojoDndItem"> 
+
+<div class="dojoDndItem">
 <span id="sku<?php echo $rowCount?>" style="display:none" class="skuorderitem"><?php echo $skuResults[$rowCount]["id"]?></span><table width="65%"><tr class="even">
 <td width="50%"><?php echo $skuResults[$rowCount]["name"]?></td>
 <td width="10%">$<?php echo $skuResults[$rowCount]["price"]?></td>
@@ -75,7 +73,7 @@ if (isUser($session, Role_TeamAdmin)){
 </td>
 </tr>
 </table></div>
-<?php 
+<?php
 			$rowCount ++;
 	}	?>
 </div>
@@ -106,18 +104,16 @@ To reorder the SKU list, click and drag them, then press the "Reorder SKUs" butt
 <td width="30">
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$programResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($programResults);?>
 <select name="programid">
 <option value="0" selected>Program associated with SKU...</option>
 <?php
-	while ($rowCount < $loopMax) { 
-		echo  "<option "; 
+	while ($rowCount < $loopMax) {
+		echo  "<option ";
 		echo  'value="' . $programResults[$rowCount]["id"] . '"';
 		echo  ">";
 		echo $programResults[$rowCount]["name"];
@@ -133,23 +129,23 @@ To reorder the SKU list, click and drag them, then press the "Reorder SKUs" butt
 <script type="text/javascript">
 function getLevelOrder(){
 	dndSource = new dojo.dnd.Source('skulist');
-	// The idea is to get all nodes from the DnD Source 
-	// create an array of node SKU ids where the index of the array+1 is the order 
+	// The idea is to get all nodes from the DnD Source
+	// create an array of node SKU ids where the index of the array+1 is the order
 	// and the content of the array is the SKU id
-	var childnodes = new Array(); 
+	var childnodes = new Array();
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
 	document.reordersku.skuorder.value = childnodes.toString();
 }
 </script>
-<?php 
+<?php
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "The SKU was not saved successfully.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The SKU was saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

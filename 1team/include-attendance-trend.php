@@ -60,7 +60,7 @@ $dbconn = getConnection();
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
 	$objid = $userid;
-	$objname = getUserName2($userid, $dbconn);
+	$objname = getUserName($userid, $dbconn);
 } else {
 	$objid = $teamid;
 	$objname = getTeamName($teamid, $dbconn);

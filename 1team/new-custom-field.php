@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,15 +14,15 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
-	} 
+	}
 }
 
 if (isset($_POST["name"])) {
@@ -44,27 +44,24 @@ if (isset($_POST["hasdisplaycondition"])) {
 }
 
 if (!$bError) {
-	  
-	
+
+
 	$strSQL = "INSERT INTO customfields VALUES (DEFAULT, ?, ?, ?, NULL, NULL, NULL, NULL, " . $hasdisplaycondition . ", NULL, NULL);";
-	$pdostatement = $dbh->prepare($strSQL);
-	if ($pdostatement->execute(array($datatype, $name, $teamid, $hasdisplaycondition)) == false) {
-		$bError = true; 
-	} else {
-	
+	$dbconn = getConnection();
+	$results = executeQuery($dbconn, $strSQL, $bError, array($datatype, $name, $teamid, $hasdisplaycondition));
+	if (! $bError) {
+
 		// Get the new id and send them to the edit form for more details
 		$strSQL = "SELECT id from customfields WHERE name = ? AND teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($name, $teamid));
-		$customfieldsResults = $pdostatement->fetchAll();
+		$customfieldsResults = executeQuery($dbconn, $strSQL, $bError, array($name, $teamid));
 
-		if (count($customfieldsResults) > 0) { 	
+		if (count($customfieldsResults) > 0) {
 			redirect("edit-custom-field-form.php?" . returnRequiredParams($session) . "&id=" . $customfieldsResults[0]["id"] . "&teamid=" . $teamid . "&done=1");
-		} else { 
+		} else {
 			$bError = true;
 		}
 	}
-} 
+}
 if ($bError == true) {
 	redirect("manage-custom-fields.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");
 }

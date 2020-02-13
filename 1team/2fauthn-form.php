@@ -47,7 +47,7 @@ if ((!isset($_GET["err"])) && (!isset($_GET["done"]))){
 <?php
 	} else {
 		// Generate an SMS code to the current session user
-		$bError = generate2fauthn( $session, $err);
+		$bError = generate2fauthn( $session, $err, $dbconn);
 		if (!$bError) {?>
 <p>You are signed on as a <?php echo $teamterms["termadmin"]?> from an unrecognized location.
 You will shortly receive a text message to your account mobile phone number with an authentication code. </p>

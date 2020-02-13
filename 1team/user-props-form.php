@@ -1,4 +1,4 @@
-<?php 
+<?php
 include_once('utils.php');
 $pagemode = pagemodeStandalone;
 $title= " User Properties" ;
@@ -8,15 +8,15 @@ if ((!isset($userid)) && (isset($_GET["id"]))){
 		$userid_input = (int)(getCleanInput($_GET["id"]));
 	} else {
 		$userid_input = 0;
-	} 	
+	}
 } else {
 //	$pagemode = pagemodeEmbedded;
 }
 if ($pagemode == pagemodeStandalone){
 	include('header.php');
-	$userid = $userid_input; 
+	$userid = $userid_input;
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dijit.form.MultiSelect");
 </script>
@@ -38,14 +38,14 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	}
 }
 
-if (canIAdministerThisUser( $session, $userid)) { 
-	$canAdmin = true; 
+if (canIAdministerThisUser( $session, $userid)) {
+	$canAdmin = true;
 } else {
 	$canAdmin = false;
 }
 
 if (isThisMe($session, $userid)) {
-	$thisIsMe = true; 
+	$thisIsMe = true;
 } else {
 	$thisIsMe = false;
 }
@@ -57,18 +57,17 @@ if (isUser( $session, Role_ApplicationAdmin) ) { ?>
 <p></p>
 <div class="navtop">
 <ul id="nav">
-<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session) . "&teamid=" . $teamid?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>	
+<li><a href="<?php if ($userid > 1 ) echo "user-props-form.php?id=" . ($userid-1) . buildRequiredParamsConcat($session) . "&teamid=" . $teamid?>"><img src="img/a_previous.gif" border="0" alt="previous">Previous member</a></li>
 <li><a class="linkopacity" href="user-props-form.php?id=<?php echo($userid+1) . buildRequiredParamsConcat($session) . "&teamid=" . $teamid?>">Next member<img src="img/a_next.gif" border="0" alt="next"></a></li>
 </ul>
 </div><p></p>
-<?php 
+<?php
 }
 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($userid, $teamid));
-$userprops = $pdostatement->fetch(PDO::FETCH_ASSOC);
+$dbconn = getConnection();
+$userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 if (!isset($userprops["userid"])) {
 	echo '<p class="error">' . UserNotFound . '</p>';
@@ -77,7 +76,7 @@ if (!isset($userprops["userid"])) {
 
 	$teamid = $userprops["teamid"];
 	$teamname = $teaminfo["teamname"];
-		
+
 	// Before we show anything, we need to know who is looking at what to decide what to show/enable
 	// if a user is looking at his own record, show and enable limited set. if he is looking at his coach's record, hide/disable
 	$bAuthorizedView = TRUE;
@@ -86,26 +85,26 @@ if (!isset($userprops["userid"])) {
 	// disableMemberControls allows us to disable specific inputs that members can read but not change, such as status, pay method
 	$disableMemberControls = "";
 	$enableControlApplicationAdmin = "disabled";
-	
+
 	// if not application admin, check out who this is to determine if they are ok to see it
 	if ((! isUser( $session, Role_ApplicationAdmin)) ) {
 		// Members can view themselves and edit themselves, but they can view their coach
 		if ((isUser( $session, Role_Member)) && (! isThisMe( $session, $userid)) ) {
 			// if this is not the coach record, error
 			if (! isThisMyCoach($session, $userid) ) {
-				$bAuthorizedView = FALSE;	
+				$bAuthorizedView = FALSE;
 			} else {
 				$enableControl = "disabled";
 			}
-		
+
 		// Only TeamAdmin and ApplicationAdmin can look at TeamAdmins
 		} else if ((doesRoleContain($roleid, Role_TeamAdmin)) && ((! isUser( $session, Role_ApplicationAdmin)) && (! isUser( $session, Role_TeamAdmin))) ) {
-			$bAuthorizedView = FALSE;		
-				
+			$bAuthorizedView = FALSE;
+
 		// Only ApplicationAdmins can look at ApplicationAdmins
 		} else if ((doesRoleContain($roleid, Role_ApplicationAdmin)) && (! isUser( $session, Role_ApplicationAdmin)) ) {
-			$bAuthorizedView = FALSE	;	
-				
+			$bAuthorizedView = FALSE	;
+
 		} else if (isUser( $session, Role_Member) ) {
 			$disableMemberControls = "disabled";
 		}
@@ -113,31 +112,31 @@ if (!isset($userprops["userid"])) {
 	} else {
 		$enableControlApplicationAdmin = "";
 	}
-	
-	// Check if authorized to see data (block 3)	
+
+	// Check if authorized to see data (block 3)
 	if ($bAuthorizedView == FALSE ) { ?>
 <h4 class="usererror">Not authorized.</h4>
-<?php 
+<?php
 	// Authorized OK to see the data
 	} else {
 		$todaysDate = date("m/d/Y");
-		
-		// This is the h3 section that displays the user role and name 
+
+		// This is the h3 section that displays the user role and name
 		echo "<h3>";
 		// For Appl Admin, we don't have a team name
-		if (! isUser( $session, Role_ApplicationAdmin) ) { 
+		if (! isUser( $session, Role_ApplicationAdmin) ) {
 			echo($teamname);
 		}
 
-		echo " " . roleToStr( $roleid, $teamterms) . ": ";		
-		
+		echo " " . roleToStr( $roleid, $teamterms) . ": ";
+
 		$accountStatus  = $userprops["status"];
-		
-		if ($accountStatus == UserAccountStatus_Inactive ) { 
+
+		if ($accountStatus == UserAccountStatus_Inactive ) {
 			echo "<span class=\"subdued\">\n";
 
-		} else { 
-			echo "<span>\n"; 
+		} else {
+			echo "<span>\n";
 		}
 
 		$firstname = $userprops["firstname"];
@@ -146,15 +145,15 @@ if (!isset($userprops["userid"])) {
 		$isBillable = $userprops["isbillable"];
 		echo htmlspecialchars($firstname) . "&nbsp;";
 		echo htmlspecialchars($lastname) . "</span></h3>\n";
- 
+
 		// End h3 section ?>
 <form name="userprops" action="/1team/user-props.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="hidden" name="id" value="<?php echo $userid ?>"/>	
+<input type="hidden" name="id" value="<?php echo $userid ?>"/>
 <input type="hidden" name="teamid" value="<?php echo $teamid ?>"/>
 <?php
 		// Show member account status info
-		if (isRoleNonAdmin($roleid)) { 
+		if (isRoleNonAdmin($roleid)) {
 ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglevis('paymentinfo');return false">Account Information<img src="img/a_expand.gif" alt="expand section" id="paymentinfo_img" border="0"></a></h4>
 <div class="hideit" id="paymentinfo" name="paymentinfo">
@@ -169,7 +168,7 @@ if (!isset($userprops["userid"])) {
 <option value="<?php echo UserAccountStatus_Active?>" <?php if ($accountStatus==UserAccountStatus_Active ) echo("selected")?>><?php echo $aStatus[UserAccountStatus_Active+UserAccountStatus_ArrayOffset]?></option>
 <option value="<?php echo UserAccountStatus_Overdue?>" <?php if ($accountStatus==UserAccountStatus_Overdue ) echo("selected")?>><?php echo $aStatus[UserAccountStatus_Overdue+UserAccountStatus_ArrayOffset]?></option>
 <option value="<?php echo UserAccountStatus_Disabled?>" <?php if ($accountStatus==UserAccountStatus_Disabled ) echo("selected")?>><?php echo $aStatus[UserAccountStatus_Disabled+UserAccountStatus_ArrayOffset]?></option>
-</select>				
+</select>
 </td>
 </tr>
 <?php		} ?>
@@ -192,7 +191,7 @@ if (!isset($userprops["userid"])) {
 <input type="submit" class="btn" value="Update Account Information" name="change" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 <?php
 				// Payment history only for billable members
-				if ($isBillable) { 
+				if ($isBillable) {
 					$pageMode = "expand"; ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglerender('paymenthist', 'paymenthistory','include-payment-history.php?<?php echo returnRequiredParams($session)?>&id=<?php echo $userid?>&teamid=<?php echo $teamid?>&pagemode=embedded' )">Payment History<img src="img/a_expand.gif" alt="expand section" id="paymenthist_img" border="0"></a></h4>
 <div class="hideit" id="paymenthist">
@@ -207,7 +206,7 @@ if (!isset($userprops["userid"])) {
 		} ?>
 </div>
 </div>
-<?php 
+<?php
 		}  // non admin ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglevis('personalinfo');return false;">Personal Information<img src="img/a_expand.gif" alt="expand section" id="personalinfo_img" border="0"></a></h4>
 <div class="hideit" id="personalinfo">
@@ -220,7 +219,7 @@ if (!isset($userprops["userid"])) {
 <tr>
 <td class="strong">Last Name</td>
 <td><input type="text" value="<?php echo htmlspecialchars($lastname)?>" name="lastname" <?php echo $enableControl?>></td>
-</tr>				
+</tr>
 <tr>
 <td class="strong">Street Address</td>
 <td><input type="text" value="<?php echo htmlspecialchars($userprops["address"])?>" name="address" <?php echo $enableControl?>></td>
@@ -253,6 +252,7 @@ if (!isset($userprops["userid"])) {
 		<option value="att" <?php if ($smsphonecarrier == "att") echo "selected"?>>AT&T</option>
 		<option value="verizon" <?php if ($smsphonecarrier == "verizon") echo "selected"?>>Verizon</option>
 		<option value="sprint" <?php if ($smsphonecarrier == "sprint") echo "selected"?>>Sprint or Credo</option>
+		<option value="googlefi" <?php if ($smsphonecarrier == "googlefi") echo "selected"?>>Google Fi</option>
 		<option value="tmobile" <?php if ($smsphonecarrier == "tmobile") echo "selected"?>>T-Mobile</option>
 		<option value="cellularone" <?php if ($smsphonecarrier == "cellularone") echo "selected"?>>Cellular One</option>
 		<option value="qwest" <?php if ($smsphonecarrier == "qwest") echo "selected"?>>Qwest</option>
@@ -267,15 +267,15 @@ if (!isset($userprops["userid"])) {
 <td ><input type="text" value="<?php echo htmlspecialchars($userprops["phone2"])?>" name="phone2" <?php echo $enableControl?>></td>
 </tr>
 <tr>
-<?php 
+<?php
 		// You can either see your own data. Admins see all.
 		if (isThisMe( $session, $userid) || isAnyAdminLoggedIn($session) ) { ?>
 <td class="strong">User login name</td>
 <td><input type="text" name="login" value="<?php echo $userprops["login"]?>" <?php echo $enableControlApplicationAdmin?>></td>
 </tr>
-<?php 
+<?php
 		} // End if you are seeing your own data or you are admin
-		
+
 		if (( isRoleNonAdmin($roleid)) && ($canAdmin)) { ?>
 <tr>
 <td class="strong">Birthdate</td>
@@ -320,16 +320,16 @@ if (!isset($userprops["userid"])) {
 <td class="strong">EC Phone 2</td>
 <td ><input type="text" value="<?php echo htmlspecialchars($userprops["ecphone2"])?>" name="ecphone2"></td>
 </tr>
-<?php 
+<?php
 		} // End non admin?>
 </table>
-<?php 
+<?php
 		// Only display the submit button if (they are looking at their own data, unless admin
 		if (isThisMe( $session, $userid) || (isAnyAdminLoggedIn($session)) ) { ?>
 <p>
 <input type="button" class="btn" value="Update" name="change" onclick="validateForm()" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" <?php echo $enableControl?>/>
 </p>
-<?php 
+<?php
 		}	// End Only display the submit button if (they are looking at their own data, unless admin ?>
 </div>
 </div>
@@ -344,34 +344,34 @@ if (!isset($userprops["userid"])) {
 <td>
 <?php // note use of [] in form element name. This tells php to process multiple values on the back-end ?>
 <select name="roleid[]" dojoType="dijit.form.MultiSelect" size="4" multiple="true">
-<?php 
+<?php
 				if ((isAnyAdminLoggedIn($session)) && (doesRoleContain($roleid, Role_TeamAdmin))) { ?>
 <option value="<?php echo Role_TeamAdmin?>" <?php if (doesRoleContain($roleid, Role_TeamAdmin) ) { echo(" selected"); }?>><?php echo roleToStr(Role_TeamAdmin, $teamterms)?></option>
-<?php  
+<?php
 				} ?>
 <option value="<?php echo Role_Member?>" <?php if (doesRoleContain( $roleid, Role_Member) ) { echo(" selected"); }?>><?php echo roleToStr(Role_Member, $teamterms)?></option>
 <option value="<?php echo Role_Coach?>" <?php if (doesRoleContain( $roleid, Role_Coach) ) { echo(" selected"); }?>><?php echo roleToStr(Role_Coach, $teamterms)?></option>
-</select>				
+</select>
 </td>
 </tr>
 <?php
 			} ?>
 <tr>
 <td class="strong">Member Since</td>
-<?php 
+<?php
 		// If there is a start date, calculate time in class
 		if (! is_null($userprops["startdate"]) ) {
 			$datejoined = htmlspecialchars($userprops["startdate"]);
 			$startdate = $datejoined;
-			$timeIn = getMembershipDuration($dbh, $userid);
+			$timeIn = getMembershipDuration($userid, $dbconn);
 		} else {
 			$datejoined = "";
 			$timeIn = 0;
 		}	// End: if there is a start date ?>
 <td><input type="text" name="startdate" id="startdate" value="<?php echo $datejoined?>" <?php if ($canAdmin) echo 'dojoType="dijit.form.DateTextBox"';?> required="true" <?php echo $enableControl?>/>
-<?php  
+<?php
 		// Only display calculated time in membership if they are active members
-		if ((strlen($datejoined) > 0) && ($accountStatus == UserAccountStatus_Active) || (!doesRoleContain($roleid, Role_Member))) { 
+		if ((strlen($datejoined) > 0) && ($accountStatus == UserAccountStatus_Active) || (!doesRoleContain($roleid, Role_Member))) {
 			echo($timeIn . "\n");
 		} // End: if there is a date joined to display for active member?>
 </td>
@@ -379,23 +379,19 @@ if (!isset($userprops["userid"])) {
 <tr>
 <td class="strong">Team</td>
 <td>
-<?php 
+<?php
 		$teamid = $userprops["teamid"];
 		// Only an app admin sees this pulldown. Otherwise they just see their own team name
 		if (isUser( $session, Role_ApplicationAdmin) ) {
 			$strSQL = "SELECT * FROM teams ORDER BY name;";
-			
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute();
-			
-			$teamsResults = $pdostatement->fetchAll();
-		
+			$teamsResults = executeQuery($dbconn, $strSQL, $bError);
+
 			$rowCount = 0;
 			$loopMax = count($teamsResults );
 			if ($loopMax > 0){?>
 <select name="team" <?php echo $enableControl?>>
-<?php 
-				while ($rowCount < $loopMax) {  
+<?php
+				while ($rowCount < $loopMax) {
 					echo( "<option value=\"");
 					echo( $teamsResults[$rowCount]["id"]);
 					echo( "\"");
@@ -407,34 +403,32 @@ if (!isset($userprops["userid"])) {
 					echo( "</option>\n");
 					$rowCount ++;
 				} ?>
-</select>	
-<?php 
-			} 
+</select>
+<?php
+			}
 		} else {	// Else not app admin, show team name and add a hidden field for teamid ?>
 <input type="hidden" name="team" value="<?php echo $teamid?>">
 <?php echo $teamname?>
-<?php 
+<?php
 		}	// End: else not app admin, show team name and add a hidden field for teamid ?>
 </td>
 </tr>
-<?php 
+<?php
 		if ( isRoleNonAdmin($roleid)) { // Member and coach has a coach ?>
 <tr>
 <td class="strong"><?php echo $teamterms["termcoach"]?></td>
 <td >
-<?php 
+<?php
 			// coach
 			$currentSelection = $userprops["coachid"];
 			$strSQL = "SELECT * FROM users WHERE roleid & " . Role_Coach . " = " . Role_Coach . " and teamid = ? ORDER BY firstname ;";
-			$pdostatementcoach = $dbh->prepare($strSQL);
-			$pdostatementcoach->execute(array($teamid)); 
-			$coachResults = $pdostatementcoach->fetchAll();
-		
+			$coachResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+
 			$rowCount = 0;
 			$loopMax = count($coachResults);
-			if ($loopMax > 0){ 
+			if ($loopMax > 0){
 				echo '<select name="coachid"' . $disableMemberControls .">\n";
-				if (!isValidUserID($currentSelection)) echo '<option value="' . User::UserID_Undefined . '">Select a ' . $teamterms["termcoach"] . '...</option>';  
+				if (!isValidUserID($currentSelection)) echo '<option value="' . User::UserID_Undefined . '">Select a ' . $teamterms["termcoach"] . '...</option>';
 				// Build an option list of coaches (only can be modified if not a member)
 				while ($rowCount < $loopMax) {
 					echo( "<option value=\"");
@@ -447,22 +441,22 @@ if (!isset($userprops["userid"])) {
 					echo( trim($coachResults[$rowCount][ "firstname"]) . " " . trim($coachResults[$rowCount][ "lastname"]));
 					echo( "</option>\n");
 					$rowCount ++;
-				}	// End: Build an option list of coaches (only can be modified if not a member) 
+				}	// End: Build an option list of coaches (only can be modified if not a member)
 				echo "</select>	";
 			} else {
 				echo 'No coaches are defined for ' . $teamname . '.';
 			} 	?>
-</td> 
+</td>
 </tr>
-<?php 
+<?php
 		} // End: non-admin ?>
 </table>
-<?php 
+<?php
 		// Only team admins and admins can change coach
 		if (isAnyAdminLoggedIn( $session) ) {
 ?>
 <p><input type="button" class="btn" value="Update" name="change" onclick="validateForm()" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" <?php echo $enableControl?>/><p>
-<?php 
+<?php
 		} // End: Only team admins and admins can change coach ?>
 </div>
 </div>
@@ -470,9 +464,9 @@ if (!isset($userprops["userid"])) {
 <?php	// If Role_Member, show payment, attendance, promotions histories, custom fields (block 4)
 		if ( isRoleNonAdmin($roleid)) {
 			$pageMode = "embedded";
-			$whoMode = "user"; 
-			
-			if (isTeamUsingLevels($session, $teamid)) { 
+			$whoMode = "user";
+
+			if (isTeamUsingLevels($session, $teamid)) {
 			// Promotions toggle ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglerender('promotionshist', 'promotionshistory','include-promotions.php<?php buildRequiredParams($session)?>&mode=<?php echo $whoMode?>&pagemode=<?php echo $pageMode?>&id=<?php echo $userid?>&teamid=<?php echo $teamid ?>');return false;">Promotions History<img src="img/a_expand.gif" alt="expand section" id="promotionshist_img" border="0"></a></h4>
 <div class="hideit" id="promotionshist">
@@ -483,9 +477,9 @@ if (!isset($userprops["userid"])) {
 	border:none"
 ></iframe>
 </div>
-<?php		} 
+<?php		}
 			// Image
-			if ((isAnyAdminLoggedIn( $session)) || ((!is_null($userprops["imageid"])) || ($userprops["imageid"] != ImageID_Undefined))) { 
+			if ((isAnyAdminLoggedIn( $session)) || ((!is_null($userprops["imageid"])) || ($userprops["imageid"] != ImageID_Undefined))) {
 ?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglevis('userimg')">Picture<img src="img/a_expand.gif" alt="expand section" id="userimg_img" border="0"></a></h4>
 <div class="hideit" id="userimg">
@@ -494,29 +488,27 @@ if (!isset($userprops["userid"])) {
 <?php		// Conditionally display image
 			if ((!is_null($userprops["url"])) && (strlen($userprops["url"]) > 0)) {?>
 <img src="<?php echo $userprops["url"]?>" id="" border=0" alt="user image">
-<?php		
-			} 
+<?php
+			}
 			// Only admins get form
 			if (isAnyAdminLoggedIn( $session)) {?>
 <p>Select an existing image by URL</p><form action="image-upload.php" method="post" enctype="multipart/form-data">
 <!--<input type="file" name="image" name="image" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>-->
 <?php buildRequiredPostFields($session) ?>
-<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>	
-<input type="hidden" name="type" value="<?php echo ImageType_User?>"/>	
-<input type="hidden" name="objid" value="<?php echo $userid ?>"/>	
+<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>
+<input type="hidden" name="type" value="<?php echo ImageType_User?>"/>
+<input type="hidden" name="objid" value="<?php echo $userid ?>"/>
 <p class="strong">Image URL&nbsp;<input type="text" value="<?php echo htmlspecialchars($userprops["url"] )?>" name="url"></p>
-<input type="submit" value="Save Picture" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/> 
+<input type="submit" value="Save Picture" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
 </form>
 <?php		} ?>
 </div></div></div>
 <?php
-		} // End image div 
+		} // End image div
 
 		// Custom fields support
 		$strSQL = "SELECT customfields.id as customfieldsid, customfields.name as customfieldname, * FROM customfields LEFT OUTER JOIN customdata ON (customdata.customfieldid = customfields.id and customdata.memberid = ? AND customfields.teamid = ?) WHERE customfields.teamid = ? ORDER BY customfields.listorder;";
-		$pdostatementcustomdata = $dbh->prepare($strSQL);
-		$pdostatementcustomdata->execute(array($userid, $teamid, $teamid));
-		$customdataResults = $pdostatementcustomdata->fetchAll();
+		$customdataResults= executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid, $teamid));
 		$loopMax = count( $customdataResults);
 		if ($loopMax > 0) {?>
 <form action="/1team/user-props-custom.php" method="post">
@@ -527,9 +519,9 @@ if (!isset($userprops["userid"])) {
 <div class="hideit" id="custominfo">
 <div class="indented-group-noborder">
 <table class="noborders">
-<?php 
+<?php
 				$rowCount = 0;
-				
+
 				while ($rowCount < $loopMax) {
 					// Get the data type of the custom field so you know how to display it
 					$datatype = $customdataResults[$rowCount]["customdatatypeid"];
@@ -539,19 +531,17 @@ if (!isset($userprops["userid"])) {
 						$dcField = $customdataResults[$rowCount]["displayconditionfield"];
 						$dcOperator = $customdataResults[$rowCount]["displayconditionoperator"];
 						$dcValue = $customdataResults[$rowCount]["displayconditionvalue"];
-						
+
 						if ($dcObject == DisplayConditionObject_User) {
 							$strSQL = "SELECT " . $dcField . " FROM " . $dcObject . " WHERE id = ?;";
 						} else {
 							$strSQL = "SELECT " . $dcField . " FROM " . $dcObject . " WHERE userid = ?;";
 						}
-						$pdostatementdc = $dbh->prepare($strSQL);
-						$pdostatementdc->execute(array($userid));
-						$dcResult = $pdostatementdc->fetchColumn();
+						$dcResult = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 						// Assume we can't until condition proves we can
 						$displayCustomField = false;
-						
-						switch ($dcOperator) { 
+
+						switch ($dcOperator) {
 							case DisplayConditionOperator_EQ:
 								if ($dcResult == $dcValue) $displayCustomField = true;
 								break;
@@ -565,11 +555,11 @@ if (!isset($userprops["userid"])) {
 								if ($dcResult != $dcValue) $displayCustomField = true;
 								break;
 						}
-											
+
 						// Skip the rest of this loop iteration if we don't display field
-						if (!$displayCustomField) { 
+						if (!$displayCustomField) {
 							$rowCount++;
-							continue;					
+							continue;
 						}
 					}
 					echo "<tr>\n";
@@ -601,18 +591,16 @@ if (!isset($userprops["userid"])) {
 							break;
 						case CustomDataType_List:
 							$customdataValue = $customdataResults[$rowCount]["valuelist"];
-							
+
 							// if the datatype is a list, build the select (and conditionally select the item)
 							$strSQL = "SELECT customlistdata.id as customlistdataid, * FROM customlists, customlistdata WHERE customlistdata.customlistid = customlists.id and customlists.id = ? and customlists.teamid = ? ORDER BY listorder;";
-							
-							$pdostatementcustomlist = $dbh->prepare($strSQL);
-							$pdostatementcustomlist->execute(array($customdataResults[$rowCount]["customlistid"], $teamid));
-							$customlistResults = $pdostatementcustomlist->fetchAll();
-							$loopMaxList = count( $customlistResults); 
+
+							$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($customdataResults[$rowCount]["customlistid"], $teamid));
+							$loopMaxList = count( $customlistResults);
 							$rowCountList = 0;
 							if ($loopMaxList > 0) {
 								echo '<select value="0" name="customfield'.$customfieldid.'value' . $rowCount .'" ' . $disableMemberControls .">\n";
-			
+
 								if (((isAnyAdminLoggedIn($session)) && ($customdataValue == 0) || (strlen($customdataValue) == 0))) echo "<option selected>Select...</option>\n";
 								// Build an option list of coaches (only can be modified if not a member)
 								while ($rowCountList < $loopMaxList) {
@@ -626,41 +614,41 @@ if (!isset($userprops["userid"])) {
 									echo( $customlistResults[$rowCountList][ "listitemname"]);
 									echo( "</option>\n");
 									$rowCountList ++;
-								}	
+								}
 								echo "</select>	";
 							} else {
 								echo "List not defined.";
-							}				
+							}
 							break;
-						default: 
+						default:
 							$customdataValue = Error;
 							echo $customdataValue;
 							break;
 					}
 					echo "</td></tr>\n";
-					
+
 					$rowCount ++;
 				} // End while Display rsCustom custom field form elements ?>
-</table>		   
-<?php 
-				if (($loopMax > 0) && (isAnyAdminLoggedIn($session))) { ?> 
+</table>
+<?php
+				if (($loopMax > 0) && (isAnyAdminLoggedIn($session))) { ?>
 <input type="submit" class="btn" value="Update custom fields" name="updatecustom" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/>
-<?php 
+<?php
 				} // End: If has custom and user is admin ?>
 <input type="hidden" value="<?php echo htmlspecialchars($firstname)?>" name="firstname">
 <input type="hidden" value="<?php echo htmlspecialchars($lastname)?>" name="lastname">
 </form>
 </div>
-</div> 
-<?php 						
+</div>
+<?php
 			// End if there are any custom fields defined for this team (block 5 ln 524)
 			}
-				
+
 		// End non-admin
-		} 
+		}
 	// End if authorized (block 3 ln 82)
-	} 
-} 
+	}
+}
 
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
@@ -671,9 +659,9 @@ if (isset($_GET["err"])){
 	showMessage('Success', 'The ' . $teamterms["termmember"] . ' was created successfully. If you have not <a href="reset-password-form.php?' . returnRequiredParams($session).'&id='.$userid_input.'">Reset their password</a>, you must before they attempt to sign in.');
 }
 if ($pagemode == pagemodeStandalone){
-	
+
 	// Start footer section
-	include('footer.php'); 
+	include('footer.php');
 }?>
 <script type="text/javascript">
 function validateForm(){

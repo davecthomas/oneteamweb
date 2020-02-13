@@ -1,16 +1,16 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title = "Manage Meeting Types";
 include('header.php');
 ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
 dojo.require("dojo.parser");
 dojo.require("dojo.dnd.Source");
-</script> 
+</script>
 <?php
- 
+
 echo "<h3>" . getTitle($session, $title) . "</h3>";
 
 $bError = false;
@@ -39,10 +39,8 @@ You can have meetings that are associated with a specific location or date or re
 </div>
 <?php
 	$strSQL = "SELECT * FROM events WHERE teamid = ? ORDER BY listorder;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$eventResults = $pdostatement->fetchAll();
+  $dbconn = getConnection();
+	$eventResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
 	$loopMax = count($eventResults);?>
@@ -56,21 +54,21 @@ You can have meetings that are associated with a specific location or date or re
 </tr>
 </thead>
 </table>
-<div dojoType="dojo.dnd.Source" id="eventlist" jsId="eventlist" class="container"> 
-<script type="dojo/method" event="creator" args="item, hint"> 
+<div dojoType="dojo.dnd.Source" id="eventlist" jsId="eventlist" class="container">
+<script type="dojo/method" event="creator" args="item, hint">
 
 	// this is custom creator, which changes the avatar representation
 	node = dojo.doc.createElement("div"), s = String(item);
-	
+
 	node.id = dojo.dnd.getUniqueId();
 	node.className = "dojoDndItem";
 	node.innerHTML = s; // "Reordering event. Drop in desired order location.";
 	return {node: node, data: item, type: ["text"]};
-</script> 
+</script>
 <?php
 	while ($rowCount < $loopMax) { ?>
-				
-<div class="dojoDndItem"> 
+
+<div class="dojoDndItem">
 <span id="event<?php echo $rowCount?>" style="display:none" class="eventorderitem"><?php echo $eventResults[$rowCount]["id"]?></span><table width="65%"><tr class="even">
 <td width="30%"><?php echo $eventResults[$rowCount]["name"]?></td>
 <td width="20%"><?php echo $eventResults[$rowCount]["eventdate"]?></td>
@@ -81,10 +79,10 @@ You can have meetings that are associated with a specific location or date or re
 </td>
 </tr>
 </table></div>
-<?php 
+<?php
 			$rowCount ++;
 	}	?>
-</div> 
+</div>
 <?php
 	if ($rowCount > 1){?>
 <table width="65%">
@@ -115,23 +113,23 @@ Ordering only changes the order of lists within <?php appname?>. To reorder the 
 <script type="text/javascript">
 function getEventOrder(){
 	dndSource = new dojo.dnd.Source('eventlist');
-	// The idea is to get all nodes from the DnD Source 
-	// create an array of node event ids where the index of the array+1 is the order 
+	// The idea is to get all nodes from the DnD Source
+	// create an array of node event ids where the index of the array+1 is the order
 	// and the content of the array is the event id
-	var childnodes = new Array(); 
+	var childnodes = new Array();
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
 	document.reorderevent.eventorder.value = childnodes.toString();
 }
 </script>
-<?php 
+<?php
 // On success, we get redirected back from team-props with done parm, triggering this message
 if (isset($_GET["err"])){
 	showError("Error", "The event was not saved successfully.", "");
 } else if (isset($_GET["done"])){
 	showMessage("Success", "The event was saved successfully.");
-} 
+}
 // Start footer section
 include('footer.php'); ?>
 </body>

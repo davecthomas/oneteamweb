@@ -751,6 +751,10 @@ CREATE TABLE `teams` (
   `eventidattendance` int(11) DEFAULT '1',
   `imageid` int(11) DEFAULT NULL,
   `introtext` varchar(1024) DEFAULT NULL,
+  'api_username' varchar(128) DEFAULT NULL,
+  'api_password' varchar(128) DEFAULT NULL,
+  'api_signature' varchar(128) DEFAULT NULL,
+  'payment_provider' varchar(128) DEFAULT "paypal",
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 

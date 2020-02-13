@@ -336,6 +336,7 @@ define("smsTextLimit", 140);							// How many characters
 // SMS phone carrier email addresses
 define("alltel", "text.wireless.alltel.com");
 define("tmobile", "tmomail.net");
+define("googlefi", "msg.fi.google.com");
 define("boost", "boostmobile.com");
 define("cellularone", "mobile.celloneusa.com");
 define("qwest", "qwestmp.com");

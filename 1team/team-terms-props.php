@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -16,31 +16,29 @@ redirectToLoginIfNotAdmin( $session);
 $bError = false;
 $errno = 0;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["id"])){
 		$teamid = $_POST["id"];
 	} else {
-		$bError = true; 
+		$bError = true;
 		$errno = "teamid";
 	}
 }
 
 if (!$bError) {
-	  
-	
+
+
 	$strSQL = "SELECT * FROM teams WHERE id = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	
-	$userResults = $pdostatement->fetchAll();
-	
+	$dbconn = getConnection();
+	$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+
 	$rowCount = 0;
-	if (count($userResults) > 0) {
+	if (count($teamResults) > 0) {
 		if ( isset($_POST["termteam"])) {
 			$termteam = $_POST["termteam"];
 		} else {
@@ -72,29 +70,24 @@ if (!$bError) {
 			$bError = true;
 		}
 
-		if (!$bError) {		
+		if (!$bError) {
 			// May need to create or update depending on if this is the first time or not
 			$strSQL = "SELECT id FROM teamterms WHERE teamid = ?";
-			$pdostatement = $dbh->prepare($strSQL);
-			$pdostatement->execute(array($teamid));
-			
-			$teamtermsResults = $pdostatement->fetchAll();
-			
+			$teamtermsResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+
 			$rowCount = 0;
 			if (count($teamtermsResults ) == 0) {
 				$strSQL = "INSERT INTO teamterms VALUES (DEFAULT, ?, NULL, ?, ?, ?, ?, ?);";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = ! $pdostatement->execute(array($termteam, $termadmin, $termcoach, $termmember, $teamid, $termclass));	
-			} else {		
+				executeQuery($dbconn, $strSQL, $bError, array($termteam, $termadmin, $termcoach, $termmember, $teamid, $termclass));
+			} else {
 				$strSQL = "UPDATE teamterms SET termteam = ?, termadmin = ?, termcoach = ?, termmember = ?, termclass = ? WHERE teamid = ?";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = ! $pdostatement->execute(array($termteam, $termadmin, $termcoach, $termmember, $termclass, $teamid));	
+				executeQuery($dbconn, $strSQL, $bError, array($termteam, $termadmin, $termcoach, $termmember, $termclass, $teamid));
 			}
-	
+
 			if (!$bError) redirect("team-props-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 		}
-	}	
-} 
+	}
+}
 
 if ($bError) {
 	redirect("team-props-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=" . $errno);

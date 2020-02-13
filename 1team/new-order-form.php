@@ -1,4 +1,4 @@
-<?php  
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 $title= " Make an Order" ;
@@ -21,7 +21,7 @@ if (isset($_GET["id"])) {
 	$userid = $_GET["id"];
 } else {
 	$userid = User::UserID_Undefined;
-} 	
+}
 
 $teamid = NotFound;
 $err = "";
@@ -39,14 +39,13 @@ if (isUser($session, Role_TeamAdmin)){
 
 
 if (!$bError) {
-	
+
 	$teamname = getTeamName($teamid, $dbconn);
 
 	// GEt skus
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-	$pdostatementS = $dbh->prepare($strSQL);
-	$bError = ! $pdostatementS->execute(array($teamid));
-	$skuResults = $pdostatementS->fetchAll();
+	$dbconn = getConnection();
+	$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountS = count( $skuResults);
 	// build array for javascript
 	if ($rowCountS > 0) { ?>
@@ -114,15 +113,12 @@ function checkEnableSubmit(submitButton){
 		if (isUser( $session, Role_TeamAdmin)) {
 			$teamid = $session["teamid"];
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE status = " . UserAccountStatus_Active . " and users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = ! $pdostatement->execute(array($teamid));
+			$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			// App Admin query isn't team specific
 		} else {
 			$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE status = " . UserAccountStatus_Active . " and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = ! $pdostatement->execute();
+			$userResults = executeQuery($dbconn, $strSQL, $bError );
 		}
-		$userResults = $pdostatement->fetchAll();
 		$countRows = 0;
 		$numRows = count($userResults);
 
@@ -177,19 +173,17 @@ function checkEnableSubmit(submitButton){
 				$countRows ++;
 			} ?>
 					</select>
-<?php 
+<?php
 		}?>
 				</td></tr>
 			<tr><td class="bold">Date</td>
 				<td><input type="text" name="orderdate" id="orderdate" value="<?php echo date("Y-m-d")?>" dojoType="dijit.form.DateTextBox" required="true" /></td></tr>
 <tr><td class="bold">Method</td><td>
-<?php 
+<?php
 
 		// GEt payment methods for this team
 		$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ?";
-		$pdostatementPM = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementPM->execute(array($teamid));
-		$paymenttypeResults = $pdostatementPM->fetchAll();
+		$paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountPM	  = count( $paymenttypeResults);
 
 		// Display paymentmethods for this team
@@ -228,14 +222,14 @@ function checkEnableSubmit(submitButton){
 			<tr>
 			</thead>
 			<tr><td width="5%"></td><td width="45%">
-<?php 
+<?php
 
 		// Display skus for this team
 		if ($rowCountS > 0) {
 			$countRowsS = 0; ?>
 					<select id="skuid" name="skuid" onchange="onSkuChanged(this.selectedIndex);">
 						<option value="<?php echo Sku::SkuID_Undefined?>" <?php if ((empty($paymentResults["skuid"])) || ($paymentResults["skuid"] == Sku::SkuID_Undefined) ) echo ' selected'?>>Select SKU purchased with this payment...</option>
-<?php 
+<?php
 			while ($countRowsS < $rowCountS) {
 				echo "<option value=\"";
 				echo $skuResults[$countRowsS]["id"];
@@ -246,7 +240,7 @@ function checkEnableSubmit(submitButton){
 				$countRowsS ++;
 			} ?>
 					</select>
-<?php 
+<?php
 			}  else {
 				echo 'No SKUs are defined for ' . $teamname . '. <a href="/1team/manage-skus-form.php?teamid=' . $teamid . buildRequiredParamsConcat($session) . '">Define SKUs</a>.';
 			} ?>
@@ -290,7 +284,7 @@ function checkEnableSubmit(submitButton){
 		</table>
 		<h3><div id="totalnet"></div></h3>
 </div>
-<?php 
+<?php
 			if ($userid == User::UserID_Undefined) {
 				$objid = $teamid;
 				$whomode = "team";
@@ -471,12 +465,10 @@ function checkEnableSubmit(submitButton){
 		alert (outstr);
 	}
 
-<?php 
+<?php
 		// Get skus and build javascript array mapping skus to amounts
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$pdostatementS = $dbh->prepare($strSQL);
-		$bError = ! $pdostatementS->execute(array($teamid));
-		$skuResults = $pdostatementS->fetchAll();
+		$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountS = count( $skuResults);
 
 		// Display skus for this team
@@ -484,7 +476,7 @@ function checkEnableSubmit(submitButton){
 			$countRowsS = 0; ?>
 var skuID=new Array();
 var skuAmount=new Array();
-<?php 
+<?php
 			// build array for javascript
 			if ($rowCountS > 0) {
 				$countRowsS = 0;

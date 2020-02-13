@@ -55,7 +55,7 @@ $dbconn = getConnection();
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
 	$objid = $userid;
-	$objname = getUserName2($userid, $dbconn);
+	$objname = getUserName($userid, $dbconn);
 	$sqlwhere = "attendance.memberid"; ?>
 <h5>Attendance for <a target="_top" href="user-props-form.php<?php buildRequiredParams($session)?>&id=<?php echo $userid?>" target="_top"><?php echo $objname?></a> for <?php echo $eventdatetime->format("F")?>, <?php echo $eventdatetime->format("Y")?></h5>
 <?php

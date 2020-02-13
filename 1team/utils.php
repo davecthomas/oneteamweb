@@ -761,7 +761,7 @@ function canAddUsersToTeam($session, $teamid, &$memberCount){
 		// Must be a real team with an assigned plan, and active
 		if ((isset($teamResults)) && ($teamResults["plan"] != TeamAccountPlan_Undefined) && ($teamResults["status"] == TeamAccountStatus_Active)) {
 			// They are on a "count members" plan, count Active members they have
-			$memberCount = getMemberCount( $session, $teamid, getDBH($session));
+			$memberCount = getMemberCount( $session, $teamid, getConnection());
 			// if they are in an unlimited plan, pass them thru
 			if ($teamResults["plan"] == TeamAccountPlan_Unlimited) {
 				$bAllowAdd = true;
@@ -815,6 +815,7 @@ function getSmsCarrierEmail($smsphonecarrier){
 	switch ($smsphonecarrier){
 		case "alltel": $carrier_email = alltel; break;
 		case "tmobile": $carrier_email = tmobile; break;
+    case "googlefi": $carrier_email = googlefi; break;
 		case "boost": $carrier_email = boost; break;
 		case "cellularone": $carrier_email = cellularone; break;
 		case "qwest": $carrier_email = qwest; break;
@@ -830,10 +831,10 @@ function getSmsCarrierEmail($smsphonecarrier){
 	return $carrier_email;
 }
 
-function getSmsPhone($dbh, $userid, $teamid, &$smsphonecarrieremail, &$err){
+function getSmsPhone( $userid, $teamid, &$smsphonecarrieremail, &$err, $dbconn = null){
 	$smsphone = "";
 	$strSQL = "SELECT smsphone, smsphonecarrier FROM users WHERE id = ? and teamid = ?;";
-  $dbconn = getConnection();
+  if ($dbconn = null) $dbconn = getConnection();
   $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 	$smsphonecarrieremail ="";
 	if (isset($userprops["smsphone"])){
@@ -849,19 +850,20 @@ function getSmsPhone($dbh, $userid, $teamid, &$smsphonecarrieremail, &$err){
 }
 
 // Generate an "email" SMS to the current session user's smsphone
-function generate2fauthn( $session, &$err){
+function generate2fauthn( $session, &$err, $dbconn = null){
 
 	$bError = false;
 	$err = "";
 	$carrier_email = "";
-	$smsphone = getSmsPhone($dbh, $session["userid"], $session["teamid"], $carrier_email, $err);
+  if ($dbconn = null) $dbconn = getConnection();
+
+	$smsphone = getSmsPhone( $session["userid"], $session["teamid"], $carrier_email, $err, $dbconn);
 //	print_r(array($dbh, $session["userid"], $session["teamid"], $carrier_email, $err));
 	if (strlen($err) == 0){
 		// Generate an auth code
 		$message= rand ( 1000, 9999 );
 		// Save the auth code in the session
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
-    $dbconn = getConnection();
     $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
 		if (!mail("$smsphone@$carrier_email", "", "$message" , "From: " . emailadmin)) {
 			$bError = true;

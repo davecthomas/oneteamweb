@@ -16,7 +16,7 @@ if (! isValidSession($session )){
 // Only admins can execute this script
 redirectToLoginIfNotAdminOrCoach( $session);
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -38,19 +38,19 @@ if (isset($_REQUEST["attendancerosterlistselections"])){
 } else {
 	$bError = true;
 	$err = "i";
-} 
+}
 
 if (isset($_POST["eventid"])){
 	$eventid = $_POST["eventid"];
 } else {
 	$bError = true;
 	$err = "e";
-} 
+}
 if (isset($_POST["date"])){
 	$attendanceDate = $_POST["date"];
 } else {
 	$bError = true;
-} 
+}
 
 if (!$bError) {
 	// Array format: numentries, uid1, uname1, uid2, uname2, ...
@@ -82,11 +82,11 @@ if (!$bError) {
 		redirect("member-attendance-roster-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=" . urlencode($returnString));
 		ob_end_flush();
 	}
-} 
+}
 if ($bError) {
 	redirect("member-attendance-roster-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=" . urlencode($returnErrString));
 	ob_end_flush();
-} 	
+}
 
 
 function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$err){
@@ -94,10 +94,9 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 	$err = "";
 	// Make sure this user exists
 	$strSQL = "SELECT users.firstname, users.lastname, users.roleid, users.id AS userid, users.useraccountinfo, useraccountinfo.*, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
-	
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = !($pdostatement->execute(array($uid, $teamid)));
-	$userResults = $pdostatement->fetch(PDO::FETCH_ASSOC);
+
+	$dbconn = getConnection();
+	$userResults = executeQuery($dbconn, $strSQL, $bError, array($uid, $teamid)));
 
 	if (!$bError)  {
 
@@ -120,16 +119,12 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 				// Get last payment for this program
 				// Get the programid for this event
 				$strSQL = "select programid from events where id = ?";
-				$pdostatement = $dbh->prepare($strSQL);
-				$pdostatement->execute(array($eventid));
-				$programid = $pdostatement->fetchColumn();
+				$programid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($eventid));
 
 				if (($programid != Program_Undefined) && ($programid != FALSE)){
 					// Get the payment details for the last payment made for this program
 					$strSQL = "SELECT skus.*, orderitems.id as payid, orderitems.* FROM (paymentmethods INNER JOIN (programs INNER JOIN (users INNER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) WHERE users.id = orderitems.userid and userid = ? AND orderitems.programid = ? AND orderitems.teamid = ? and numeventsremaining <> 0 and (paymentdate + expires >= current_date) ORDER BY paymentdate DESC";
-					$pdostatement = $dbh->prepare($strSQL);
-					$pdostatement->execute(array($uid, $programid, $teamid));
-					$paymentResults =  $pdostatement->fetchAll();
+					$paymentResults = executeQuery($dbconn, $strSQL, $bError, array($uid, $programid, $teamid));
 
 					// If we find one result, we know this user has a payment that will conver the event they are trying to log
 					if (count($paymentResults) > 0){
@@ -165,8 +160,7 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 					}
 					// Update the number of classes remaining
 					$strSQL = "UPDATE orderitems SET numeventsremaining = ? WHERE id = ? and userid = ?;";
-					$pdostatement = $dbh->prepare($strSQL);
-					$pdostatement->execute(array($numClassesRemaining, $lastPaymentID, $uid));
+					executeQuery($dbconn, $strSQL, $bError, array($numClassesRemaining, $lastPaymentID, $uid));
 
 					$canLogAttendance = true;
 				}
@@ -176,8 +170,7 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 				// Regardless of if they pay, we log attendance
 				// Add a record to the attendance table with the member id and date.
 				$strSQL = "INSERT INTO attendance VALUES ( ?, ?, ?,DEFAULT,?)";
-				$pdostatement = $dbh->prepare($strSQL);
-				$bError = !$pdostatement->execute(array($uid, $attendanceDate, $eventid, $teamid));
+				executeQuery($dbconn, $strSQL, $bError, array($uid, $attendanceDate, $eventid, $teamid));
 			}
 		}
 	}

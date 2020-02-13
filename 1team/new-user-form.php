@@ -1,27 +1,27 @@
-<?php 
+<?php
 // Only admins can execute this script. Header.php enforces this.
 $isadminrequired = true;
 // The title is set here and rendered in header.php
 $title= " New User" ;
-include('header.php'); 
+include('header.php');
 $title = "New " . $teamterms["termmember"];
 $bError = false;
 $bAllowAdd = false;
 
-  
 
-if (!$bError){ 
+
+if (!$bError){
 	if ( isset($_GET["roleid"])) {
 		$roleid = $_GET["roleid"];
 	} else {
 		$roleid = Role_Member;
-	}	
-	
-	// teamid depends on who is calling 
+	}
+
+	// teamid depends on who is calling
 	if (isUser($session, Role_TeamAdmin)){
 		if (isset($session["teamid"])){
 			$teamid = $session["teamid"];
-		} 
+		}
 	} else {
 		if (isset($_GET["teamid"])){
 			$teamid = $_GET["teamid"];
@@ -29,7 +29,7 @@ if (!$bError){
 			$teamid = 0; // This should trigger a select list for app admin
 		}
 	}
-	
+
 	// Get team account settings
 	if ($teamid != 0){
 		if (getTeam($session, $teamid, $teamResults) == RC_Success){
@@ -37,9 +37,9 @@ if (!$bError){
 	     	$bAllowAdd = canAddUsersToTeam($session, $teamid, $memberCount);
 		} else $bAllowAdd = false;
 	} ?>
-<script type="text/javascript"> 
+<script type="text/javascript">
 dojo.require("dijit.form.DateTextBox");
-dojo.require("dijit.form.ValidationTextBox"); 
+dojo.require("dijit.form.ValidationTextBox");
 </script>
 <script type="text/javascript">
 function updateCityState() {
@@ -69,7 +69,7 @@ function changeUserRole(){
 	// not allowed to add a member
 	if (($teamid != 0) && (!$bAllowAdd)) { ?>
 <p class="usererror">Your team has <?php echo $memberCount ." " . $teamterms["termmember"]?>s. Your team plan is currently full. <a href="help/contact.php">Contact us</a> to arrange a plan upgrade.</p>
-<?php 
+<?php
 	}
 	// Allowed to add a member
 	else { ?>
@@ -77,10 +77,10 @@ function changeUserRole(){
 <?php buildRequiredPostFields($session) ?>
 <?php
 		if ($teamid != 0) { ?>
-<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>	
+<input type="hidden" name="teamid" value="<?php echo $teamid?>"/>
 <?php
 		// Select list for team if they are app admin
-		} else { 
+		} else {
 		?>
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglevis('teaminfo')">Team<img src="img/a_collapse.gif" alt="collapse section" id="teaminfo_img" border="0"></a></h4>
 <div class="showit" id="teaminfo">
@@ -90,15 +90,15 @@ function changeUserRole(){
 <tr>
 <td class="bold">Team</td>
 <td>
-<?php 
-			// In any case, give the app admin the option of selecting another team admin 
+<?php
+			// In any case, give the app admin the option of selecting another team admin
 			$strSQL = "SELECT teams.id, teams.name FROM teams ORDER BY name;";
-			$pdostatementTeamPick = $dbh->prepare($strSQL);
-			$pdostatementTeamPick->execute();	?>
+      $dbconn = getConnection();
+  		$teams_records = executeQuery($dbconn, $strSQL, $bError);	?>
 <select name="teamid"  onchange="teamSelected()">
 <option value="0">Select a team...</option>
-<?php 
-			foreach ($pdostatementTeamPick as $rowteampick) { 
+<?php
+			foreach ($teams_records as $rowteampick) {
 				echo( '<option value="');
 				echo( $rowteampick["id"]);
 				echo( '"');
@@ -111,7 +111,7 @@ function changeUserRole(){
 </tr>
 </table>
 </div></div></div>
-<?php 
+<?php
 		} ?>
 <div class="<?php if ($teamid > 0) echo 'showit'; else echo 'hideit';?>" id="teamselected">
 <h4 class="expandable"><a class="linkopacity" href="javascript:togglevis('personalinfo')">Personal Information<img src="img/a_collapse.gif" alt="collapse section" id="personalinfo_img" border="0"></a></h4>
@@ -123,14 +123,14 @@ function changeUserRole(){
 <td class="bold">User Role</td>
 <td>
 <select name="roleid" onchange="changeUserRole()">
-<?php 
+<?php
 		if (isUser($session, Role_ApplicationAdmin )) { ?>
 <option value="<?php echo Role_TeamAdmin?>" <?php if (doesRoleContain($roleid, Role_TeamAdmin) ) { echo(" selected"); }?>><?php echo roleToStr(Role_TeamAdmin, $teamterms)?></option>
-<?php  
+<?php
 		} ?>
 <option value="<?php echo Role_Member?>" <?php if (doesRoleContain( $roleid, Role_Member) ) { echo(" selected"); }?>><?php echo roleToStr(Role_Member, $teamterms)?></option>
 <option value="<?php echo Role_Coach | Role_Member?>" <?php if (doesRoleContain($roleid, Role_Coach )) { echo(" selected"); }?>><?php echo roleToStr(Role_Coach, $teamterms)?></option>
-</select>				
+</select>
 </td>
 </tr>
 <tr>
@@ -256,6 +256,7 @@ function changeUserRole(){
 <?php	}?>
 		<option value="att" <?php if ($smsphonecarrier == "att") echo "selected"?>>AT&T</option>
 		<option value="verizon" <?php if ($smsphonecarrier == "verizon") echo "selected"?>>Verizon</option>
+    <option value="googlefi" <?php if ($smsphonecarrier == "googlefi") echo "selected"?>>Google Fi</option>
 		<option value="sprint" <?php if ($smsphonecarrier == "sprint") echo "selected"?>>Sprint or Credo</option>
 		<option value="tmobile" <?php if ($smsphonecarrier == "tmobile") echo "selected"?>>T-Mobile</option>
 		<option value="cellularone" <?php if ($smsphonecarrier == "cellularone") echo "selected"?>>Cellular One</option>
@@ -317,7 +318,7 @@ function changeUserRole(){
 	<option value="<?php echo UserAccountStatus_Active?>" selected='true'><?php echo $aStatus[UserAccountStatus_Active+UserAccountStatus_ArrayOffset]?></option>
 	<option value="<?php echo UserAccountStatus_Overdue?>"><?php echo $aStatus[UserAccountStatus_Overdue+UserAccountStatus_ArrayOffset]?></option>
 	<option value="<?php echo UserAccountStatus_Disabled?>"><?php echo $aStatus[UserAccountStatus_Disabled+UserAccountStatus_ArrayOffset]?></option>
-</select>				
+</select>
 </td>
 </tr>
 <tr>
@@ -354,18 +355,17 @@ function changeUserRole(){
 <tr>
 <td class="bold"><?php echo $teamterms["termcoach"]?></td>
 <td >
-<?php 
+<?php
 //				$strSQL = "SELECT * FROM users WHERE roleid & " . Role_Coach . " = " . Role_Coach . " AND teamid = ? ORDER BY firstname;";
 				$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE useraccountinfo.status = " . UserAccountStatus_Active . " AND users.useraccountinfo = useraccountinfo.id AND (roleid & " . Role_Coach . ") = " . Role_Coach . " AND users.teamid = ? ORDER BY firstname;";
-				$pdostatement = $dbh->prepare($strSQL);
-				$pdostatement->execute(array($teamid)); 
-				$userResults = $pdostatement->fetchAll();
+				$dbconn = getConnection();
+				$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 				if ( count($userResults) > 0) {  ?>
 <select name="coachid">
 <option value="0" selected>Select <?php echo $teamterms["termcoach"]?>...</option>
 <?php
-					$rowCountCoach = 0; 
-					while ($rowCountCoach < count($userResults) ) { 
+					$rowCountCoach = 0;
+					while ($rowCountCoach < count($userResults) ) {
 						echo '<option value="';
 						echo $userResults[$rowCountCoach]["userid"];
 						echo '"';
@@ -376,8 +376,8 @@ function changeUserRole(){
 						echo "</option>";
 						$rowCountCoach++;
 					} ?>
-</select>	
-<?php 
+</select>
+<?php
 				// No coaches, tell them so
 				} else {
 					echo "No " . $teamterms["termcoach"] . " has been defined for this " . $teamterms["termteam"] . ". ";
@@ -391,7 +391,7 @@ function changeUserRole(){
 </div>
 <?php 		// end membersonly div ?>
 </div>
-<?php 
+<?php
 			// If Member
 		} ?>
 <p class="bold">Email new password to&nbsp;<?php echo $teamterms["termuser"] ?>?&nbsp;<input type="checkbox" name="sendemail" value="1" checked="checked"></p>

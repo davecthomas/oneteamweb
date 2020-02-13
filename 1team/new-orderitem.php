@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -15,11 +15,11 @@ redirectToLoginIfNotAdmin( $session);
 //This accepts post or get input since it is called both ways
 $bError = false;
 $err = "non";
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_REQUEST["teamid"])){
 		$teamid = $_REQUEST["teamid"];
@@ -34,9 +34,9 @@ if ( isset($_REQUEST["id"])) {
 } else {
 	$bError = true;
 	$err = "i";
-} 	
+}
 if (isset($_REQUEST["paymentdate"])) {
-	$paymentdate = $_REQUEST["paymentdate"]; 
+	$paymentdate = $_REQUEST["paymentdate"];
 } else {
 	$bError = true;
 	$err = "pd";
@@ -44,14 +44,14 @@ if (isset($_REQUEST["paymentdate"])) {
 
 
 if (isset($_REQUEST["paymentmethod"])) {
-	$paymentmethod = $_REQUEST["paymentmethod"]; 
+	$paymentmethod = $_REQUEST["paymentmethod"];
 } else {
 	$bError = true;
 	$err = "pm";
 }
 
 if (isset($_REQUEST["amount"])) {
-	$amount = $_REQUEST["amount"]; 
+	$amount = $_REQUEST["amount"];
 } else {
 	$bError = true;
 	$err = "p";
@@ -59,7 +59,7 @@ if (isset($_REQUEST["amount"])) {
 
 // SKU is required, since it drives numeventsremaining
 if (isset($_REQUEST["skuid"])) {
-	$skuid = $_REQUEST["skuid"]; 
+	$skuid = $_REQUEST["skuid"];
 } else {
 	$bError = true;
 	$err = "sid";
@@ -81,13 +81,12 @@ if (isset($_POST["isrefunded"])) {
 	$isrefunded = false;
 }
 
-  
+
 
 // get the programid and numclassesfrom the sku
 $strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";
-$pdostatement = $dbh->prepare($strSQL);
-$pdostatement->execute(array($skuid, $teamid));
-$resultsSku = $pdostatement->fetchAll();
+$dbconn = getConnection();
+$resultsSku = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid));
 $numSkus = count($resultsSku );
 if ($numSkus == 1) {
 	$programid = $resultsSku[0]["programid"];
@@ -100,23 +99,21 @@ if ($numSkus == 1) {
 }
 
 if ( !$bError) {
-	// Fee is not required 
+	// Fee is not required
 	if (isset($_REQUEST["fee"])){
 		$fee = $_REQUEST["fee"];
 	} else $fee = 0;
-	
+
 	$strSQL = "INSERT INTO orderitems VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = (!$pdostatement->execute(array($programid, $paymentdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $isrefundedsql )));
-	
+	executeQuery($dbconn, $strSQL, $bError, array($programid, $paymentdate, $userid, $teamid, $paymentmethod, $amount, $skuid, $numeventsremaining, $fee, $ispaidsql, $isrefundedsql ));
+
 	if (!$bError){
-		
+
 		// Epayments are only passed via GET. This triggers a reconcile and different redirect
 		if (isset($_GET["epayid"])){
 			$epayid = $_GET["epayid"];
 			$strSQL = "UPDATE epayments set reconciled = TRUE WHERE id = ? and teamid = ?;";
-			$pdostatement = $dbh->prepare($strSQL);
-			$bError = (!$pdostatement->execute(array($epayid, $teamid)));
+			executeQuery($dbconn, $strSQL, $bError, array($epayid, $teamid));
 			// Success
 			if (!$bError){
 				redirect( "payment-history.php?".returnRequiredParams($session). "&teamid=" . $teamid . "&id=" . $userid . "&done=1");
@@ -124,7 +121,7 @@ if ( !$bError) {
 			} else {
 				redirect("epayment-reconcile-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=eps");
 			}
-		// Success 			
+		// Success
 		} else {
 			redirect( "payment-history.php?".returnRequiredParams($session)."&teamid=" . $teamid . "&id=" . $userid . "&done=1");
 		}
@@ -137,6 +134,6 @@ if ($bError) {
 	// Go to payment history
 	else
 		redirect( "payment-history.php?".returnRequiredParams($session)."&teamid=" . $teamid . "&id=" . $userid . "&err=". $err);
-	
+
 }
 ?>

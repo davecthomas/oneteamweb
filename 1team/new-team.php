@@ -1,4 +1,4 @@
-<?php  
+<?php
 include ('utils.php');
 
 // Assure we have the input we need, else send them to default.php
@@ -18,134 +18,126 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	$bError = true;
 }
 if (!$bError) {
-	  
+
 
 	if ( isset($_POST["teamname"])) {
 		$teamname = $_POST["teamname"];
 	} else {
-		$teamname = "Unnamed team";			
+		$teamname = "Unnamed team";
 	}
-	
+
 	// Prevent duplicate names
 	$strSQL = "SELECT * FROM teams WHERE name = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamname));
-	
-	$teamResults = $pdostatement->fetchAll();
-	
+	$dbconn = getConnection();
+	$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamname));
+
 	$rowCount = 0;
 	if (count($teamResults) > 0) {
 		$bError = true;
 	} else {
-	
+
 		if ( isset($_POST["city"])) {
 			$city = $_POST["city"];
 		} else {
-			$city = "";			
+			$city = "";
 		}
 		if ( isset($_POST["state"])) {
 			$state = $_POST["state"];
 		} else {
-			$state = "";			
+			$state = "";
 		}
 		if ( isset($_POST["address1"])) {
 			$address1 = $_POST["address1"];
 		} else {
-			$address1 = "";			
+			$address1 = "";
 		}
 		if ( isset($_POST["address2"])) {
 			$address2 = $_POST["address2"];
 		} else {
-			$address2 = "";			
+			$address2 = "";
 		}
 		if ( isset($_POST["postalcode"])) {
 			$postalcode = $_POST["postalcode"];
 		} else {
-			$postalcode = "";			
+			$postalcode = "";
 		}
 		if ( isset($_POST["email"])) {
 			$email = $_POST["email"];
 		} else {
-			$email = "";			
+			$email = "";
 		}
 		if ( isset($_POST["phone"])) {
 			$phone = $_POST["phone"];
 		} else {
-			$phone = "";			
+			$phone = "";
 		}
 		if ( isset($_POST["website"])) {
 			$website = $_POST["website"];
 		} else {
-			$website = "";			
+			$website = "";
 		}
 		if ( isset($_POST["paymenturl"])) {
 			$paymenturl = $_POST["paymenturl"];
 		} else {
-			$paymenturl = "";			
+			$paymenturl = "";
 		}
 		if ( isset($_POST["activityname"])) {
 			$activityname = $_POST["activityname"];
 		} else {
-			$activityname = "";			
+			$activityname = "";
 		}
 		if ( isset($_POST["notes"])) {
 			$notes = $_POST["notes"];
 		} else {
-			$notes = "";			
+			$notes = "";
 		}
-	
+
 		if ( isset($_POST["startdate"])) {
 			$startdate = $_POST["startdate"];
 		} else {
-			$startdate = "";			
+			$startdate = "";
 		}
-				
+
 	// TO DO!!! Some day we should be able to upload a Logo file...
-	
+
 		$strSQL = "INSERT INTO teams VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, ?, NULL);";
-		$pdostatementUpdate = $dbh->prepare($strSQL);
-		
-		$pdostatementUpdate->execute(array($teamname, $city, $state, $address1, $address2, $postalcode, $phone, $email, $website, $activityname, $notes, $startdate, $paymenturl));		
-	
+		executeQuery($dbconn, $strSQL, $bError, array($teamname, $city, $state, $address1, $address2, $postalcode, $phone, $email, $website, $activityname, $notes, $startdate, $paymenturl));
+
 		// Now get the new ID, then set account settings
 		$teamid  = 0;
 		$strSQL = "SELECT id FROM teams WHERE name = ?";
-		$pdostatement = $dbh->prepare($strSQL);
-		$pdostatement->execute(array($teamname));	
-		$teamid = $pdostatement->fetchColumn();
-	
+		$teamid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamname));
+
 		if ($teamid > 0){
-		
-			// Set account info 
+
+			// Set account info
 			$status = TeamAccountStatus_PendingLicense;  // All teams are created pending license so they have to accept license agreement
-			
+
 			if ( isset($_POST["isbillable"])) {
 				$isbillable = $_POST["isbillable"];
 			} else {
-				$isbillable = true;			
+				$isbillable = true;
 			}
 			if ( isset($_POST["plan"])) {
 				$plan = $_POST["plan"];
 			} else {
-				$plan = TeamAccountPlan_Undefined;			
+				$plan = TeamAccountPlan_Undefined;
 			}
 			if ( isset($_POST["planduration"])) {
 				$planduration = $_POST["planduration"];
 			} else {
-				$planduration = TeamAccountPlanDuration_Undefined;			
+				$planduration = TeamAccountPlanDuration_Undefined;
 			}
-				
+
 			$strSQL = "INSERT INTO teamaccountinfo VALUES (DEFAULT, ?, ?, ?, ?, ?);";
-			$pdostatementAccount = $dbh->prepare($strSQL);
-			
-			$pdostatementAccount->execute(array($teamid, $status, $plan, $planduration, $isbillable));	
-			
+			executeQuery($dbconn, $strSQL, $bError, array($teamid, $status, $plan, $planduration, $isbillable));
+
 			redirect("team-props-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&new=1");
 		} else {
 			$bError = true;
 		}
-	}	
-} 
+	}
+}
 
 if ($bError) {
 	redirect("new-team-form.php?" . returnRequiredParams($session) . "&err=" . $errno);

@@ -1,4 +1,4 @@
-<?php  
+<?php
 // Only admins or coaches can execute this script. Header.php enforces this.
 $isadminorcoachrequired = true;
 include_once('utilsbase.php');
@@ -24,18 +24,18 @@ if (isset($_REQUEST["eventid"])){
 } else {
 	$bError = true;
 	$err = "ei";
-} 
+}
 if (isset($_REQUEST["eventname"])){
 	$eventname = $_REQUEST["eventname"];
 } else {
 	$bError = true;
 	$err = "en";
-} 
+}
 
 if (!$bError){
 	$userid_login = getUserID();
-	
-	
+
+
 	if (AttendanceConsole::isAttendanceConsole($session)){
 		$teamterms = getTeamTerms($teamid, getDBH($session));
 		$teaminfo = getTeamInfo($teamid ); ?>
@@ -63,8 +63,8 @@ Session time remaining:&nbsp;<?php echo getSessionTimeRemaining($session)?>
 <table class="noborders">
 <tr><td class="bold">Scan Card Here</td><td><input type="password" id="scan" name="scan" maxlength="50"></td></tr>
 </table>
-<input type="hidden" name="eventid" value="<?php echo $eventid?>"/>	
-<input type="hidden" name="eventname" value="<?php echo $eventname?>"/>	
+<input type="hidden" name="eventid" value="<?php echo $eventid?>"/>
+<input type="hidden" name="eventname" value="<?php echo $eventname?>"/>
 </form>
 <p>If your card isn't scanning, please check the following:</p>
 <ol><li>Make sure the web browser window has focus (is "on top")</li>
@@ -73,22 +73,22 @@ Session time remaining:&nbsp;<?php echo getSessionTimeRemaining($session)?>
 <script type="text/javascript">
 	document.scanform.scan.focus()
 	var charfield=document.getElementById("scan");
-	var isTimerRunning; 
+	var isTimerRunning;
 	var timerScan = 0;
-	
+
 	charfield.onkeydown=function(e){
 		// Reset the old timer
 		if (timerScan != 0) {
-			clearTimeout(timerScan); 
+			clearTimeout(timerScan);
 			timerscan = 0;
 		}
 		//Start a timer that will automatically submit form in one second
 		timerScan = setTimeout("document.forms['scanform'].submit()",1000);
 	}
-	
+
 	function docLoad(){
 		isTimerRunning = 0;
-	}	
+	}
 
 	// AJAX support for presenting password and checking
 	var xmlhttp;
@@ -162,9 +162,8 @@ Session time remaining:&nbsp;<?php echo getSessionTimeRemaining($session)?>
 <td><select name="uid">
 <?php
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users WHERE ((roleid & " . Role_TeamAdmin . ") = " . Role_TeamAdmin . " OR (roleid & " . Role_Coach . ") = " . Role_Coach . ") AND users.teamid = ? ORDER BY firstname;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid));
-	$userResults = $pdostatement->fetchAll();
+	$dbconn = getConnection();
+	$userResults = executeQuery($dbconn, $strSQL, $bError);
 	$rowCount = 0;
 	$numRows = count($userResults);
 	if ( $userid_login == 0 ) {
@@ -198,11 +197,11 @@ A <?php echo $teamterms["termadmin"] ." or ".$teamterms["termcoach"] ?> is requi
 <br/>
 <div class="boxbutton"><input type="button" value="Ok" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onClick="javascript:togglevis2('errorboxPW', 'errorboxshow', 'errorboxhide');"/></div>
 </div>
-<?php 
+<?php
 		if (isset($_GET["badcard"])){
 			showError("Error Scanning Card", "The card is not recognized.<br />Please assure you are scanning a valid " . appname . "&nbsp;card.", "document.scanform.scan.focus();");
 		}
-		include('footer.php'); 		 
+		include('footer.php');
 	// Not team admin system
 	} else {
 		redirect("default.php");
