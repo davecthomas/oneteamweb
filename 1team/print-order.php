@@ -16,7 +16,7 @@ if (isset($_GET["orderid"])) {
 } else {
 	$bError = true;
 	$orderid = 0;
-} 	
+}
 if (isset($_GET["uid"])) {
 	$userid = $_GET["uid"];
 } else {
@@ -24,7 +24,7 @@ if (isset($_GET["uid"])) {
 	$bError = true;
 }
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
@@ -44,7 +44,7 @@ if (isset($_GET["email"])) {
 
 if (!$bError){
 	$teaminfo = getTeamInfo($teamid );
-	
+
 	if ($email){
 		ob_start();
 		include 'include-order-details.php';
@@ -196,7 +196,7 @@ tr.odd td {
 </body>
 </html>";
 //		print_r(array($subject, $message, getUserEmail($session, $dbh)));
-		$rc = $user->sendEmail($subject, $message, getUserEmail($session, $dbh), $err);
+		$rc = $user->sendEmail($subject, $message, getUserEmail($session, getConnectionFromSession($session)), $err);
 		if ($rc == RC_Success)
 			redirect( "manage-orders-form.php?".returnRequiredParams($session)."&teamid=" . $teamid . "&done=1");
 		else

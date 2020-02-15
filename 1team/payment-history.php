@@ -94,7 +94,7 @@ function updateProgramID() {
 
 			// GEt payment methods for this team
 			$strSQL = "SELECT * FROM programs WHERE teamid = ?";
-			$dbconn = getConnection();
+			$dbconn = getConnectionFromSession($session);
 			$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 			$rowCountP = count( $programResults);
 

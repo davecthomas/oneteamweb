@@ -15,7 +15,7 @@ class Session extends DbObject {
 	public static function deleteStaleSessions($session){
 
 		$strSQL = "delete from sessions where timeexpires < current_timestamp";
-		$dbconn = getConnection();
+		$dbconn = getConnectionFromSession($session);
 		$results = executeQuery($dbconn, $strSQL, $bError);
 
 		if ($bError) return RC_SessionCleanupFail;

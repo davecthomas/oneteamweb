@@ -35,7 +35,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO programs VALUES (DEFAULT, ?, ?, NULL);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($programname, $teamid));
 
 	redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

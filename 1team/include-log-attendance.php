@@ -10,7 +10,7 @@ if ((! isset($attendanceDate)) || (! isset($eventid)) ||(! isset($teamid)) ||(! 
 } else {
 
 	$strSQL = "SELECT COUNT(*) FROM users WHERE users.id = ? AND users.teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$rowCount = executeQueryFetchColumn($dbconn, $strSQL, $bError, array( $memberID, $teamid));
 
 	if ($rowCount != 1 ) {?>

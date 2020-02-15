@@ -18,7 +18,6 @@ if (!isAnyAdminLoggedIn($session)) {
 }
 
 $bError = false;
-$dbconn = getConnection();
 
 if (!isUser( $session, Role_ApplicationAdmin )) {
 	$teamid = $session["teamid"];
@@ -49,10 +48,10 @@ if (isset($_POST["publiclocation"])){
 }
 
 if (!$bError){
+	$dbconn = getConnectionFromSession($session);
 	// Verify the session has the code stored in it
 	$strSQL = "SELECT count(*) FROM sessions WHERE authsms = ? and userid = ? and login = ? and teamid = ?;";
-	$dbconn = getConnection();
-	$num = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($code, $session["userid"], $session["login"], $session["teamid"]));
+	$num = executeQueryFetchColumn( $dbconn, $strSQL, $bError, array($code, $session["userid"], $session["login"], $session["teamid"]));
 	if ($num == 1){
 		// Good code! Happy day, they can log in.
 		// Update the session to reset retries

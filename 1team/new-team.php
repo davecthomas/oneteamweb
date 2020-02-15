@@ -28,7 +28,7 @@ if (!$bError) {
 
 	// Prevent duplicate names
 	$strSQL = "SELECT * FROM teams WHERE name = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamname));
 
 	$rowCount = 0;

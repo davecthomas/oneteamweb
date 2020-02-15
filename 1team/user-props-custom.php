@@ -40,7 +40,7 @@ if ( $bError) {
 } else {
 
 	$strSQL = "SELECT * FROM users WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$userResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 	// Only if we find this user can we update the custom data for the user
 	if (count($userResults) > 0) {

@@ -43,7 +43,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE paymentmethods SET name = ? WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($paymenttypename, $paymenttypeid, $teamid));
 
 	redirect("manage-payment-types-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

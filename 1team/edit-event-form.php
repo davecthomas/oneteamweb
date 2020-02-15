@@ -31,7 +31,7 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM events WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $eventResults = executeQuery($dbconn, $strSQL, $bError, array($eventid));
 
 if (count($eventResults) > 0) { ?>

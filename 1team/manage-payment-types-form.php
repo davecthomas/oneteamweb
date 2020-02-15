@@ -34,7 +34,7 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? ORDER BY listorder;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
 	$paymentmethodResults = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

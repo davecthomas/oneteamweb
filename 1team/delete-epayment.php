@@ -33,7 +33,7 @@ if (isset($_GET["id"])) {
 
 if ($bError != true) {
 	$strSQL = "DELETE FROM epayments WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$bError = false;
 	executeQuery($dbconn, $strSQL, $bError, array($epaymentid, $teamid));
 

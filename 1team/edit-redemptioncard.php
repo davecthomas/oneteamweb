@@ -81,7 +81,7 @@ if ( isset($_REQUEST["type"])){
 if ( isset($_REQUEST["skuid"])){
 	$skuid = $_REQUEST["skuid"];
 	$strSQL = "SELECT name FROM skus WHERE id = ? AND teamid = ?";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$skuname = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($skuid, $teamid));
 
 } else {

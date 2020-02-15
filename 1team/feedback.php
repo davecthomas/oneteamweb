@@ -41,7 +41,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO feedback VALUES (DEFAULT, ?, ?, ?, ?, ?);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($summary, $details, $session["userid"], date("m-d-Y"), $teamid));
 
 	if (!$bError){

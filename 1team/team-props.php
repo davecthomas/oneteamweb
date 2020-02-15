@@ -32,7 +32,7 @@ if (isUser($session, Role_TeamAdmin)){
 
 if (!$bError) {
 	$strSQL = "SELECT * FROM teams WHERE id = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

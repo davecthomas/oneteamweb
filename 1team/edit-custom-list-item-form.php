@@ -37,7 +37,7 @@ if (isset($_GET["customlistid"])) {
 }
 
 $strSQL = "SELECT * FROM customlistdata, customlists WHERE customlistdata.customlistid = customlists.id AND customlistdata.id = ? AND customlistdata.teamid = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $customlistitemResults = executeQuery($dbconn, $strSQL, $bError, array($customlistitemid, $teamid));
 
 if (count($customlistitemResults) > 0) { ?>

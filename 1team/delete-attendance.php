@@ -44,7 +44,7 @@ if (isset($_GET["attendanceid"])){
 }
 
 $strSQL = "DELETE FROM attendance WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $results = executeQuery($dbconn, $strSQL, $attendanceid));
 
 if ($whomode == "team") {

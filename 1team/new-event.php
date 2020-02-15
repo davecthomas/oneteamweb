@@ -43,7 +43,7 @@ if (isset($_POST["location"])) {
 
 if (!$bError) {
 
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	if ($eventdate == 0) {
 		$strSQL = "INSERT INTO events VALUES (DEFAULT, ?, NULL, ?, NULL, ?);";

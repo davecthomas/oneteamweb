@@ -36,7 +36,7 @@ if (!$bError) {
 		$bDisplayUserSelector = true;
 		echo '<h3>' . $title . ' for ' . $teamname . ' ' . $teamterms["termmember"] . '</h3>';
 	}
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	// If invalid userID, Build a select list of all billable and active students to allow selection
 	if ($bDisplayUserSelector) {
 		// Team admin must get team id from session

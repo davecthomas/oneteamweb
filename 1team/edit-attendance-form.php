@@ -54,7 +54,7 @@ if (!$bError) {
 <div class="indented-group-noborder">
 <?php
 	$strSQL = "SELECT * FROM attendance WHERE id = ? and memberid = ? and teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$rs = executeQuery($dbconn, $strSQL, $bError, array($attendanceid, $userid, $teamid));
 
 	$countResults = count($rs);

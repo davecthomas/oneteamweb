@@ -106,7 +106,7 @@ purchased or gifted services.</p>
 <?php
 	// GEt payment methods for this team
 	$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCountS = count( $skuResults);
 

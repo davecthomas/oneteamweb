@@ -3,7 +3,7 @@ ob_start(); 	// This caches non-header output, allowing us to redirect after hea
 $title= " Reset Password " ;
 include('header.php');
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 // Make sure we have an ID
 $id = User::UserID_Undefined;
 if (isset($_GET["id"])) {
@@ -64,7 +64,6 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 		$bError = resetPassword($session, $teamid, $id, $sendemail, $intro);
 
 		if (!$bError){
-			$dbconn = getConnection();
 		  ?>
 <h3>Password Reset</h3>
 <div class="indented-group-noborder">

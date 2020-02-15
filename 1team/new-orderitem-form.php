@@ -50,7 +50,7 @@ if ($bDisplayUserSelector) {
 	if (isUser( $session, Role_TeamAdmin)) {
 		$teamid = $session["teamid"];
 		$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users, useraccountinfo WHERE isbillable = true and status = " . UserAccountStatus_Active . " and users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-		$dbconn = getConnection();
+		$dbconn = getConnectionFromSession($session);
 		$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	// App Admin query isn't team specific
 	} else {

@@ -11,7 +11,7 @@ dojo.require("dijit.form.CurrencyTextBox");
 <?php
 
 $strSQL = "SELECT * FROM teams, teamaccountinfo WHERE isbillable = true and status <> " . TeamAccountStatus_Inactive . " and teams.teamaccountinfo = teamaccountinfo.id ORDER BY names;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $teamResults = executeQuery($dbconn, $strSQL, $bError);
 $countRows = 0;
 $numRows = count($teamResults);

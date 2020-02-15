@@ -58,18 +58,15 @@ class User extends DbObject {
 			RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id
 			WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = !($pdostatement->execute(array($this->id, $this->teamid)));
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session),array($this->id, $this->teamid)));
 		if ($bError) return RC_PDO_Error;
-		else $this->dbrecord = $pdostatement->fetch();
 	}
 
 	function commit(){
 		if (($this->isdirty) && ($id != User::UserID_Guest)&& ($id != User::UserID_Undefined)){
 			$strSQL = "UPDATE users set firstname = ?, lastname = ?, email = ?, smsphone = ?, smsphonecarrier = ?
 					WHERE teamid = ? AND id = ?;";
-			$pdostatement = $this->dbh->prepare($strSQL);
-			$bError = !($pdostatement->execute(array($this->firstname, $this->lastname, $this->email, $this->smsphone,
+			executeQuery( getConnectionFromSession($this->session),array($this->firstname, $this->lastname, $this->email, $this->smsphone,
 					$this->smsphonecarrier, $this->teamid, $this->id)));
 			if (!$bError) $this->dirty = false;
 		}

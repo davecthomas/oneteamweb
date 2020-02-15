@@ -8,7 +8,7 @@ $formPasswordOld = cleanSQL(trim($_POST["current-password"]));
 $formPasswordNew = cleanSQL(trim($_POST["new-password"]));
 
 $strSQL = "SELECT * FROM users WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $results = executeQuery(array($session["userid"]));
 
 foreach ($results as $row) {

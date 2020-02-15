@@ -57,7 +57,7 @@ if (!$bError) {
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? " . $filterRequestSQL . " ORDER BY " . $sortRequest . ";";
 
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	// Now that we've done the query, we need to strip the secondary sort column off.

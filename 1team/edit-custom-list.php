@@ -43,7 +43,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE customlists SET name = ? WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($customlistname, $customlistid, $teamid));
 
 	redirect("edit-custom-list-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $customlistid ."&done=1");

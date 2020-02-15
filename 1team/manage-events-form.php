@@ -39,7 +39,7 @@ You can have meetings that are associated with a specific location or date or re
 </div>
 <?php
 	$strSQL = "SELECT * FROM events WHERE teamid = ? ORDER BY listorder;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
 	$eventResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

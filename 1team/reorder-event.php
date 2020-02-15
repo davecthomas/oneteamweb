@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,11 +14,11 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
@@ -30,21 +30,19 @@ if (isUser($session, Role_TeamAdmin)){
 
 if (isset($_POST["eventorder"])) {
 	$eventorder = explode(",", $_POST["eventorder"]);
-	if (count($eventorder) < 1) { 
+	if (count($eventorder) < 1) {
 		$bError = true;
-	} 
+	}
 }
 
 if (!$bError) {
-	  
 
-	for ($i = 0; $i < count($eventorder); $i++){	
+
+	for ($i = 0; $i < count($eventorder); $i++){
 		$strSQL = "UPDATE events SET listorder = ? WHERE id = ? AND teamid = ?;";
-		$pdostatement = $dbh->prepare($strSQL);
-		// The +1 is to force level orders to start at 1, not 0
-		$pdostatement->execute(array($i+1, $eventorder[$i], $teamid));
+		executeQuery( getConnectionFromSession($session), $strSQL, $bError, array($i+1, $eventorder[$i], $teamid));
 	}
-	
+
 	redirect("manage-events-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 } else {
 	redirect("manage-events-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");

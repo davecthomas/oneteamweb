@@ -4,7 +4,7 @@ $isadminrequired = true;
 $title= " Delete User" ;
 include('header.php');
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $bError = false;
 if (isset($_GET["id"])) {
 	$userid = (int)(getCleanInput($_GET["id"]));
@@ -21,7 +21,6 @@ if (isUser($session, Role_TeamAdmin)){
 	$title .= " for " . getTeamName($teamid );
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users WHERE (roleid & " . Role_TeamAdmin . ") <> " . Role_TeamAdmin . " AND users.teamid = ? ORDER BY firstname;";
-	$dbconn = getConnection();
 	$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 } else {
 	if (isset($_GET["teamid"])){

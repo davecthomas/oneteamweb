@@ -44,7 +44,7 @@ if (isUser($session, Role_TeamAdmin)){
 }
 
 if (!$bError){
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods RIGHT OUTER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
 	$orderResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $orderid, $teamid));
 

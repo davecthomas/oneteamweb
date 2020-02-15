@@ -42,7 +42,7 @@ if (isset($_GET["uid"])) {
 
 if (!$bError) {
 	$strSQL = "SELECT * FROM orderitems WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$paymentResults = executeQuery($dbconn, $strSQL, $bError, array($paymentid, $teamid));
 
 	if (count($paymentResults) > 0) { ?>

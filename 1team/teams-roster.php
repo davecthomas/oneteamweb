@@ -33,7 +33,7 @@ if (!$bError){
 	}
 
 	$strSQL = "SELECT teams.id as id_team, teams.*, teamaccountinfo.*, images.* FROM teamaccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id AND images.type = " . ImageType_Team . ") WHERE teamaccountinfo.teamid = teams.id " . $filterRequestSQL . " ORDER BY " . $sortRequest . ";";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$teams_records = executeQuery($dbconn, $strSQL, $bError); ?>
 <table>
 <thead class="head"><tr>

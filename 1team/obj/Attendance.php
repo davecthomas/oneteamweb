@@ -45,9 +45,7 @@ class Attendance extends DbObject {
 
 	private function initRecord( ){
 		$strSQL = "SELECT * FROM attendance WHERE id = ? and teamid = ?;";
-
-		$dbconn = getConnection();
-		$results = executeQuery($dbconn, $strSQL, $bError, array($this->id, $this->teamid));
+		$results = executeQuery( getConnectionFromSession($this->session), $strSQL, $bError, array($this->id, $this->teamid));
 		if ($bError) return RC_PDO_Error;
 		else $this->dbrecord = $results;
 	}
@@ -55,11 +53,11 @@ class Attendance extends DbObject {
 	function commit(){
 		if ($this->isdirty){
 			$strSQL = "UPDATE attendance set memberid = ?, attendancedate = ?, eventid = ?, type = ? WHERE teamid = ? AND id = ?;";
-			executeQuery($this->dbh, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->type, $this->teamid, $this->id)));
+			executeQuery($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->type, $this->teamid, $this->id)));
 			if (!$bError) $this->isdirty = false;
 		} else if ($this->id == DbObject::DbID_Undefined){
 			$strSQL = "INSERT INTO attendance VALUES(?, ?, ?, DEFAULT, ?, ?) RETURNING id;";
-			$this->id = executeQueryFetchColumn($this->dbh, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type)));
+			$this->id = executeQueryFetchColumn($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type)));
 			if ($bError) $this->id = null;
 		}
 	}

@@ -69,7 +69,7 @@ if (!$bError){
 				GROUP BY redemptioncardid, userid, redemptioncards.teamid, skuid, createdate, amountpaid, facevalue, numeventsremaining,
 				paymentmethod, redemptioncards.description, redemptioncards.expires, type, code, users.id, firstname, lastname, skus.programid, skus.name
 				ORDER BY createdate DESC";
-		$dbconn = getConnection();
+		$dbconn = getConnectionFromSession($session);
 		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 		// Now get guest cards, if any

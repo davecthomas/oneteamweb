@@ -34,13 +34,11 @@ if (isset($_GET["id"])) {
 if ($bError != true) {
 	$strSQL = "DELETE FROM paymentmethods WHERE id = ? AND teamid = ?;";
 
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($paymenttypeid, $teamid));
 
 	// Change any orderitems with this type to undefined so there are no orphans
 	$strSQL = "UPDATE orderitems SET paymentmethod = ? where paymentmethod = ? and teamid = ?";
-
-	$dbconn = getConnection();
 	executeQuery($dbconn, $strSQL, $bError, array(PaymentMethod_Undefined, $paymenttypeid, $teamid));
 
 	redirect("manage-payment-types-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

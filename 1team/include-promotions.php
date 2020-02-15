@@ -69,7 +69,7 @@ if (($whomode == "team") && (!isAnyAdminLoggedIn($session))) {
 	$errStr = Error;
 }
 if (!$bError ) {
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	// User mode: make sure they can adminster this user
 	if ($whomode == "user") {
 		$objid = $userid;

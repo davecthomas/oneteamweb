@@ -15,7 +15,7 @@ if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) 
 }
 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 echo "<h3>" .$title . " of " . roleToStr($session["roleid"], $teamterms) . " " . $username . " with " . $teaminfo["teamname"] ."</h3>\n";

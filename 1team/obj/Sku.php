@@ -38,10 +38,8 @@ class Sku extends DbObject {
 	function getSku( ){
 		// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? AND id = ?;";
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = ! $pdostatement->execute(array($this->teamid, $this->getID()));
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), array($this->teamid, $this->getID()));
 		if ($bError) return RC_PDO_Error;
-		else $this->dbrecord = $pdostatement->fetch();
 	}
 
 	function setName($name){

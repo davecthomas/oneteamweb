@@ -47,7 +47,7 @@ if (isset($_REQUEST["uid"])) {
 // Verify this epayment exists
 if (!$bError) {
 	$strSQL = "SELECT * from epayments WHERE id = ? AND teamid = ?";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$resultsEpayments = executeQuery($dbconn, $strSQL, $bError, array($epaymentid, $teamid));
 	if ($bError){
 		$err = "epn";

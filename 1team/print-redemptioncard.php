@@ -28,7 +28,7 @@ if (! isValidSession($session )){
 // Only admins can execute this script
 redirectToLoginIfNotAdminOrCoach( $session);
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if ( !isUser($session, Role_ApplicationAdmin)){
 	if ( !isset($session["teamid"])){
 		$bError = true;
@@ -64,10 +64,10 @@ if (strlen($session["teamimageurl"]) > 0) {
 
 $returnErrString = "";
 if (!$bError) {
-	
+
 	$returnString = "";
 	// Get team terms gracefully handles the case where app admin has no team
-	$teamterms = getTeamTerms(getTeamID($session), getDBH($session));
+	$teamterms = getTeamTerms(getTeamID($session), getConnectionFromSession($session));
 	$rolename = roleToStr($session["roleid"], $teamterms);
 	$teaminfo = getTeamInfo( $teamid);
 	if ((isset($session)) && (isset($session["teamimageurl"]))) {
@@ -83,9 +83,7 @@ if (!$bError) {
 
 	// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 	$strSQL = "SELECT redemptioncards.*, users.firstname, users.lastname FROM redemptioncards, users WHERE redemptioncards.teamid = ? AND redemptioncards.id = ? AND users.id = redemptioncards.userid;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$pdostatement->execute(array($teamid, $id));
-	$redemptioncardResults = $pdostatement->fetch();
+	$redemptioncardResults = executeQuery( getConnectionFromSession($session), $strSQL, $bError, array($teamid, $id));
 
 	if (isset($redemptioncardResults["id"])){
 		$sku = new Sku($session, $redemptioncardResults["skuid"]);

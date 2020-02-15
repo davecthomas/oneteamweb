@@ -36,7 +36,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$teamid = $_GET["teamid"];
 	} else $bError = true;
 }
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 if (!$bError){
 	$strSQL = "SELECT users.firstname, users.lastname,  paymentmethods.name as paymentmethodname, programs.name as programname, skus.*, skus.name as skuname, orderitems.id as orderitemid, orderitems.*, orders.paymentmethod as orderpaymentmethod, orders.ispaid as orderispaid, orders.* FROM (orders INNER JOIN (paymentmethods INNER JOIN (programs INNER JOIN (users RIGHT OUTER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid and users.id = ? ) on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id) ON orderitems.orderid = orders.id) WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
@@ -489,7 +489,6 @@ function onNewItemChanged(skuindex){
 <?php
 		// Get skus and build javascript array mapping skus to amounts
 		$strSQL = "SELECT * FROM skus WHERE teamid = ? ORDER BY listorder";
-		$dbconn = getConnection();
 		$skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		$rowCountS = count( $skuResults);
 

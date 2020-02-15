@@ -27,7 +27,7 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM levels WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $levelResults = executeQuery($dbconn, $strSQL, $bError, array($levelid));
 
 if (count($levelResults) > 0) { ?>

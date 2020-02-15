@@ -111,7 +111,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE orderitems SET amount = ?, paymentdate = ?, paymentmethod = ?, programid = ?, numeventsremaining = ?, skuid = ?, fee = ?, ispaid = ?, isrefunded = ? WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($amount, $paymentdate, $paymentmethod, $programid, $numeventsremaining, $skuid, $fee, $ispaidsql, $isrefundedsql, $paymentid, $teamid));
 	if (!$bError)
 		redirect("payment-history.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $uid . "&done=1");

@@ -36,7 +36,7 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT programs.name AS programs_name, levels.* FROM programs INNER JOIN levels on programs.id = levels.programid WHERE programs.teamid = ? ORDER BY levels.programid, listorder;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$levelResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

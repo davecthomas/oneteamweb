@@ -63,7 +63,7 @@ if (!$bError ) {
 			$username = getUserName( $userid, $dbconn);
 		}
 	}
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	// User mode: make sure they can adminster this user
 	if ($whomode == "user") {

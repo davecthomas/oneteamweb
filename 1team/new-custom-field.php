@@ -47,7 +47,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO customfields VALUES (DEFAULT, ?, ?, ?, NULL, NULL, NULL, NULL, " . $hasdisplaycondition . ", NULL, NULL);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$results = executeQuery($dbconn, $strSQL, $bError, array($datatype, $name, $teamid, $hasdisplaycondition));
 	if (! $bError) {
 

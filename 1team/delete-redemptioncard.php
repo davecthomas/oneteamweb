@@ -13,7 +13,7 @@ if (! isValidSession($session )){
 redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 // teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){

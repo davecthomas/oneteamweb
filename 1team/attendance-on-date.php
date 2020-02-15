@@ -80,7 +80,7 @@ if (isset($_GET["filter"])) {
 //	$strSQL = "SELECT attendance.id as attendanceid, attendance.*, events.id as eventid, events.*, users.id as userid, users.*, useraccountinfo.* FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid), useraccountinfo WHERE attendance.teamid = ? AND attendancedate = ? and users.useraccountinfo = useraccountinfo.id ORDER BY attendance.attendancedate DESC";
 	$strSQL = "SELECT attendance.id as attendanceid, attendance.*, events.id as eventid, events.*, users.id as userid, users.*, useraccountinfo.*, images.* FROM useraccountinfo, events INNER JOIN attendance INNER JOIN teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id ON attendance.memberid = users.id on events.id = attendance.eventid WHERE attendance.teamid = ? AND attendancedate = ? and users.useraccountinfo = useraccountinfo.id ORDER BY attendance.attendancedate DESC;";
 
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$results = executeQuery($dbconn, $strSQL, $bError, array($session["teamid"],$thedatesql));
 ?>
 <h4><?php echo getTeamName($teamid, $dbconn)?> Members attending on <?php echo $attendanceCheckDate->format("F j, Y") ?></h4>

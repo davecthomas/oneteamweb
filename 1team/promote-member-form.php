@@ -53,7 +53,7 @@ if ( ! $bError ) { ?>
 <table class="noborders">
 <?php
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, useraccountinfo.status, useraccountinfo FROM users, useraccountinfo WHERE roleid & " . Role_Member . " = " . Role_Member . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> ? ORDER BY firstname;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$user_records = executeQuery($dbconn, $strSQL, $bError, array( $teamid, UserAccountStatus_Inactive));
 	$promolistorder = 0;
 ?>

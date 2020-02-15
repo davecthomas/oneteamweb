@@ -37,7 +37,7 @@ if (!$bError){
 
 
 	if (AttendanceConsole::isAttendanceConsole($session)){
-		$teamterms = getTeamTerms($teamid, getDBH($session));
+		$teamterms = getTeamTerms($teamid, getConnectionFromSession($session));
 		$teaminfo = getTeamInfo($teamid ); ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
@@ -162,7 +162,7 @@ Session time remaining:&nbsp;<?php echo getSessionTimeRemaining($session)?>
 <td><select name="uid">
 <?php
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid FROM users WHERE ((roleid & " . Role_TeamAdmin . ") = " . Role_TeamAdmin . " OR (roleid & " . Role_Coach . ") = " . Role_Coach . ") AND users.teamid = ? ORDER BY firstname;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$userResults = executeQuery($dbconn, $strSQL, $bError);
 	$rowCount = 0;
 	$numRows = count($userResults);

@@ -48,7 +48,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE levels SET name = ?, programid = ? WHERE id = ? AND teamid = ?;";
-	$$dbconn = getConnection();
+	$$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($levelname, $programid, $levelid, $teamid));
 
 	redirect("manage-levels-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

@@ -18,7 +18,7 @@ if (isset($_POST["id"])) {
 	redirect("delete-user-form.php?".returnRequiredParams($session)."&err=i");
 }
 $bError = false;
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 $username = getUserName( $delete_id);
 $rc = 1; // assume success

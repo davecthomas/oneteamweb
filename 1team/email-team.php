@@ -90,7 +90,7 @@ define("recipient_lastname", 2);
 define("recipient_email", 3);
 define("recipient_smsphone", 4);
 define("recipient_smsphonecarrier", 5);
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 if (isset($_REQUEST["recipientgroup"])){
 
 	$recipientgroup = $_REQUEST["recipientgroup"];

@@ -10,7 +10,7 @@ if ((isset($_GET["sessionkey"])) && (isset($_GET["userid"]))) {
 		redirectToLogin();
 	}
 	$title = getTitle($session, $title);
-	$teamterms = getTeamTerms(getTeamID($session), getDBH($session));
+	$teamterms = getTeamTerms(getTeamID($session), getConnectionFromSession($session));
 } else {
 	$session = RC_SessionKey_Invalid;
 	$title=getTitleNotLoggedIn($title);

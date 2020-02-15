@@ -42,13 +42,12 @@ if (isset($_GET["id"])) {
 if (!$bError) {
 	// Remove orderitems
 	$strSQL = "DELETE FROM orderitems WHERE orderid = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
 
 	if (!$bError) {
 		// Remove the order
 		$strSQL = "DELETE FROM orders WHERE id = ? AND teamid = ?;";
-		$dbconn = getConnection();
 		executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
 		// Send them back
 		if (!$bError) {

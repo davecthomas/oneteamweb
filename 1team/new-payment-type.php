@@ -35,7 +35,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO paymentmethods VALUES (DEFAULT, ?, ?, NULL);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($paymenttypename, $teamid));
 
 	redirect("manage-payment-types-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

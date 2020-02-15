@@ -38,7 +38,7 @@ if (!$bError) {
 	// Only let active members on active teams login. Get the team status to push the user to license screen if they have not accepted license yet.
 	//$strSQL = "SELECT teamaccountinfo.status as teamstatus, users.teamid as team_id, users.id as userid, users.* FROM users, useraccountinfo, teamaccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND teamaccountinfo.teamid = users.teamid and useraccountinfo.status = " . UserAccountStatus_Active . " AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . " AND login = ?;";
 	$strSQL = "SELECT users.salt, users.passwd FROM users WHERE id = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$loginResults = executeQuery($dbconn, $strSQL, $bError, array($uid));
 	$rowCount = count( $loginResults);
 	if ($rowCount != 1) {

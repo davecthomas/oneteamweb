@@ -33,7 +33,7 @@ if (isset($_GET["id"])) {
 
 if ($bError != true) {
 	$strSQL = "DELETE FROM skus WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid));
 
 	redirect("manage-skus-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

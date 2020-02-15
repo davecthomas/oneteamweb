@@ -40,7 +40,7 @@ if (isset($_GET["customlistid"])) {
 if ($bError != true) {
 	// Find out if this custom list item is in use anywhere. If so, fail the delete
 	$strSQL = "SELECT name FROM customdata, customfields WHERE customfields.id = customdata.customfieldid AND customlistid = ? AND valuelist = ? AND customfields.teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$customfieldsResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $customlistitemid, $teamid));
 	if (count($customfieldsResults) > 0) {
 		// error, redirect with name

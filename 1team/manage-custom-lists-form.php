@@ -28,7 +28,7 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT * FROM customlists WHERE teamid = ?;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
 	$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

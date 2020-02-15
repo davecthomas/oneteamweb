@@ -35,7 +35,7 @@ if (isset($_GET["id"])) {
 }
 if (!$bError) {
 	$strSQL = "SELECT * FROM customlists WHERE id = ? AND teamid = ?;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $customlistResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $teamid));
 
 	$loopMax = count($customlistResults);

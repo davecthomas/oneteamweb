@@ -46,7 +46,7 @@ if (!$bError) {
 
 	// Leave listorder and description NULL for now
 	$strSQL = "INSERT INTO skus VALUES (DEFAULT, ?, ?, NULL, ?, ?, NULL);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($skuname, $programid, $teamid, $price));
 
 	redirect("manage-skus-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

@@ -111,7 +111,7 @@ if (isset($_POST["hasdisplaycondition"])) {
 }
 
 if (!$bError) {
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	if ($bhasdisplaycondition) {
 		$strSQL = "UPDATE customfields SET name = ?, customdatatypeid = ?, hasdisplaycondition = " . $hasdisplaycondition . ", displayconditionobject = ?, displayconditionfield = ?, displayconditionoperator = ?, displayconditionvalue = ?, customlistid = ? WHERE id = ? AND teamid = ?;";

@@ -35,7 +35,7 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM skus WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $skuResults = executeQuery($dbconn, $strSQL, $bError, array($levelid));
 if (count($skuResults) > 0) { ?>
 <h4>Modify a SKU for <?php echo getTeamName($teamid, $dbconn)?></h4>

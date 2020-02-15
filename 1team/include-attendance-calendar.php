@@ -51,7 +51,7 @@ if (isset($_REQUEST["EventDate"])) {
 } else {
 	$eventdatetime = new DateTime();
 }
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 // User mode: make sure they can adminster this user
 if ($whomode == "user") {
 	$objid = $userid;

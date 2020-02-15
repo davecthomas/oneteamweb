@@ -33,7 +33,7 @@ if (!$bError){
 
 	// All new orderitems
 	$strSQL = "select * from epayments where reconciled <> TRUE and teamid = ? ORDER BY date DESC";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$numPayments = count($results);
 

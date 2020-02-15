@@ -50,7 +50,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE programs SET name = ?, eventid = ? WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($programname, $eventid, $programid, $teamid));
 
 	redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

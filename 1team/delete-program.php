@@ -33,7 +33,7 @@ if (isset($_GET["id"])) {
 
 if ($bError != true) {
 	$strSQL = "DELETE FROM programs WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($programid, $teamid));
 
 	redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

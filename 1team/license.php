@@ -43,7 +43,7 @@ if (!$bError) {
 
 	// First, make sure the team is actually currently TeamAccountStatus_PendingLicense. Otherwise, this could create a status reset back door for overdue customers!
 	$strSQL = "SELECT COUNT(*) FROM teamaccountinfo WHERE status = ? AND id = ?";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$count_results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array(TeamAccountStatus_PendingLicense, $teamid));
 	// Update the teamaccountinfo to make the team active
 	if ($count_results == 1) {

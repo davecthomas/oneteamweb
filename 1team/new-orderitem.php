@@ -85,7 +85,7 @@ if (isset($_POST["isrefunded"])) {
 
 // get the programid and numclassesfrom the sku
 $strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $resultsSku = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid));
 $numSkus = count($resultsSku );
 if ($numSkus == 1) {

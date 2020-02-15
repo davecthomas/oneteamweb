@@ -53,7 +53,7 @@ if (isset($_REQUEST["id"])){
 }
 
 if (!$bError){
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
   if (strlen($session["teamimageurl"]) > 0) {
 		$teamlogo = $session["teamimageurl"];

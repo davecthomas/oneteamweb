@@ -93,7 +93,7 @@ function changeUserRole(){
 <?php
 			// In any case, give the app admin the option of selecting another team admin
 			$strSQL = "SELECT teams.id, teams.name FROM teams ORDER BY name;";
-      $dbconn = getConnection();
+      $dbconn = getConnectionFromSession($session);
   		$teams_records = executeQuery($dbconn, $strSQL, $bError);	?>
 <select name="teamid"  onchange="teamSelected()">
 <option value="0">Select a team...</option>
@@ -358,7 +358,7 @@ function changeUserRole(){
 <?php
 //				$strSQL = "SELECT * FROM users WHERE roleid & " . Role_Coach . " = " . Role_Coach . " AND teamid = ? ORDER BY firstname;";
 				$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE useraccountinfo.status = " . UserAccountStatus_Active . " AND users.useraccountinfo = useraccountinfo.id AND (roleid & " . Role_Coach . ") = " . Role_Coach . " AND users.teamid = ? ORDER BY firstname;";
-				$dbconn = getConnection();
+				$dbconn = getConnectionFromSession($session);
 				$userResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 				if ( count($userResults) > 0) {  ?>
 <select name="coachid">

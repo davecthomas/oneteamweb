@@ -32,7 +32,7 @@ if (isset($_GET["id"])) {
 
 if (!$bError) {
 	$strSQL = "SELECT * FROM customfields WHERE id = ? AND teamid = ?;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
 	$customfieldResults = executeQuery($dbconn, $strSQL, $bError, array($customfieldid, $teamid));
 
 	if (count($customfieldResults) > 0) { ?>

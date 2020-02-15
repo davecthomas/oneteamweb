@@ -59,7 +59,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE attendance SET attendancedate = ?, eventid = ? WHERE id = ? AND memberid = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($attendancedate, $eventid, $attendanceid, $userid, $teamid));
 
 	$datetimeevent = new DateTime($attendancedate);

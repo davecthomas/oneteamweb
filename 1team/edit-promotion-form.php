@@ -41,7 +41,7 @@ if ( isset($_GET["pagemode"])) {
 }
 
 $teamname = getTeamName($teamid, $dbconn);
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 ?>
 <h3><?php echo $title . " for " . $teamname . " " . $teamterms["termmember"] . " " . getUserName($memberid, $dbconn);?></h3>
 <?php

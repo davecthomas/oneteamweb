@@ -61,7 +61,7 @@ if (isset($_POST["scannable"])){
 	$scannable = "FALSE";
 }
 if (!$bError) {
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	if 	($eventdate == 0) {
 		$strSQL = "UPDATE events SET name = ?, location = ?, scannable = " . $scannable . ", programid = ? WHERE id = ? AND teamid = ? ;";

@@ -19,7 +19,7 @@
 				on orderitems.programid = programs.id) on orderitems.paymentmethod = paymentmethods.id)
 			ON orderitems.orderid = orders.id)
 		WHERE orderid = ? AND orderitems.teamid = ? ORDER BY paymentdate DESC;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$orderResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $orderid, $teamid));
 	$countOrders = 0;
 	$numOrders = count($orderResults);

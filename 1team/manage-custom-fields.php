@@ -35,7 +35,7 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT customfields.id as customfieldsid, customdatatypes.id as customdatatypesid, * FROM customfields, customdatatypes WHERE customfields.teamid = ? AND customfields.customdatatypeid = customdatatypes.id ORDER BY listorder;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$customfieldResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

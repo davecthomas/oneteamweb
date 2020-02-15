@@ -13,7 +13,7 @@ if (isset($_GET["id"])) {
 	$id= TeamID_Undefined;
 }
 $strSQL = "SELECT teams.name, teams.id FROM teams ORDER BY name;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $teamResults = executeQuery($dbconn, $strSQL, $bError);
 
 $rowCount = 0;

@@ -28,22 +28,20 @@ if (isset($_GET["isactive"])) {
 
 redirectToLoginIfNotAdmin( $session);
 
+$dbconn = getConnectionFromSession($session);
 
 // Team admin must get team id from session
 if ( isUser( $session, Role_TeamAdmin)) {
 	$teamid = $session["teamid"];
 	if ($isactive == 1) {
 		$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid, users.teamid, useraccountinfo.status, useraccountinfo.isbillable, useraccountinfo.email FROM users, useraccountinfo WHERE users.teamid = ? AND status > 0 and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-		$dbconn = getConnection();
 		$users = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	} else {
 		$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid, users.teamid, useraccountinfo.status, useraccountinfo.isbillable, useraccountinfo.email FROM users, useraccountinfo WHERE users.teamid = ? and users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-		$dbconn = getConnection();
 		$users = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	}
 } else {
 	$strSQL = "SELECT users.firstname, users.lastname, users.id, users.roleid, useraccountinfo.status, useraccountinfo.isbillable, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id ORDER BY firstname;";
-	$dbconn = getConnection();
 	$users = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 }
 

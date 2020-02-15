@@ -31,7 +31,7 @@ if (((isset($isadminorcoachrequired)) && ($isadminorcoachrequired))){
 	redirectToLoginIfNotAdminOrCoach( $session);
 }
 // Get team terms gracefully handles the case where app admin has no team
-$teamterms = getTeamTerms(getTeamID($session), getDBH($session));?>
+$teamterms = getTeamTerms(getTeamID($session), getConnectionFromSession($session));?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>

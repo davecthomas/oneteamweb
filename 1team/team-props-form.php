@@ -35,7 +35,7 @@ if ($bError) {
 	redirectToLogin();
 } else {
 	$strSQL = "SELECT teams.id as id_team, teams.*, teamaccountinfo.*, images.* FROM teamaccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE teamaccountinfo.teamid = teams.id AND teams.id = ?";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$row = executeQuery($dbconn, $strSQL, $bError, array(ImageType_Team, $teamid, $teamid));
 ?>
 <h3><?php echo $title?></h3>

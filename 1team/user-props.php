@@ -38,7 +38,7 @@ if ( !$bError) {
 
 
 	$strSQL = "SELECT * FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? AND users.teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$userResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 	if ($bError) $errstr = "s";

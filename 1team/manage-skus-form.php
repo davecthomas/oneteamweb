@@ -35,7 +35,7 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT programs.name AS programs_name, skus.* FROM programs INNER JOIN skus on programs.id = skus.programid WHERE programs.teamid = ? ORDER BY skus.programid, listorder;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $skuResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
@@ -104,7 +104,6 @@ To reorder the SKU list, click and drag them, then press the "Reorder SKUs" butt
 <td width="30">
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
-	$dbconn = getConnection();
 	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

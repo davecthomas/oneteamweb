@@ -30,7 +30,7 @@ if (isset($_POST["name"])) {
 	$bCreate = false;
 }
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 if ($bCreate) {
 

@@ -39,7 +39,7 @@ if (!$bError){
 	$redemptioncardfound = false;
 	$teamid = getTeamID($session);
 	$memberID = User::UserID_Undefined;
-	$teamterms = getTeamTerms($teamid, getDBH($session));
+	$teamterms = getTeamTerms($teamid, getConnectionFromSession($session));
 	$formScan = cleanSQL($_POST["scan"]);
 	
 	// Support new cards (zero left padded memberid with the last digit chopped off)

@@ -40,7 +40,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO levels VALUES (DEFAULT, ?, ?, NULL, ?);";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($levelname, $programid, $teamid));
 
 	redirect("manage-levels-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

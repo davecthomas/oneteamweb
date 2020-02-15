@@ -23,7 +23,7 @@ if (isset($_REQUEST["id"])) {
 
 if ($bError != true) {
 	$strSQL = "DELETE FROM feedback WHERE teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($teamid)));
 
 	if (!$bError) {

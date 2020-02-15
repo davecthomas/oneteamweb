@@ -38,7 +38,7 @@ if (isUser($session, Role_TeamAdmin)){
 	// Note! This left outer join is necessary to return all programs since events may be null. The side effect of this is that other team programs are returned. These
 	// are filtered out below in the loop
 	$strSQL = "SELECT programs.*, events.name as eventname FROM programs LEFT OUTER JOIN events ON programs.eventid = events.id AND programs.teamid = ? ORDER BY listorder;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;

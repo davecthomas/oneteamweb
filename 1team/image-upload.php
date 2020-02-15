@@ -113,7 +113,7 @@ if (!$bError) {
 
 	// Check if this is an INSERT or UPDATE
 	$strSQL = "SELECT * FROM images WHERE type = ? and objid = ? and teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$existingImage = executeQuery($dbconn, $strSQL, $bError, array($type, $objid, $teamid));
 	if ($bError) $errno = "Exist";
 

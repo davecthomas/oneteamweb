@@ -24,7 +24,7 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM programs WHERE id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $programResults = executeQuery($dbconn, $strSQL, $bError, array($programid));
 
 if (count($programResults) > 0) { ?>

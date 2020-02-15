@@ -12,7 +12,7 @@ class DbObject {
 	static $HelpText = "";
 
 	protected $session;
-	protected $dbh;
+	protected $dbconn;
 	protected $teamid;
 	protected $id;
 
@@ -23,7 +23,7 @@ class DbObject {
 	function __construct( $session, $id = DbObject::DbID_Undefined) {
 		$this->isdirty = false;
 		$this->session = $session;
-		$this->dbh = getDBH($session);
+		$this->dbconn = getConnectionFromSession($session);
 		$this->teamid = $session["teamid"];
 		$this->id = $id;
 	}
@@ -44,7 +44,7 @@ class DbObject {
 	function getID(){
 		return $this->id;
 	}
-	
+
 	static function getHelp(){
 		return self::$HelpText;
 	}

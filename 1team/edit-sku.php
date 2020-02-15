@@ -91,7 +91,7 @@ if (!$bError) {
 
 
 	$strSQL = "UPDATE skus SET name = ?, price = ?, description = ?, programid = ?, numevents = ?, expires = ? WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($skuname, $price, $description, $programid, $numevents, $expires, $skuid, $teamid));
 
 	redirect("manage-skus-form.php?" .returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");

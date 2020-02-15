@@ -48,7 +48,7 @@ if (!$bError) {
 
 	// Add a record to the promotions table with the member id and date.
 	$strSQL = "UPDATE promotions SET promotiondate = ?, newlevel = ? WHERE id = ? AND memberid = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($promotionDate, $levelID, $promotionid, $memberID, $teamid));
 }
 if (!$bError){

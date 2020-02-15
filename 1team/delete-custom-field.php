@@ -35,7 +35,7 @@ if ($bError != true) {
 
 	// Delete any custom data so we have no orphans
 	$strSQL = "DELETE FROM customdata WHERE customfieldid = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$results = executeQuery($dbconn, $strSQL, $bError, array($customfieldid, $teamid));
 
 	// Delete the custom field

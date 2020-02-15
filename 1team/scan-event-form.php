@@ -24,7 +24,7 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	}
 }
 
-$teamterms = getTeamTerms($teamid, getDBH($session));
+$teamterms = getTeamTerms($teamid, getConnectionFromSession($session));
 $teaminfo = getTeamInfo($teamid );
 
 // Must be run from team admin console
@@ -38,7 +38,7 @@ if ($isTeamAttendanceConsole){?>
 <tr><td class="strong">Event</td><td><?php
 
 	$strSQL = "SELECT * FROM events WHERE teamid = ? and scannable = TRUE ORDER by listorder;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$eventResults = executeQuery($dbconn, $strSQL, $bError, array($teamid ));
 
 	$rowCount = 0;

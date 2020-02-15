@@ -52,7 +52,7 @@ $nextmonth = new DateTime($startdatetime->format("d-m-Y"));
 
 // Only looking for a count with this query
 $sqlBase = "SELECT COUNT(*) AS ROW_COUNT FROM users where teamid = ?";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 for ($enrollmentLoop = 0; $enrollmentLoop < $numMonths; $enrollmentLoop++){
 	$thismonth = $nextmonth->format("m-d-Y");

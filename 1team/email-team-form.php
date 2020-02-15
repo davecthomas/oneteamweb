@@ -276,7 +276,7 @@ function getSelectList( srcList){
 	}
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? ORDER BY firstname;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));?>
 <div class="hideit" id="rosterdiv">
 <h4>Select From List</h4>

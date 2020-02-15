@@ -14,7 +14,7 @@ if (isset($_GET["teamid"])) {
 	$teamid = 0;
 }
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 // Team admin must get team id from session
 if ( isUser($session, Role_TeamAdmin)) {
@@ -50,7 +50,6 @@ if (isValidUserID( $userid)) {
 <td class="bold"><?php echo $teamterms["termuser"] ?> name:</td>
 <td><select name="id">
 <?php
-		$dbconn = getConnection();
 		$results = executeQuery($dbconn, $strSQL, $bError);
 		echo("<option value=\"0\" selected>Select member...</option>");
 		foreach($results as $row) {

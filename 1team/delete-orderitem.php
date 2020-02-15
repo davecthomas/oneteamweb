@@ -55,7 +55,7 @@ if (isset($_GET["whomode"])) {
 
 if (!$bError) {
 	$strSQL = "DELETE FROM orderitems WHERE id = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($delete_id, $teamid));
 
 	// Send them back

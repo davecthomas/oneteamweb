@@ -77,9 +77,7 @@ class RedemptionCard extends DbObject {
 	private function getRecord( $id){
 		// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 		$strSQL = "SELECT * FROM redemptioncards WHERE teamid = ? AND id = ?;";
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = ! ($pdostatement->execute(array($this->teamid, $id)));
-		$this->dbrecord = $pdostatement->fetch();
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), array($this->teamid, $id)));
 		if ($bError) return RC_PDO_Error;
 		else return $this->dbrecord ;
 	}
@@ -88,9 +86,7 @@ class RedemptionCard extends DbObject {
 	private function getRecordFromCode( $barcode){
 		// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 		$strSQL = "SELECT * FROM redemptioncards WHERE teamid = ? AND code = ?;";
-		$pdostatement = $this->dbh->prepare($strSQL);
-		$bError = ! ($pdostatement->execute(array($this->teamid, $barcode)));
-		$this->dbrecord = $pdostatement->fetch();
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), array($this->teamid, $barcode)));
 		if ($bError) return RC_PDO_Error;
 		else return $this->dbrecord ;
 	}
@@ -102,9 +98,8 @@ class RedemptionCard extends DbObject {
 			// by definition in order to guarantee the barcode doesn't change for an existing card
 			$strSQL = "UPDATE redemptioncards SET description = ?, numeventsremaining = ?, expires=?, facevalue=?, paymentmethod=?, userid=?, skuid=?,
 					createdate=?, amountpaid=? WHERE teamid = ? AND id = ?;";
-			$pdostatement = $this->dbh->prepare($strSQL);
-			$bError = ! ($pdostatement->execute(array($this->getDescription(), $this->getNumEventsRemaining(), $this->getExpires(), $this->getFaceValue(),
-				$this->getPaymentMethod(), $this->userid, $this->getSkuID(), $this->getCreateDate(), $this->getAmountPaid(), $this->teamid, $this->id)));
+			executeQuery( getConnectionFromSession($this->session),array($this->getDescription(), $this->getNumEventsRemaining(), $this->getExpires(), $this->getFaceValue(),
+				$this->getPaymentMethod(), $this->userid, $this->getSkuID(), $this->getCreateDate(), $this->getAmountPaid(), $this->teamid, $this->id));
 			if (!$bError) $this->isdirty = false;
 		}
 		if ($bError) return RC_PDO_Error;

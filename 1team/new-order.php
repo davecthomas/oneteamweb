@@ -110,7 +110,7 @@ $discount = 0.00;
 
 
 if ( !$bError) {
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	if (is_null($duedate)) {
 		$strSQL = "INSERT INTO orders VALUES (DEFAULT, ?, ?, ?, NULL, ?, ?, ?) RETURNING id;";

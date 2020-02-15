@@ -47,7 +47,7 @@ if (!$bError) {
 
 
 	$strSQL = "INSERT INTO customlistdata VALUES (DEFAULT, ?, ?, ?, ? );";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($customlistid, $listitemname, $listitemorder, $teamid));
 
 	redirect("edit-custom-list-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&id=" . $customlistid . "&done=1");

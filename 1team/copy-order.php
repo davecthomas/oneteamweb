@@ -89,7 +89,7 @@ if (isset($_POST["isrefunded"])) {
 
 
 $discount = 0.00;
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $orderid = array();
 if ( !$bError) {
 	if (is_null($duedate)) {

@@ -111,7 +111,7 @@ $discount = 0.00;
 
 
 if ( !$bError) {
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	if (is_null($duedate)) {
 		$strSQL = "UPDATE orders set orderdate = ?, duedate = NULL, discount = ?, ispaid = ?, paymentmethod = ? where teamid = ? and userid = ? and id = ?;";

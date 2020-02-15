@@ -26,7 +26,7 @@ if (isset($_GET["id"])) {
 }
 
 $strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? AND id = ?;";
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $paymenttypeResults = executeQuery($dbconn, $strSQL, $bError, array($teamid, $paymenttypeid));
 
 if (count($paymenttypeResults) > 0) { ?>

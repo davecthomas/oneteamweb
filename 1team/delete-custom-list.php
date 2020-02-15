@@ -34,7 +34,7 @@ if (isset($_GET["id"])) {
 if ($bError != true) {
 	// Find out if this custom list is in use anywhere. If so, fail the delete
 	$strSQL = "SELECT name FROM customfields WHERE customlistid = ? AND teamid = ?;";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	$bError = false;
 	$customfieldsResults = executeQuery($dbconn, $strSQL, $bError, array($customlistid, $teamid));
 	if (count($customfieldsResults) > 0) {

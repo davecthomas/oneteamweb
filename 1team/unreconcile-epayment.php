@@ -1,4 +1,4 @@
-<?php   
+<?php
 include('utils.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
@@ -14,11 +14,11 @@ redirectToLoginIfNotAdmin( $session);
 
 $bError = false;
 
-// teamid depends on who is calling 
+// teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
-	} 
+	}
 } else {
 	if (isset($_REQUEST["teamid"])){
 		$teamid = $_REQUEST["teamid"];
@@ -35,29 +35,23 @@ if (isset($_REQUEST["id"])) {
 	$err = "pid";
 }
 
-
-  
-
 // Verify this epayment exists
 if (!$bError) {
 	$strSQL = "SELECT * from epayments WHERE id = ? AND teamid = ?";
-	$pdostatement = $dbh->prepare($strSQL);
-	if (!$pdostatement->execute(array($epaymentid, $teamid))){
-		$bError = true;
+	$resultsEpayments = executeQuery( getConnectionFromSession($session), $strSQL, $bError, array($epaymentid, $teamid));
+	if ($bError) {
 		$err = "epn";
 	} else {
-		$resultsEpayments = $pdostatement->fetchAll();
 		if (count($resultsEpayments) != 1){
 			$bError = true;
 			$err = "pnf";
 		}
-	}	
+	}
 }
 
 if (!$bError) {
 	$strSQL = "UPDATE epayments SET reconciled = FALSE WHERE id = ? AND teamid = ?;";
-	$pdostatement = $dbh->prepare($strSQL);
-	$bError = ! $pdostatement->execute(array($epaymentid, $teamid));
+	executeQuery( getConnectionFromSession($session), $strSQL, $bError, array($epaymentid, $teamid));
 	$err = "s";
 }
 if (!$bError){

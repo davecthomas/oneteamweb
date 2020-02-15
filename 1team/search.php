@@ -49,7 +49,7 @@ if (isset($_REQUEST["filter"])) {
 	$filterRequestSQL = "";
 }
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 
 if (isUser( $session, Role_ApplicationAdmin) ) {
 	$strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') ORDER BY " . $sortRequest .";";

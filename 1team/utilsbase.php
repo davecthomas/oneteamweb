@@ -209,8 +209,7 @@ function canIViewThisUser( $session, $id){
 
 		// See if this user is on my team
 		$strSQL = "SELECT id FROM users WHERE id = ? and teamid = ?;";
-		$dbconn = getConnection();
-		$results = executeQuery($dbconn, $strSQL, $bError, array($id, $session["teamid"]));
+		$results = executeQuery( getConnectionFromSession($session), $strSQL, $bError, array($id, $session["teamid"]));
 		if (count($results) == 1) return true;
 		else return false;
 
@@ -278,7 +277,7 @@ function executeQueryFetchColumn($dbconn, $sql, &$bError = false, $array_params 
 	return $item;
 }
 
-function getDBH($session = 0){
+function getConnectionFromSession($session = 0){
 	if ($session == 0){
 		return getConnection();
 	} else {

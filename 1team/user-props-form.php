@@ -66,7 +66,7 @@ if (isUser( $session, Role_ApplicationAdmin) ) { ?>
 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 
-$dbconn = getConnection();
+$dbconn = getConnectionFromSession($session);
 $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 if (!isset($userprops["userid"])) {

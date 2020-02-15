@@ -56,7 +56,7 @@ $disablenextyearlink = ($paymentyear+1 > (int)date("Y"));
 
 if (!$bError){
 	$teamname = getTeamName($teamid, $dbconn);
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 
 	// All new orderitems
 	if ($programid != Program_Undefined){

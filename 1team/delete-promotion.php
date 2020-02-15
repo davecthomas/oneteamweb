@@ -50,7 +50,7 @@ if ( isset($_GET["pagemode"])) {
 
 if (!$bError) {
 	$strSQL = "DELETE FROM promotions WHERE memberid = ? AND id = ? AND teamid = ?";
-	$dbconn = getConnection();
+	$dbconn = getConnectionFromSession($session);
 	executeQuery($dbconn, $strSQL, $bError, array($memberid, $promotionid, $teamid ));
 	redirect("include-promotions.php?id=" . $memberid . "&pagemode=" . $pagemode . "&whomode=user&teamid=" . $teamid . buildRequiredParamsConcat($session) );
 } else {
