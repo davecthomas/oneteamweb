@@ -250,7 +250,6 @@ define("RC_LogAttendanceUnsuccessful",RC_Success-24);		//-23     Error - LogAtte
 define("RC_EmailFailed",			RC_Success-25);		// -24	Error sending email
 define("RC_EmailAddrInvalid",		RC_Success-26);		// -25	Error sending email - bad address
 define("RC_SessionCleanupFail",	RC_Success-27);		// -26	Error deleting stale sessions
-define("RC_PDO_Error",	RC_Success-28);		// -27	Generic PDO failure
 //
 // Human-readable error codes - TO DO - get rid of these and replace with numeric codes that tranlsate in the script to error strings
 define("NotFound", "Object not found");

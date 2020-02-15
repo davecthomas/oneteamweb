@@ -21,9 +21,8 @@ if ((isset($_POST['gotourl'])) && (is_url($_POST["gotourl"]))) {
 // Only let active members on active teams login. Get the team status to push the user to license screen if they have not accepted license yet.
 //$strSQL = "SELECT teamaccountinfo.status as teamstatus, users.teamid as team_id, users.id as userid, users.* FROM users, useraccountinfo, teamaccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND teamaccountinfo.teamid = users.teamid and useraccountinfo.status = " . UserAccountStatus_Active . " AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . " AND login = ?;";
 $strSQL = "SELECT users.teamid as team_id, users.id as userid, users.*, teamaccountinfo.status as teamstatus FROM useraccountinfo, users LEFT OUTER JOIN teamaccountinfo ON (teamaccountinfo.teamid = users.teamid AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . ") WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND login = ?;";
-$dbconn = getConnectionFromSession($session);
+$dbconn = getConnection();
 $loginResults = executeQuery($dbconn, $strSQL, $bError, array($formLogin));
-echo "$loginResults".$loginResults;
 
 $rowCount = count( $loginResults);
 if ($rowCount != 1) {
