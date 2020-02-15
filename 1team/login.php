@@ -23,6 +23,7 @@ if ((isset($_POST['gotourl'])) && (is_url($_POST["gotourl"]))) {
 $strSQL = "SELECT users.teamid as team_id, users.id as userid, users.*, teamaccountinfo.status as teamstatus FROM useraccountinfo, users LEFT OUTER JOIN teamaccountinfo ON (teamaccountinfo.teamid = users.teamid AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . ") WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND login = ?;";
 $dbconn = getConnectionFromSession($session);
 $loginResults = executeQuery($dbconn, $strSQL, $bError, array($formLogin));
+echo "$loginResults".$loginResults;
 
 $rowCount = count( $loginResults);
 if ($rowCount != 1) {
@@ -30,11 +31,13 @@ if ($rowCount != 1) {
 	redirect("login-form.php?e=".RC_LoginFailure);
 
 } else {
+	echo "else";
 	// Pull out the password and salt from the db
 	$salt = $loginResults[0]["salt"];
 	$passwordenc_db = $loginResults[0]["passwd"];
 	// Get hashed version with salt
 	$passwordencsalted_form = generateHash($formPassword, $salt);
+	echo "$passwordencsalted_form".$passwordencsalted_form;
 	// Remove salt
 	$passwordenc_nosalt_form = substr($passwordencsalted_form, SALT_LENGTH);
 	// Chop down to PASSWORD_LENGTH

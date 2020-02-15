@@ -21,11 +21,15 @@ class DbObject {
 	protected $dberrinfo;
 
 	function __construct( $session, $id = DbObject::DbID_Undefined) {
+		echo "7.10";
 		$this->isdirty = false;
 		$this->session = $session;
+		echo "7.11";
+
 		$this->dbconn = getConnectionFromSession($session);
 		$this->teamid = $session["teamid"];
 		$this->id = $id;
+		echo "7.12";
 	}
 
 	function dump(){

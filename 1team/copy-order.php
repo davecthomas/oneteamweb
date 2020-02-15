@@ -110,7 +110,7 @@ if ( !$bError) {
 
 			// get the programid and numclassesfrom the sku, for each orderitem in the order
 			$strSQL = "SELECT programid, numevents from skus where id = ? and teamid = ?";
-			$resultsSku = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid)));
+			$resultsSku = executeQuery($dbconn, $strSQL, $bError, array($skuid, $teamid));
 
 			$numSkus = count($resultsSku );
 			if ($numSkus == 1) {

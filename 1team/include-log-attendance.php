@@ -21,7 +21,7 @@ if ((! isset($attendanceDate)) || (! isset($eventid)) ||(! isset($teamid)) ||(! 
 	} else {
 		// Make sure this user exists
 		$strSQL = "SELECT users.firstname, users.lastname, users.roleid, users.id AS userid, users.useraccountinfo, useraccountinfo.*, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
-		$userResults = executeQuery($dbconn, $strSQL, $bError, array($memberID, $teamid)));
+		$userResults = executeQuery($dbconn, $strSQL, $bError, array($memberID, $teamid));
 
 		if ((count($userResults) == 1) && (!$bError)) {
 

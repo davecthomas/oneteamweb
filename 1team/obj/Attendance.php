@@ -53,11 +53,11 @@ class Attendance extends DbObject {
 	function commit(){
 		if ($this->isdirty){
 			$strSQL = "UPDATE attendance set memberid = ?, attendancedate = ?, eventid = ?, type = ? WHERE teamid = ? AND id = ?;";
-			executeQuery($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->type, $this->teamid, $this->id)));
+			executeQuery($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->type, $this->teamid, $this->id));
 			if (!$bError) $this->isdirty = false;
 		} else if ($this->id == DbObject::DbID_Undefined){
 			$strSQL = "INSERT INTO attendance VALUES(?, ?, ?, DEFAULT, ?, ?) RETURNING id;";
-			$this->id = executeQueryFetchColumn($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type)));
+			$this->id = executeQueryFetchColumn($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type));
 			if ($bError) $this->id = null;
 		}
 	}

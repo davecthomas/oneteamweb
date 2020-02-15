@@ -296,10 +296,11 @@ function getConnection(){
 		$cleardb_username = $cleardb_url["user"];
 		$cleardb_password = $cleardb_url["pass"];
 		$cleardb_db       = substr($cleardb_url["path"],1);
+		echo($cleardb_server."; dbname=".$cleardb_db." ".$cleardb_username." ".$cleardb_password);
     $pdo = new PDO("mysql:host=".$cleardb_server."; dbname=".$cleardb_db, $cleardb_username, $cleardb_password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	} catch (PDOException $e) {
-	    print "Error!: " . $e->getMessage() . "<br/>";
+	    print( "Connect error!: " . $e->getMessage() . "<br/>");
 	}
 	return $pdo;
 }

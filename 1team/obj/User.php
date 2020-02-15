@@ -58,7 +58,7 @@ class User extends DbObject {
 			RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id
 			WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 
-		$this->dbrecord = executeQuery( getConnectionFromSession($this->session),array($this->id, $this->teamid)));
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session),array($this->id, $this->teamid));
 		if ($bError) return RC_PDO_Error;
 	}
 
@@ -67,7 +67,7 @@ class User extends DbObject {
 			$strSQL = "UPDATE users set firstname = ?, lastname = ?, email = ?, smsphone = ?, smsphonecarrier = ?
 					WHERE teamid = ? AND id = ?;";
 			executeQuery( getConnectionFromSession($this->session),array($this->firstname, $this->lastname, $this->email, $this->smsphone,
-					$this->smsphonecarrier, $this->teamid, $this->id)));
+					$this->smsphonecarrier, $this->teamid, $this->id));
 			if (!$bError) $this->dirty = false;
 		}
 	}
