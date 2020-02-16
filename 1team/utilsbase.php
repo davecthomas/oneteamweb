@@ -55,8 +55,8 @@ function isUser($session, $roleid){
 
 // Does this role contain that role. In other words, does one role contain another.
 // For example, if a user's role is 5, that contains role 4 and 1
-function doesRoleContain( $roleid, $roleTest){
-	return ($roleid & $roleTest);
+function doesRoleContain( $role, $roleTest){
+	return ($role & $roleTest);
 }
 
 // Many features require a team or application admin
@@ -128,7 +128,7 @@ function isSessionKeyValid( $sessionkey ) {
 
 // redirect to url
 function redirect( $url) {
-	Header("Location: " . $url);
+	Header("Location: http://" . $url);
 }
 
 // Build the page title for the current page
@@ -262,18 +262,40 @@ function getTeamID($session){
 }
 
 // On fail return array(RC_PDO_Error)
+// Updates return count of update rows
 function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
-	$statement = $dbconn->prepare($sql);
-  $bError = ! $statement->execute($array_params);
-	if (!$bError) $items = $statement->fetchAll();
+	try {
+		$statement = $dbconn->prepare($sql);
+	  $bError = ! $statement->execute($array_params);
+		if (!$bError) {
+			if (strcasecmp(explode(' ',trim($sql))[0], "UPDATE") != 0){
+				$items = $statement->fetchAll();
+			}
+			else {
+				$items = $statement->rowCount();
+			}
+		}
+		else {
+			$items = null;
+		}
+	} catch (Exception $e) {
+		$bError = true;
+		print($e->getMessage());
+	}
 	return $items;
 }
 
 // On fail return array(RC_PDO_Error)
 function executeQueryFetchColumn($dbconn, $sql, &$bError = false, $array_params = array()){
-	$statement = $dbconn->prepare($sql);
-  $bError = ! $statement->execute($array_params);
-  if (!$bError) $item = $statement->fetchColumn();
+	try {
+		$statement = $dbconn->prepare($sql);
+	  $bError = ! $statement->execute($array_params);
+	  if (!$bError) $item = $statement->fetchColumn();
+		else $items = null;
+	} catch (Exception $e) {
+		$bError = true;
+		print($e->getMessage());
+	}
 	return $item;
 }
 

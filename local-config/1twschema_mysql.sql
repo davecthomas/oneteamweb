@@ -53,7 +53,7 @@ LOCK TABLES `attendanceconsoles` WRITE;
 
 INSERT INTO `attendanceconsoles` (`id`, `name`, `ip`, `teamid`)
 VALUES
-	(1,'Gym laptop','192.168.0.14',1);
+	(1,'Dev laptop','127.0.0.1',1);
 
 /*!40000 ALTER TABLE `attendanceconsoles` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -628,6 +628,7 @@ CREATE TABLE `sessions` (
   `authsmsretries` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
 
 # Dump of table skus
 # ------------------------------------------------------------

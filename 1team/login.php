@@ -23,20 +23,17 @@ if ((isset($_POST['gotourl'])) && (is_url($_POST["gotourl"]))) {
 $strSQL = "SELECT users.teamid as team_id, users.id as userid, users.*, teamaccountinfo.status as teamstatus FROM useraccountinfo, users LEFT OUTER JOIN teamaccountinfo ON (teamaccountinfo.teamid = users.teamid AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . ") WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND login = ?;";
 $dbconn = getConnection();
 $loginResults = executeQuery($dbconn, $strSQL, $bError, array($formLogin));
-
 $rowCount = count( $loginResults);
 if ($rowCount != 1) {
 	$bError = true;
 	redirect("login-form.php?e=".RC_LoginFailure);
 
 } else {
-	echo "else";
 	// Pull out the password and salt from the db
 	$salt = $loginResults[0]["salt"];
 	$passwordenc_db = $loginResults[0]["passwd"];
 	// Get hashed version with salt
 	$passwordencsalted_form = generateHash($formPassword, $salt);
-	echo "$passwordencsalted_form".$passwordencsalted_form;
 	// Remove salt
 	$passwordenc_nosalt_form = substr($passwordencsalted_form, SALT_LENGTH);
 	// Chop down to PASSWORD_LENGTH
@@ -91,7 +88,6 @@ if ($rowCount != 1) {
 							redirect($formURL."?sessionkey=" . $sessionkey . "&userid=" . $userid);
 						} else {
 							// Finally: There's no place like home. Click your heels, Dorothy!
-//	echo ("<BR>remote=".$_SERVER["REMOTE_HOST"]." last IP=".$loginResults[0]["ipaddr"]);
 							redirect("home.php?sessionkey=" . $sessionkey . "&userid=" . $userid);
 						}
 					}
@@ -114,6 +110,7 @@ function createSession( $userid, $roleid, $dbconn = null){
 
 	// Generate a session key based on ipaddr and userid
 	$ipaddr = (string) $_SERVER["REMOTE_ADDR"];
+
 	if (($sessionkey = createSessionKey( $ipaddr, $userid)) == RC_SessionKey_Invalid) {
 		return RC_SessionKey_Invalid;		// failure prevents login
 	}
@@ -142,13 +139,12 @@ function saveSession( $sessionkey, $userid, $ipaddr, $dbconn = null) {
 	$userloginResults = executeQuery($dbconn, $strSQL, $bError, array($userid));
 
 	$rowCount = count( $userloginResults);
-
 	// Save in temporary variables in the format friendly for a SQL insert/update statement
 	if ( $rowCount == 1) {
 		$login = $userloginResults[0]["login"];
 		$fullname = $userloginResults[0]["firstname"] . " " . $userloginResults[0][ "lastname"];
 		$teamid = ($userloginResults[0]["teamid"] == NULL) ? "NULL" : $userloginResults[0]["teamid"];
-		$isbillable = ($userloginResults[0][ "isbillable"]) ? "TRUE" : "FALSE";
+		$isbillable = ($userloginResults[0][ "isbillable"]) ? 1 : 0;
 		$status = (int) $userloginResults[0][ "status"];
 		$roleid = $userloginResults[0]["roleid"];
 
@@ -181,13 +177,13 @@ function saveSession( $sessionkey, $userid, $ipaddr, $dbconn = null) {
 
 	// If no results, create a session record
 	if ($rowCountSessions == 0) {
-		$strSQL = "INSERT INTO sessions VALUES (DEFAULT, ?, ?, ?, current_timestamp, (current_timestamp  + cast('" . $timeExpireSQL . "' as interval)), ?, ?, ?, ?, ?, ?, 0, 0);";
+		$strSQL = "INSERT INTO sessions VALUES (DEFAULT, ?, ?, ?, current_timestamp, (current_timestamp  + interval " . $timeExpireSQL . "), ?, ?, ?, ?, ?, ?, 0, 0);";
 		executeQuery($dbconn, $strSQL, $bError, array($ipaddr, $userid, $sessionkey, $login, $roleid, $fullname, $teamid, $isbillable, $status));
 
 	// Else get the session results
 	} else {
 		// Update the record. It's important to update all of this stuff in case a value changed since the last session update (e.g., "status")
-		$strSQL = "UPDATE sessions SET timecreated = current_timestamp, timeexpires = (current_timestamp  + cast('" . $timeExpireSQL . "' as interval)), login = ?, roleid = ?, fullname = ?, teamid = ?, isbillable = ?, status = ?, authsms = 0, authsmsretries = 0 WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
+		$strSQL = "UPDATE sessions SET timecreated = current_timestamp, timeexpires = (current_timestamp  + interval " . $timeExpireSQL . "), login = ?, roleid = ?, fullname = ?, teamid = ?, isbillable = ?, status = ?, authsms = 0, authsmsretries = 0 WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
 		executeQuery($dbconn, $strSQL, $bError, array($login, $roleid, $fullname, $teamid, $isbillable, $status, $ipaddr, $userid, $teamid));
 	}
 
