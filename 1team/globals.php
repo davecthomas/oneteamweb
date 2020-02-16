@@ -36,7 +36,7 @@ define("defaultterm_class", "Class");
 define("defaultterm_appadmin", "Application Administrator");
 
 // Note: this could change, so stay on top of it. It is used to visually distinguish staging vs. production
-define("stagingserveraddr",  "192.168.0.10");
+define("stagingserveraddr",  "localhost:8000");
 define("productionserveraddr",  "192.168.0.8");
 
 // Dojo dijit style

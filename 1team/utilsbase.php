@@ -128,7 +128,10 @@ function isSessionKeyValid( $sessionkey ) {
 
 // redirect to url
 function redirect( $url) {
-	Header("Location: http://" . $url);
+	$actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	$parseurl_array = parse_url($actual_link);
+	$path_array = explode('/', $parseurl_array['path']);
+	Header("Location: {$parseurl_array['scheme']}://{$parseurl_array['host']}:{$parseurl_array['port']}/{$path_array[1]}/{$url}");
 }
 
 // Build the page title for the current page
