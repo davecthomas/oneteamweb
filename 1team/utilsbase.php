@@ -112,8 +112,31 @@ function redirectToLogin(){
 function redirectToReferrer($path_add = ""){
 	$referrer = $_SERVER['HTTP_REFERER'];
 	$parseurl_array = parse_url($referrer);
+	$path = implode("",array_slice(explode('/', $parseurl_array['path']), 2));
+	if (array_key_exists( "query", $parseurl_array)){
+		if (strlen($parseurl_array["query"])>0)	{
+			$query = "?".$parseurl_array["query"];
+		} else {
+			$query = "";
+		}
+	}
+	if (array_key_exists( "fragment", $parseurl_array)){
+		if (strlen($parseurl_array["fragment"])>0)	{
+			$fragment = "#".$parseurl_array["fragment"];
+		} else {
+			$fragment = "";
+		}
+	}
+	// var_dump(array($referrer, $path, $query, $path_add));
+	redirect($path.$query.$path_add.$fragment);
+}
+
+// redirect to url
+function redirect( $url) {
+	$actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	$parseurl_array = parse_url($actual_link);
 	$path_array = explode('/', $parseurl_array['path']);
-	redirect($parseurl_array['path'].$path_add);
+	Header("Location: {$parseurl_array['scheme']}://{$parseurl_array['host']}:{$parseurl_array['port']}/{$path_array[1]}/{$url}");
 }
 
 // assure the session key is known to our DB
@@ -131,14 +154,6 @@ function isSessionKeyValid( $sessionkey ) {
 	} else {
 		return false;
 	}
-}
-
-// redirect to url
-function redirect( $url) {
-	$actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-	$parseurl_array = parse_url($actual_link);
-	$path_array = explode('/', $parseurl_array['path']);
-	Header("Location: {$parseurl_array['scheme']}://{$parseurl_array['host']}:{$parseurl_array['port']}/{$path_array[1]}/{$url}");
 }
 
 // Build the page title for the current page
