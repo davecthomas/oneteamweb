@@ -109,8 +109,6 @@ if ((isset($_POST["url"])) && (is_url($_POST["url"]))){
 
 // Time to update the images table
 if (!$bError) {
-
-
 	// Check if this is an INSERT or UPDATE
 	$strSQL = "SELECT * FROM images WHERE type = ? and objid = ? and teamid = ?;";
 	$dbconn = getConnectionFromSession($session);
@@ -130,12 +128,13 @@ if (!$bError) {
 			if ($bError) $errno = "Update";
 		// Image for this object does not exist, do an insert
 		} else {
+
 			$strSQL = "INSERT into images VALUES( DEFAULT, ?, ?, ?, ?, ?)";
 			executeQuery($dbconn, $strSQL, $bError, array($imageurl, $filename, $teamid, $type, $objid));
 			if ($bError) $errno = "Insert";
 
 			// Get the image id
-			$strSQL = "SELECT id FROM images WHERE type = ? AND objid = ? AND teamid = ?;";
+			$strSQL = "SELECT LAST_INSERT_ID();";
 			$imageid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($type, $objid, $teamid));
 			if ($bError)
 				$errno = "GetNew";
@@ -167,11 +166,11 @@ if (!$bError) {
 			}
 		}
 		if (!$bError)
-			redirect( $_SERVER['HTTP_REFERER'] . "&done=1");
+			redirectToReferrer( "&done=1");
 
 	}
 }
 
 if ($bError) {
-	redirect($_SERVER['HTTP_REFERER'] . "&err=" . urlencode($errno));
+	redirectToReferrer( "&err=" . urlencode($errno));
 } ?>

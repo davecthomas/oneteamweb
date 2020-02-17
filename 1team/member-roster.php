@@ -56,9 +56,8 @@ if (!$bError) {
 	}
 
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? " . $filterRequestSQL . " ORDER BY " . $sortRequest . ";";
-
-  $dbconn = getConnectionFromSession($session);
-  $results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+	// var_dump(array($strSQL, $teamid));
+	$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	// Now that we've done the query, we need to strip the secondary sort column off.
 	$sortRequest = substr($sortRequest, 0, strpos($sortRequest, ",")); ?>
@@ -69,7 +68,7 @@ if (!$bError) {
 
 		// While it may seem inefficient to query the count of teams every time this page is rendered, this only affects the app admin (me), so tough noogies, Dave.
 		$strSQL2 = "SELECT COUNT(*) AS ROW_COUNT FROM teams;";
-		$numteams = executeQuery($dbconn, $strSQL, $bError);
+		$numteams = executeQuery($dbconn, $strSQL, $bError);?>
 
 <div class="navtop">
 <ul id="nav">

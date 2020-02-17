@@ -1,8 +1,6 @@
 <?php
 $title = "Home";
 include('header.php');
-
-echo("welcome home");
 $username = getCurrentUserName($session);
 $userid = getSessionUserID($session);
 $canlogattendance = false;

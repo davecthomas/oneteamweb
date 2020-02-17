@@ -106,7 +106,14 @@ function redirectToLoginIfNot($session, $roleid){
 
 // Save current page and redirect to login. Current page is saved to attempt redirect after successful login
 function redirectToLogin(){
-	Header("Location: /1team/login-form.php?login-redirect=" . $_SERVER["SCRIPT_NAME"]);
+	redirect("login-form.php?login-redirect=" . $_SERVER["SCRIPT_NAME"]);
+}
+
+function redirectToReferrer($path_add = ""){
+	$referrer = $_SERVER['HTTP_REFERER'];
+	$parseurl_array = parse_url($referrer);
+	$path_array = explode('/', $parseurl_array['path']);
+	redirect($parseurl_array['path'].$path_add);
 }
 
 // assure the session key is known to our DB
@@ -283,6 +290,7 @@ function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
 		}
 	} catch (Exception $e) {
 		$bError = true;
+		var_dump(array($sql,$array_params));
 		print($e->getMessage());
 	}
 	return $items;
@@ -361,7 +369,7 @@ function startSession( $sessionkey, $userid ){
 	}
 
 	// Before we return the session, run one more query through to see if the session should be expired
-	if (isSessionExpired($sessionResults[0]["timeexpires"])) {
+	if (calculateCurrentTimeIsLaterThan($sessionResults[0]["timeexpires"])) {
 		return RC_SessionExpired;
 	} else {
 		$session = array();
@@ -406,8 +414,8 @@ function startSession( $sessionkey, $userid ){
 }
 
 // See if the session is expired
-function isSessionExpired2($session){
-	$dbconn = getConnection();
+// TO DO - never used this and probably should. Reworked it for MySQL
+function isSessionExpired($session){
 	$roleid = $session["roleid"];
 	if (doesRoleContain($roleid, Role_Member)) {
 		$timeExpireSQL = "1 hours";
@@ -417,12 +425,9 @@ function isSessionExpired2($session){
 		$timeExpireSQL = "1 month";
 	}
 
-	$strSQL = "select (select timeexpires from sessions where userid = " . $session["userid"] . " and ipaddr = '" . $session["ipaddr"] . ")  + cast('" . $timeExpireSQL . "' as interval) - current_date as expired;";
-	$dbconn = getConnection();
-	$teamResults = executeQuery($dbconn, $strSQL, $bError);
-
-	$expired = $results[0]["expired"];
-	echo "expires= " . $expired;
+	$strSQL = "select (select timeexpires from sessions where userid = " . $session["userid"] . " and ipaddr = '" . $session["ipaddr"] . ")  < interval " . $timeExpireSQL . " + current_date as expired;";
+	$dbconn = getConnectionFromSession($session);
+	$expired = executeQueryFetchColumn($dbconn, $strSQL, $bError);
 	if ($expired<1) return true;
 	else return false;
 }
@@ -443,19 +448,21 @@ function isValidSessionKey( $userid, $sessionkey ){
 	}
 
 	// Make sure the session is in the sessions table
-	$strSQL = "SELECT timeexpires FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
+	$strSQL = "SELECT * FROM sessions WHERE sessionkey = ? AND userid = ?;";
 	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL, $bError);
+	$rs = executeQuery($dbconn, $strSQL, $bError, array($sessionkey, $userid));
+	if ($bError) return false;
+
 	// If no results, create a session record
 	if (count($rs) == 0) {
 		return false;
 	}
 	// if Session is expired, delete the row and return false
-	if (isSessionExpired($rs["timeexpires"])) {
+	if (calculateCurrentTimeIsLaterThan($rs[0]["timeexpires"])) {
 		// delete the session row
-		$strSQL = "DELETE FROM sessions WHERE sessionkey = '" . $sessionkey . "' AND userid = " . $userid . ";";
+		$strSQL = "DELETE FROM sessions WHERE sessionkey = ? AND userid = ?;";
 		// ignore the rc of odbc_exec, since we are returning false anyway
-		$rs = executeQuery($dbconn, $strSQL, $bError);
+		$rs = executeQuery($dbconn, $strSQL, $bError, array($sessionkey, $userid));
 		return false;
 	}
 
@@ -477,16 +484,17 @@ function trimSessionKey( $sessionKey){
 	return substr($sessionKey, 0, SESSIONKEY_LENGTH);
 }
 
-// returns true if session has expired, else false
-// This should only be called on startSession. The idea is that a false return will cause logout, deletion of session record, and redirect to login page
-function isSessionExpired( $timeexpires){
-	$strSQL = "select age(current_timestamp, '" . $timeexpires . "');";
-	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL, $bError);
-	if (count($rs)>0) {
-		$age = $rs["age"];
+// returns true if current_timestamp is later than expiration date, else false
+// This doesn't care about session. It's just intended to calculate a datetime difference
+function calculateCurrentTimeIsLaterThan( $timeexpires, $dbconn = null){
+	// For mysql: $strSQL = "select TIMESTAMPDIFF(MINUTE,CURRENT_TIMESTAMP,'" . $timeexpires . "') AS age;
+	$strSQL = "select TIMESTAMPDIFF(MINUTE,CURRENT_TIMESTAMP,'" . $timeexpires . "') < 0";
+	// For PostGreSQL: $strSQL = "select age(current_timestamp, '" . $timeexpires . "');";
+	if ($dbconn == null) $dbconn = getConnection();
+	$is_later = executeQueryFetchColumn($dbconn, $strSQL, $bError);
+	if (! $bError) {
 		// If the result is positive, the session is expired
-		return ((bool) ($age > 0));
+		return ((bool) $is_later);
 	} else {
 		return true;
 	}
@@ -499,21 +507,13 @@ function getSessionTimeRemaining( $session){
 	if (is_null($timeexpires)) {
 		return "";
 	}
-	$strSQL = "select age('" . $timeexpires . "', current_timestamp);";
-	$dbconn = getConnection();
-	$rs = executeQuery($dbconn, $strSQL, $bError);
-	if (count($rs)>0) {
-		$age = $rs["age"];
-		// If the result is positive, the session is expired
-		$aage = explode(":", $age);
-		if ($aage[0] == "00") {
-			$aage[0] = "";
-		} else if ($aage[0] == "01") {
-			$aage[0] = "1 hour";
-		} else {
-			$aage[0] = $aage[0] . " hours";
-		}
-		return $aage[0] . " " . $aage[1] . " minutes.";
+	// mysql $strSQL = "SELECT CONCAT(FLOOR(HOUR(TIMEDIFF(current_timestamp,?)) / 24), ' DAYS ', MOD(HOUR(TIMEDIFF(current_timestamp,?)), 24), ' HOURS ',MINUTE(TIMEDIFF(current_timestamp,?)), ' MINUTES ') AS time_remaining;"
+	$strSQL = "SELECT CONCAT(FLOOR(HOUR(TIMEDIFF(current_timestamp,?)) / 24), ' DAYS ', MOD(HOUR(TIMEDIFF(current_timestamp,?)), 24), ' HOURS ',MINUTE(TIMEDIFF(current_timestamp,?)), ' MINUTES ') AS time_remaining;";
+	// postgreSWL $strSQL = "select age('" . $timeexpires . "', current_timestamp);";
+	$dbconn = getConnectionFromSession($session);
+	$time_remaining_str = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($timeexpires, $timeexpires, $timeexpires));
+	if (! $bError){
+		return $time_remaining_str;
 	} else {
 		return "";
 	}
@@ -806,6 +806,9 @@ function isProductionServer(){
 // Determine if (we are running on the staging server (affects CSS render of background reminder text)
 function isStagingServer(){
 	if (strcasecmp($_SERVER['HTTP_HOST'], stagingserveraddr) == 0) {
+		ini_set('display_errors', 1);
+		ini_set('display_startup_errors', 1);
+		error_reporting(E_ALL);
 		return true;
 	} else {
 		return false;
