@@ -51,11 +51,11 @@ if (!$bError) {
 		executeQuery($dbconn, $strSQL, $bError, array(TeamAccountStatus_Active, $teamid));
 		redirect("home.php?".returnRequiredParams($session));
 	} else {
-		redirect($_SERVER['HTTP_REFERER']."&err=s");
+		redirectToReferrer( "&err=s");
 	}
 }
 
 if ($bError) {
-	redirect($_SERVER['HTTP_REFERER']."&err=".$errno);
+	redirectToReferrer( "&err=".$errno);
 }
  ?>

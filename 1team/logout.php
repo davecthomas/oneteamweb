@@ -10,7 +10,7 @@ if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = 
 	if (! isValidSession($session )){
 		redirect("default.php?rc=" . $session);
 	}
-	
+
 	deleteSession($session);
 	redirect("default.php?logout=1");
 }?>

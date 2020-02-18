@@ -50,8 +50,6 @@ if (isThisMe($session, $userid)) {
 	$thisIsMe = false;
 }
 
-
-
 // Only display prev/next for app admin, since this data spans teams
 if (isUser( $session, Role_ApplicationAdmin) ) { ?>
 <p></p>
@@ -65,11 +63,15 @@ if (isUser( $session, Role_ApplicationAdmin) ) { ?>
 }
 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
-
 $dbconn = getConnectionFromSession($session);
-$userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
-if (!isset($userprops["userid"])) {
+$userprops_records = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+$found = (count($userprops_records)>0);
+if ($found){
+	$userprops = $userprops_records[0];
+	$found = ($found && (isset($userprops["userid"])));
+}
+if (! $found){
 	echo '<p class="error">' . UserNotFound . '</p>';
 } else {
 	$roleid = $userprops["roleid"];
@@ -363,16 +365,17 @@ if (!isset($userprops["userid"])) {
 		if (! is_null($userprops["startdate"]) ) {
 			$datejoined = htmlspecialchars($userprops["startdate"]);
 			$startdate = $datejoined;
-			$timeIn = getMembershipDuration($userid, $dbconn);
+			$time_in_str = getMembershipDurationString($userid, $dbconn, $bError);
 		} else {
 			$datejoined = "";
-			$timeIn = 0;
-		}	// End: if there is a start date ?>
+			$time_in_str = "";
+		}	// End: if there is a start date
+		?>
 <td><input type="text" name="startdate" id="startdate" value="<?php echo $datejoined?>" <?php if ($canAdmin) echo 'dojoType="dijit.form.DateTextBox"';?> required="true" <?php echo $enableControl?>/>
 <?php
 		// Only display calculated time in membership if they are active members
 		if ((strlen($datejoined) > 0) && ($accountStatus == UserAccountStatus_Active) || (!doesRoleContain($roleid, Role_Member))) {
-			echo($timeIn . "\n");
+			echo($time_in_str);
 		} // End: if there is a date joined to display for active member?>
 </td>
 </tr>
@@ -537,6 +540,7 @@ if (!isset($userprops["userid"])) {
 						} else {
 							$strSQL = "SELECT " . $dcField . " FROM " . $dcObject . " WHERE userid = ?;";
 						}
+
 						$dcResult = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid));
 						// Assume we can't until condition proves we can
 						$displayCustomField = false;

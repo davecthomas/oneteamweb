@@ -15,15 +15,21 @@ if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) 
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 $dbconn = getConnectionFromSession($session);
 $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+if ((! is_array($teaminfo)) && ($teaminfo == RC_TeamID_Invalid)){
+	$teamname_str = "";
+	$teamname = "";
+} else {
+	$teamname = $teaminfo["teamname"];
+	$teamname_str = " with {$teamname}";
+}
 
-echo "<h3>" .$title . " of " . roleToStr($session["roleid"], $teamterms) . " " . $username . " with " . $teaminfo["teamname"] ."</h3>\n";
+echo "<h3>" .$title . " of " . roleToStr($session["roleid"], $teamterms) . " " . $username . $teamname_str ."</h3>\n";
 
 if (isset($userprops["id"])) {
 	$teamid = $userprops["teamid"];
 	$roleid = $userprops["roleid"];
 	$runningOnAdminConsole = (bool) (AttendanceConsole::isAttendanceConsole($session));
 	$isBillable = $userprops["isbillable"];
-	$teamname = $teaminfo["teamname"];
 	$fullname = $userprops["firstname"] . " " . $userprops["lastname"];
 
 	$accountStatus = $userprops["status"];
@@ -35,7 +41,19 @@ if (isset($userprops["id"])) {
 		$flagEmailMgmt = False;
 		// Figure out if their payment is late
 		// Get all unexpired orderitems, and their events
-		$strSQL = "SELECT programs.name as programname, skus.*, skus.name as skuname, events.id as eventid, events.name as eventname, orderitems.id as payid, orderitems.* FROM events INNER JOIN (programs INNER JOIN (users INNER JOIN (orderitems LEFT OUTER JOIN skus ON (skus.id = orderitems.skuid)) on users.id = orderitems.userid) on orderitems.programid = programs.id) on events.id = programs.eventid WHERE users.id = orderitems.userid AND userid = ? AND orderitems.teamid = ? and (paymentdate expires >= current_date) ORDER BY paymentdate DESC;";
+		$strSQL = <<<EOD
+SELECT programs.name as programname, skus.*, skus.name as skuname, events.id as eventid, events.name as eventname,
+orderitems.id as payid, orderitems.*
+FROM events INNER JOIN (
+	programs INNER JOIN (
+		users INNER JOIN (orderitems LEFT OUTER JOIN
+		skus ON (skus.id = orderitems.skuid))
+		on users.id = orderitems.userid)
+		on orderitems.programid = programs.id)
+		on events.id = programs.eventid
+		WHERE users.id = orderitems.userid AND userid = ? AND orderitems.teamid = ? and (paymentdate + expires >= current_date)
+		ORDER BY paymentdate DESC;
+EOD;
 		$paymentResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 
 		// If they have unexpired events, show attendance button, with event selector (only events they can record)
@@ -114,7 +132,7 @@ if (isset($userprops["id"])) {
 	}
 	// Conditionally display image
 	if ((!is_null($userprops["url"])) && (strlen($userprops["url"]) > 0)) {?>
-<img src="<?php echo $userprops["url"]?>" id="" border=0" alt="user">
+<img src="<?php echo $userprops["url"]?>" id="" border="0" alt="user">
 <?php
 	}
 ?>
@@ -234,8 +252,8 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 	} else {
 		$startdate =  date("m/d/Y");
 	}
-	$timeIn = getMembershipDuration($userid, $dbconn);?>
-<td  valign="top"><?php echo $startdate?> (<?php echo $timeIn ?>)</td>
+	$time_in_str = getMembershipDurationInMonths($userid, $dbconn, $bError);?>
+<td  valign="top"><?php echo $startdate?> (<?php echo $time_in_str ?>)</td>
 </tr>
 </table>
 </div>

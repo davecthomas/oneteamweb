@@ -71,7 +71,7 @@ $aTeamCost = array(0, 1.00, 2.50, 5.00, 10.00, 25.00, 50.00, 75.00, 100.00);
 
 $aTeamPlanDuration = array("undefined",  "Unlimited", "");
 
-define("ApplicationAdminEmail",  "coach@austinjiujitsu.com");
+define("ApplicationAdminEmail",  "seattlejits@gmail.com");
 
 // Declare our roles, since they are referenced everywhere
 // These represent bit fields that can be combined with binary operators, allowing a team admin to also be a coach, for example

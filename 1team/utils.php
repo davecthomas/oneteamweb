@@ -170,25 +170,32 @@ function datediff($interval, $datefrom, $dateto, $using_timestamps = false)
 
 // Get the date the next payment is due
 function getNextPaymentDueDate2($userid, $payid, $expires, $dbconn = null){
-	$strSQL = "select age(((select paymentdate from orderitems where userid = ? and id = ?) + '" . $expires . "'::interval), current_date);";
-
+	// $strSQL = "select age(((select paymentdate from orderitems where userid = ? and id = ?) + '" . $expires . "'::interval), current_date);";
+  $strSQL = "select (select paymentdate from orderitems where userid = ? and id = ?) + " . $expires . ";";
 	if ($dbconn == null) $dbconn = getConnection();
   return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $payid, $expires));
 }
 
 function dateDiffString($date1 , $date2, $dbconn = null){
-	$strSQL = "select age(?, ?)";
+  $diff_str = "";
+  // MySQL variant 	$strSQL = "select TIMESTAMPDIFF(DAY,?,?);";
+	// PostgreSQL $strSQL = "select age(?, ?)";
+  $strSQL = "select TIMESTAMPDIFF(DAY,?,?);";
 	if ($dbconn == null) $dbconn = getConnection();
-	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
-	if (strcmp($diff, "00:00:00") == 0) $diff = "0 days";
-	return $diff;
+	$diff_days = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
+	if (! $bError) $diff_str = "{$diff_days} days";
+	return $diff_str;
 }
 
 function dateDiffNumDays($date1 , $date2, $dbconn = null){
-	$strSQL = "select ?::date - ?::date;";
+  $diff_days = null;
+	// PostgreSQL $strSQL = "select ?::date - ?::date;";
+  // MySQL   $strSQL = "select TIMESTAMPDIFF(DAY,?,?);";
+  $strSQL = "select TIMESTAMPDIFF(DAY,?,?);";
   if ($dbconn == null) $dbconn = getConnection();
 	$diff = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
-	return $diff;
+  if (! $bError) $diff_days = $diff;
+	return $diff_days;
 }
 
 // Requires this sql installed:
@@ -215,10 +222,34 @@ function dateDiffNumMonths($date1 , $date2, $dbconn= null){
   if ($dbconn==null) $dbconn = getConnection();
 	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date1, $date2));
 }
-function getMembershipDuration( $id, $dbconn= null) {
-	$strSQL = "select age(current_date, (select startdate from users where id = ?))";
+
+function getMembershipDurationInMonths( $id, $dbconn= null, &$bError) {
+  // PostgreSQL variant $strSQL = "select age(current_date, (select startdate from users where id = ?))";
+  // MySQL variant 	$strSQL = "select TIMESTAMPDIFF(MONTH,(select startdate from users where id = 2), CURRENT_TIMESTAMP);";
+	$strSQL = "select TIMESTAMPDIFF(MONTH,(select startdate from users where id = ?), CURRENT_TIMESTAMP);";
   if ($dbconn==null) $dbconn = getConnection();
-	return executeQueryFetchColumn($dbconn, $strSQL, $bError);
+	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($id));
+}
+
+function getMembershipDurationString($id, $dbconn= null, &$bError){
+  $timeIn = getMembershipDurationInMonths($id, $dbconn, $bError);
+
+  $time_in_str = "";
+  if (! $bError){
+    if ($timeIn>11){
+      $time_in_years = intdiv($timeIn, 12);
+      $months_remaining = $timeIn%12;
+      $time_in_str = "{$time_in_years} years, ";
+    } else {
+      $months_remaining = $timeIn;
+    }
+    if ($months_remaining != 1){
+      $time_in_str .= "{$months_remaining} months";
+    } else {
+      $time_in_str .= "{$months_remaining} month";
+    }
+  }
+  return $time_in_str;
 }
 
 // Get the custom value from the recordset

@@ -367,12 +367,12 @@ div.push {
 	}
 
 	if (!$bError){
-		redirect($_SERVER["HTTP_REFERER"] . "&done=" . urlencode($returnString));
+		redirectToReferrer( "&done=" . urlencode($returnString));
 		ob_end_flush();
 	}
 }
 if ($bError) {
-	redirect($_SERVER["HTTP_REFERER"] . "&err=" . urlencode($returnErrString));
+	redirectToReferrer( "&err=" . urlencode($returnErrString));
 	ob_end_flush();
 }
 

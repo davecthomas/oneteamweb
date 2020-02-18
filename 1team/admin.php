@@ -1,5 +1,7 @@
 <?php
 // The title is set here and rendered in header.php
+// This page is used to run app admin commands on the DB using ?cmd=
+// Currently support cleaning out old sessions with ?cmd=sessclean
 $title= " Administer " ;
 include('header.php');
 $bError = false;
@@ -7,7 +9,7 @@ $bError = false;
 if (!isUser( $session, Role_ApplicationAdmin)){
 	$bError = true;
 	$err = "a";
-	redirect($_SERVER['HTTP_REFERER']."&err=".$err);
+	redirectToReferrer( "&err=".$err);
 }
 if (isset($_GET["cmd"])) {
 	$cmd = $_GET["cmd"];
@@ -29,7 +31,7 @@ if ($bError != true) {
 	}
 }
 if ($bError) {
-	redirect($_SERVER['HTTP_REFERER']."&err=".$err);
+	redirectToReferrer( "&err=".$err);
 } else {
 	echo "Success: ". $cmd.".";
 }

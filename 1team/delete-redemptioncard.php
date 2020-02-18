@@ -41,7 +41,7 @@ if ($bError != true) {
 		$strSQL = "DELETE FROM redemptioncards WHERE (expires < current_date OR numeventsremaining = 0) AND teamid = ?;";
 		executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	}
-	redirect($_SERVER["HTTP_REFERER"] . "&done=1");
+	redirectToReferrer( "&done=1");
 } else {
-	redirect($_SERVER["HTTP_REFERER"]. "&err=1");
+	redirectToReferrer(  "&err=1");
 }

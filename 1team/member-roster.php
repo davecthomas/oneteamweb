@@ -24,6 +24,7 @@ if ( !isUser($session, Role_ApplicationAdmin)){
 	} else {
 		$bError = true;
 		$err = "A team must be selected, Admin!";
+		$teamid = null;
 	}
 }
 
@@ -54,10 +55,11 @@ if (!$bError) {
 	} else {
 		$filterRequestSQL = "";
 	}
-
 	$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? " . $filterRequestSQL . " ORDER BY " . $sortRequest . ";";
-	// var_dump(array($strSQL, $teamid));
-	$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+	$dbconn = getConnectionFromSession($session);
+	$array_params = array($teamid);
+	$user_results = executeQuery($dbconn, $strSQL, $bError, $array_params);
+
 
 	// Now that we've done the query, we need to strip the secondary sort column off.
 	$sortRequest = substr($sortRequest, 0, strpos($sortRequest, ",")); ?>
@@ -67,9 +69,8 @@ if (!$bError) {
 	if (isUser( $session, Role_ApplicationAdmin)){
 
 		// While it may seem inefficient to query the count of teams every time this page is rendered, this only affects the app admin (me), so tough noogies, Dave.
-		$strSQL2 = "SELECT COUNT(*) AS ROW_COUNT FROM teams;";
-		$numteams = executeQuery($dbconn, $strSQL, $bError);?>
-
+		$strSQL = "SELECT COUNT(*) FROM teams;";
+		$numteams = executeQueryFetchColumn( $dbconn, $strSQL, $bError);?>
 <div class="navtop">
 <ul id="nav">
 <li><div align="left"><a id="prev" class="linkopacity"
@@ -94,7 +95,7 @@ href="member-roster.php<?php buildRequiredParams($session) ?>&teamid=<?php echo 
 	}
 
 	// If none found
-	if (count($results) == 0) { ?>
+	if (count($user_results) == 0) { ?>
 <h3><?php echo $title?></h3>
 <?php
 		echo "<p>No members found.<br>\n";

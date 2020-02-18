@@ -289,11 +289,22 @@ function getTeamID($session){
 // On fail return array(RC_PDO_Error)
 // Updates return count of update rows
 function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
+	$items = null;
 	try {
 		$statement = $dbconn->prepare($sql);
-	  $bError = ! $statement->execute($array_params);
+		if (is_array($array_params)) {
+			if (count($array_params)<1){
+				$bError = ! $statement->execute();
+			} else {
+				$bError = ! $statement->execute($array_params);
+			}
+		} else {
+			$bError = ! $statement->execute();
+		}
 		if (!$bError) {
-			if (strcasecmp(explode(' ',trim($sql))[0], "UPDATE") != 0){
+			if ((strcasecmp(explode(' ',trim($sql))[0], "UPDATE") != 0) ||
+					(strcasecmp(explode(' ',trim($sql))[0], "INSERT") != 0) ||
+					(strcasecmp(explode(' ',trim($sql))[0], "DELETE") != 0)){
 				$items = $statement->fetchAll();
 			}
 			else {
@@ -305,22 +316,34 @@ function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
 		}
 	} catch (Exception $e) {
 		$bError = true;
-		var_dump(array($sql,$array_params));
+		// var_dump(array($sql,$array_params));
 		print($e->getMessage());
 	}
 	return $items;
 }
 
 // On fail return array(RC_PDO_Error)
+// Note: Select count(*) is acting weird on the fetch below, so I've changed select counts to be select *
+// and then count the rows returned, for callers to this function.
 function executeQueryFetchColumn($dbconn, $sql, &$bError = false, $array_params = array()){
+	$item = null;
 	try {
 		$statement = $dbconn->prepare($sql);
-	  $bError = ! $statement->execute($array_params);
+		if (is_array($array_params)) {
+			if (count($array_params)<1){
+				$bError = ! $statement->execute();
+			} else {
+				$bError = ! $statement->execute($array_params);
+			}
+		} else {
+			$bError = ! $statement->execute();
+		}
 	  if (!$bError) $item = $statement->fetchColumn();
 		else $items = null;
 	} catch (Exception $e) {
 		$bError = true;
 		print($e->getMessage());
+		var_dump(array($sql,$array_params));
 	}
 	return $item;
 }
@@ -1105,10 +1128,13 @@ function cleanupPhone($phone = '', $format = false)
 
 // Remove the session. Typically only used on logout.
 function deleteSession($session){
-
 	$strSQL = "DELETE FROM sessions WHERE userid = ? AND sessionkey = ?;";
-	$dbconn = getConnection();
-	$results = executeQuery($strSQL, $dbconn, $bError, array($session["userid"], $session["sessionkey"]));
+	$dbconn = getConnectionFromSession($session);
+	if (is_array($session)){
+		if ((array_key_exists("userid", $session)) && (array_key_exists("sessionkey", $session))){
+			$results = executeQuery($dbconn, $strSQL, $bError, array($session["userid"], $session["sessionkey"]));
+		}
+	}
 	$session = array();
 }
 // returns true if session has expired, else false

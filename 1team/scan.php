@@ -109,6 +109,6 @@ if (!$bError){
 </html>
 <?php
 } else {
-	redirect($_SERVER["HTTP_REFERER"]."&err=" . $err);
+	redirectToReferrer( "&err=" . $err);
 }
 ob_end_flush(); ?>

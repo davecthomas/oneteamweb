@@ -425,7 +425,7 @@ if ($bError) {
 	if (isDevelopmentServer() || isStagingServer())
 		echo "<br/>".$err;
 	else
-		redirect($_SERVER["HTTP_REFERER"] . "&err=" . urlencode($err));
+		redirectToReferrer( "&err=" . urlencode($err));
 }?>
 </div>
 <?php

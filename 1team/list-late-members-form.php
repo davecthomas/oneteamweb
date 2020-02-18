@@ -194,7 +194,7 @@ function doSkusSelected( ){
 	}
 }
 if ($bError) {
-	redirect($_SERVER["HTTP_REFERER"] . "&err=" . $err);
+	redirectToReferrer( "&err=" . $err);
 }
 ob_end_flush();
 
