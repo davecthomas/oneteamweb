@@ -308,16 +308,19 @@ function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
 				$items = $statement->fetchAll();
 			}
 			else {
-				$items = $statement->rowCount();
+				// $items = $statement->rowCount();
 			}
 		}
 		else {
 			$items = null;
 		}
-	} catch (Exception $e) {
-		$bError = true;
-		// var_dump(array($sql,$array_params));
-		print($e->getMessage());
+	} catch (PDOException $e) {
+		$err_detail = $dbconn->errorInfo();
+		if (strcmp($err_detail[0], "00000") != 0){
+			$bError = true;
+			var_dump(array($sql,$array_params, ));
+			print($e->getMessage());
+		}
 	}
 	return $items;
 }
