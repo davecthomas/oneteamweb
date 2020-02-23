@@ -141,6 +141,7 @@ function redirect( $url) {
 
 // assure the session key is known to our DB
 function isSessionKeyValid( $sessionkey ) {
+	$bError = false;
 	if ((strlen($sessionkey) < SESSIONKEY_LENGTH) || (!is_string($sessionkey))) {
 		return false;
 	}
@@ -182,7 +183,7 @@ function isThisMe($session, $userid){
 // Determine if (the given user is belongs to the current logged in user's coach
 function isThisMyCoach($session, $coachid){
 	if ((!isset($session["userid"])) || (!isset($session["teamid"]))) return false;
-
+	$bError = false;
 	$strSQL = "SELECT coachid FROM users WHERE id = " . $session["userid"] . " and teamid = " . $session["teamid"] . ";";
 	$dbconn = getConnection();
   $result_id = executeQueryFetchColumn($dbconn, $strSQL, $bError);
@@ -308,7 +309,7 @@ function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
 				$items = $statement->fetchAll();
 			}
 			else {
-				// $items = $statement->rowCount();
+				$items = $statement->rowCount();
 			}
 		}
 		else {
@@ -318,7 +319,7 @@ function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
 		$err_detail = $dbconn->errorInfo();
 		if (strcmp($err_detail[0], "00000") != 0){
 			$bError = true;
-			var_dump(array($sql,$array_params, ));
+			var_dump(array($sql,$array_params, $err_detail));
 			print($e->getMessage());
 		}
 	}
@@ -341,12 +342,53 @@ function executeQueryFetchColumn($dbconn, $sql, &$bError = false, $array_params 
 		} else {
 			$bError = ! $statement->execute();
 		}
-	  if (!$bError) $item = $statement->fetchColumn();
-		else $items = null;
+	  if (!$bError) {
+			// PDOStatement::fetchColumn() should not be used to retrieve boolean columns
+			$item = $statement->fetchColumn();
+			// var_dump(array($bError, $item));
+		}
+		else {
+			// echo("ERROR");
+		}
 	} catch (Exception $e) {
-		$bError = true;
-		print($e->getMessage());
-		var_dump(array($sql,$array_params));
+		$err_detail = $dbconn->errorInfo();
+		if (strcmp($err_detail[0], "00000") != 0){
+			$bError = true;
+			var_dump(array($sql,$array_params, $err_detail));
+			print($e->getMessage());
+		}
+	}
+	return $item;
+}
+
+function executeQueryFetchBoolean($dbconn, $sql, &$bError = false, $array_params = array()){
+	$item = null;
+	try {
+		$statement = $dbconn->prepare($sql);
+		if (is_array($array_params)) {
+			if (count($array_params)<1){
+				$bError = ! $statement->execute();
+			} else {
+				$bError = ! $statement->execute($array_params);
+			}
+		} else {
+			$bError = ! $statement->execute();
+		}
+	  if (!$bError) {
+			// PDOStatement::fetchColumn() should not be used to retrieve boolean columns
+			$item = $statement->fetch();
+			// var_dump(array($bError, $item));
+		}
+		else {
+			// echo("ERROR");
+		}
+	} catch (Exception $e) {
+		$err_detail = $dbconn->errorInfo();
+		if (strcmp($err_detail[0], "00000") != 0){
+			$bError = true;
+			var_dump(array($sql,$array_params, $err_detail));
+			print($e->getMessage());
+		}
 	}
 	return $item;
 }
@@ -457,6 +499,7 @@ function startSession( $sessionkey, $userid ){
 // See if the session is expired
 // TO DO - never used this and probably should. Reworked it for MySQL
 function isSessionExpired($session){
+	$bError = false;
 	$roleid = $session["roleid"];
 	if (doesRoleContain($roleid, Role_Member)) {
 		$timeExpireSQL = "1 hours";
@@ -479,6 +522,7 @@ function isSessionExpired($session){
 // 3. Make sure the session is in the sessions table and not expired
 // The assumption is that a false return will have the caller redirect to default.php
 function isValidSessionKey( $userid, $sessionkey ){
+	$bError = false;	
 	// Generate a session key and test for a match
 	$ipaddr = (string) $_SERVER["REMOTE_ADDR"];
 	if (($sessionkeyTest = createSessionKey( $ipaddr, $userid)) == RC_SessionKey_Invalid) {
@@ -528,6 +572,7 @@ function trimSessionKey( $sessionKey){
 // returns true if current_timestamp is later than expiration date, else false
 // This doesn't care about session. It's just intended to calculate a datetime difference
 function calculateCurrentTimeIsLaterThan( $timeexpires, $dbconn = null){
+	$bError = false;
 	// For mysql: $strSQL = "select TIMESTAMPDIFF(MINUTE,CURRENT_TIMESTAMP,'" . $timeexpires . "') AS age;
 	$strSQL = "select TIMESTAMPDIFF(MINUTE,CURRENT_TIMESTAMP,'" . $timeexpires . "') < 0";
 	// For PostGreSQL: $strSQL = "select age(current_timestamp, '" . $timeexpires . "');";
@@ -543,6 +588,7 @@ function calculateCurrentTimeIsLaterThan( $timeexpires, $dbconn = null){
 
 // For userheader returns string of how much time is left
 function getSessionTimeRemaining( $session){
+	$bError = false;	
 	$timeexpires = $session["timeexpires"];
 	// This should never be null, but I saw some unexplained errors in SQL log
 	if (is_null($timeexpires)) {
@@ -657,6 +703,7 @@ function generatePassword(){
 // getTeamInfo - Get the team settings from DB and return as array
 // This must be called by any script that uses team table values.
 function getTeamInfo( $id){
+	$bError = false;
 	if (!isValidTeamID( $id)) {
 		return RC_TeamID_Invalid;
 	}
@@ -771,6 +818,7 @@ function boolToTFStr( $boolval){
 
 //
 function getAdminEmail($session, $dbconn = null){
+	$bError = false;
 	$strSQL = "SELECT email FROM useraccountinfo, users WHERE useraccountinfo.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND users.roleid = ?;";
 	if ($dbconn == null) $dbconn = getConnection();
 	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($session["teamid"], Role_TeamAdmin));
@@ -800,7 +848,7 @@ function isSuccessful( $rc){
 
 // Get the team terms array. Must be used by any script needing to display team terms
 function getTeamTerms(	$teamid, $dbconnection = null){
-
+	$bError = false;
 	$teamterms = array();
 
 	// Default values
@@ -1131,6 +1179,7 @@ function cleanupPhone($phone = '', $format = false)
 
 // Remove the session. Typically only used on logout.
 function deleteSession($session){
+	$bError = false;
 	$strSQL = "DELETE FROM sessions WHERE userid = ? AND sessionkey = ?;";
 	$dbconn = getConnectionFromSession($session);
 	if (is_array($session)){
@@ -1143,17 +1192,17 @@ function deleteSession($session){
 // returns true if session has expired, else false
 // This should only be called on startSession. The idea is that a false return will cause logout, deletion of session record, and redirect to login page
 function isLockedOut( $userid, $teamid, $dbconn = null){
+	$bError = false;
 	if ($dbconn == null) $dbconn = getConnection();
-
 	$strSQL = "SELECT timelockoutexpires FROM users WHERE id = ? AND teamid = ?";
-	$dbconn = getConnection();
-	$timelockoutexpires = executeQueryFetchColumn($strSQL, $dbconn, $bError, array($userid, $teamid));
+	$timelockoutexpires = executeQueryFetchColumn( $dbconn, $strSQL, $bError, array($userid, $teamid));
 	if (empty($timelockoutexpires)) return false;
 	else {
-		$strSQL = "select ('".$timelockoutexpires."' > current_timestamp );";
-		$isLocked = executeQueryFetchColumn($strSQL, $dbconn, $bError);
-		// If the result is positive, the session is expired
-		return $isLocked;
+		$strSQL = "select '{$timelockoutexpires}' > current_timestamp;";
+		$isLocked = executeQueryFetchBoolean( $dbconn, $strSQL, $bError );
+		// If the result is 0, the session is expired
+		$result = gettype($isLocked);
+		return (bool) $isLocked;
 	}
 }
 

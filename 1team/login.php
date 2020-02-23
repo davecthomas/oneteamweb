@@ -73,6 +73,7 @@ if ($rowCount != 1) {
 					// Make sure account isn't locked out due to 2fa auth retries failures
 					// And make sure any team admin is logging in from the same address as last time
 					if (doesRoleContain($roleid, Role_TeamAdmin)) {
+
 						if (isLockedOut($userid, $teamid, $dbconn)){
 							$bError = true;	// Not really an error, but avoid redirect to home
 							redirect("login-form.php?l=" . RC_LoginFailAccountLocked);

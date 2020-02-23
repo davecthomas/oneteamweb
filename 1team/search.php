@@ -13,8 +13,6 @@ if (isset($_REQUEST["str"])) {
 }
 $title .= "'" . $strSearch . "'";
 
-
-
 $rowCount = 0;
 // Set up teamid from session or input
 $bError = FALSE;
@@ -48,33 +46,64 @@ if (isset($_REQUEST["filter"])) {
 } else {
 	$filterRequestSQL = "";
 }
-
 $dbconn = getConnectionFromSession($session);
-
 if (isUser( $session, Role_ApplicationAdmin) ) {
-	$strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') ORDER BY " . $sortRequest .";";
-	$results = executeQuery($dbconn, $strSQL, $bError, array($strSearch, $strSearch, $strSearch));
-} else {
-	$strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? and (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') " . $filterRequestSQL . " ORDER BY " . $sortRequest .";";
+	// PostgreSQL: $strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') ORDER BY " . $sortRequest .";";
+	$strSQL = <<<EOD
+	SELECT teams.name as teamname, teams.id as teamteamid, users.firstname, users.lastname, 
+users.id as userid, users.roleid, 
+users.imageid, users.teamid as userteamid, 
+useraccountinfo.status, useraccountinfo.isbillable, images.url, images.id as imageimageid, images.filename 
+FROM useraccountinfo, images 
+RIGHT OUTER JOIN users 
+RIGHT OUTER JOIN teams 
+ON users.teamid = teams.id 
+ON users.imageid = images.id
+WHERE users.useraccountinfo = useraccountinfo.id 
+AND (firstname LIKE CONCAT('%', ?, '%') 
+or lastname LIKE CONCAT('%', ?, '%') 
+or useraccountinfo.email LIKE CONCAT('%', ?, '%'))
+EOD;
+	$strSQL .= " ORDER BY ". $sortRequest;
+	// SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, users.teamid as teamid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname LIKE CONCAT('%', ?, '%') or lastname LIKE CONCAT('%', ?, '%') or useraccountinfo.email LIKE CONCAT('%', ?, '%')) ORDER BY " . $sortRequest .";";
+	$user_results = executeQuery($dbconn, $strSQL, $bError, array($strSearch, $strSearch, $strSearch));
+} else { 
+	$strSQL =<<<EOD
+	SELECT teams.name as teamname, teams.id as teamteamid, users.firstname, users.lastname, 
+users.id as userid, users.roleid, 
+users.imageid, users.teamid as userteamid, 
+useraccountinfo.status, useraccountinfo.isbillable, images.url, images.id as imageimageid, images.filename 
+FROM useraccountinfo, images 
+RIGHT OUTER JOIN users 
+RIGHT OUTER JOIN teams 
+ON users.teamid = teams.id 
+ON users.imageid = images.id
+WHERE users.useraccountinfo = useraccountinfo.id 
+AND users.teamid = ?
+AND (firstname LIKE CONCAT('%', ?, '%') 
+or lastname LIKE CONCAT('%', ?, '%') 
+or useraccountinfo.email LIKE CONCAT('%', ?, '%'))
+EOD;
+	$strSQL .= " " . $filterRequestSQL . " ORDER BY " . $sortRequest .";";
+	// SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, users.teamid as teamid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.teamid = ? and (firstname LIKE CONCAT('%', ?, '%') or lastname LIKE CONCAT('%', ?, '%') or useraccountinfo.email LIKE CONCAT('%', ?, '%')) " . $filterRequestSQL . " ORDER BY " . $sortRequest .";";
 	if (strlen($filterRequestSQL) > 0) {
-		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $filterRequest));
+		$user_results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $filterRequest));
 	} else {
-		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $teamid));
+		$user_results = executeQuery($dbconn, $strSQL, $bError, array($teamid, $strSearch, $strSearch, $strSearch, $teamid));
 	}
 }
 
 // Now that we've done the query, we need to strip the secondary sort column off.
 $sortRequest = substr($sortRequest, 0, strpos($sortRequest, ","));
-
 // If none found
-if (count($results ) == 0) { ?>
+if (count($user_results ) == 0) { ?>
 <div id="bodycontent">
 <h3><?php echo $title?></h3>
 <?php
 	echo "<p>No members found.<br>\n";
 // If only one result, go to props page for that user
-} else if (count($results) == 1){
-	redirect('user-props-form.php?'.returnRequiredParams($session).'&id='.$results[0]["userid"]);
+} else if (count($user_results) == 1){
+	redirect('user-props-form.php?'.returnRequiredParams($session).'&id='.$user_results[0]["userid"].'&teamid='.$user_results[0]["teamteamid"]);
 // If multiple results show roster
 } else { ?>
 <div id="bodycontent">

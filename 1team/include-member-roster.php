@@ -71,7 +71,7 @@ while ($rowCount < $numRows) {
 	}
 	if ($isAdmin){ ?>
 <a href="user-props-form.php?<?php
-		echo returnRequiredParams($session) . "&id=" . $user_results[$rowCount][ "userid"] . "&teamid=" . $teamid?>">
+		echo returnRequiredParams($session) . "&id=" . $user_results[$rowCount][ "userid"] . "&teamid=" . $user_results[$rowCount][ "teamid"]?>">
 <?php
 	} ?>
 <span <?php echo subdueInactive($accountStatus)?>><?php echo $user_results[$rowCount][ "firstname"];?></span>
