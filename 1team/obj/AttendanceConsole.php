@@ -37,9 +37,11 @@ class AttendanceConsoles extends DbObject{
 
 	private function getRecord( ){
 		$strSQL = "SELECT * FROM attendanceconsoles WHERE teamid = ?;";
-		executeQuery($this->dbconn, $strSQL, $bError, array($this->teamid));
-		if ($bError) return RC_PDO_Error;
-		else $this->dbrecord = $pdostatement->fetchAll();
+		$this->dbrecord = executeQuery($this->dbconn, $strSQL, $bError, array($this->teamid));
+		if ($bError) {
+			$this->dbrecord = null;
+			return RC_PDO_Error;
+		}
 	}
 
 	function getNumAttendanceConsoles(){

@@ -708,9 +708,9 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 	// Get the current user record
 
 	$strSQL = "SELECT * FROM users WHERE id = ? and teamid=?;";
-  $dbconn = getConnection();
-  $userprops = executeQuery($dbconn, $strSQL, $bError, array($teamid));
-
+  $dbconn = getConnectionFromSession($session);
+  $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+	var_dump(array($strSQL, $userprops, $teamid, $userid, $bEmail ));
 	if (count($userprops) == 1) {
 		// If intro is set, add into text from team settings to the email you send the user.
 		if ($bIntro){
@@ -731,8 +731,10 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 			$emailsubject = appname . " Password Reset";
 			$introtext = "";
 		}
+		echo("1");
 		// Generage a new password
 		$passwd_cleartext = generatePassword();
+		echo("2");
 
 		// Get the salt
 		$salt = $userprops[0]["salt"];
@@ -750,10 +752,12 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 		$passwd = trimSalt( $passwd);
 		// Trim the password to desired storage length
 		$passwd = trimPassword( $passwd );
+		var_dump($passwd_cleartext);
 		// Store the new passwd and the salt
-		$strSQL = "update users set passwd = '" . $passwd . "', salt = '" . $salt . "' where id = " .$userid . ";";
+		$strSQL = "update users set passwd = ?, salt = ? where id = ?;";
 		$mailok = 0;
-    $results = executeQuery($dbconn, $strSQL, $bError);
+    $results = executeQuery($dbconn, $strSQL, $bError, array($passwd, $salt, $userid));
+		var_dump(array($results, $bError));
 		// Email the password to the user
 		$mailok = 0;
 		if ($bEmail) {
@@ -766,8 +770,8 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 			     $introtext .= "You can change your password to your preference after you sign on.\n\n";
 			     $introtext .= "This message was sent automatically from " . appname_nowhitespace . ".\n";
 				$introtext .= "Please do not reply to this email, as it was sent from an automated system. Thank you.";
-				ini_set("SMTP", MailServer);
-				$mailok = mail($email, $emailsubject, $introtext , "From: " . emailadmin);
+				$mailer = new Mail();
+				$mailok = $mailer->mail($email, $emailsubject, $introtext);
 			} else {
 				$mailok = 0;
 			}

@@ -73,7 +73,6 @@ if ($rowCount != 1) {
 					// Make sure account isn't locked out due to 2fa auth retries failures
 					// And make sure any team admin is logging in from the same address as last time
 					if (doesRoleContain($roleid, Role_TeamAdmin)) {
-
 						if (isLockedOut($userid, $teamid, $dbconn)){
 							$bError = true;	// Not really an error, but avoid redirect to home
 							redirect("login-form.php?l=" . RC_LoginFailAccountLocked);
@@ -195,8 +194,8 @@ function isUserLocationRecognized( $userid, $teamid, $ipaddr, $dbconn = null){
 	if ($dbconn == null){
 		$dbconn = createConnection();
 	}
-	$strSQL = "SELECT count(*) FROM recognizeduserlocations WHERE userid = ? AND teamid = ? AND ipaddr = ?;";
-	$num = $executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $teamid, $ipaddr));
-	if ($num > 0) return true;
+	$strSQL = "SELECT * FROM recognizeduserlocations WHERE userid = ? AND teamid = ? AND ipaddr = ?;";
+	$results = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid, $ipaddr));
+	if (count($results) > 0) return true;
 	else return false;
 }?>

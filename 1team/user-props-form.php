@@ -61,7 +61,6 @@ if (isUser( $session, Role_ApplicationAdmin) ) { ?>
 </div><p></p>
 <?php
 }
-
 $strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
 $dbconn = getConnectionFromSession($session);
 
@@ -471,7 +470,7 @@ if (! $found){
 
 			if (isTeamUsingLevels($session, $teamid)) {
 			// Promotions toggle ?>
-<h4 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglerender('promotionshist', 'promotionshistory','include-promotions.php<?php buildRequiredParams($session)?>&mode=<?php echo $whoMode?>&pagemode=<?php echo $pageMode?>&id=<?php echo $userid?>&teamid=<?php echo $teamid ?>');return false;">Promotions History<img src="img/a_expand.gif" alt="expand section" id="promotionshist_img" border="0"></a></h4>
+<h4 class="expandable"><a class="linkopacity" href="javascript:void(0)" onclick="javascript:togglerender('promotionshist', 'promotionshistory','include-promotions.php<?php buildRequiredParams($session)?>&mode=<?php echo $whoMode?>&pagemode=<?php echo $pageMode?>&id=<?php echo $userid?>&teamid=<?php echo $teamid ?>&startdate=<?php echo $userprops['startdate']?>');return false;">Promotions History<img src="img/a_expand.gif" alt="expand section" id="promotionshist_img" border="0"></a></h4>
 <div class="hideit" id="promotionshist">
 <iframe src="empty.html"
 	id="promotionshistory" name="promotionshistory"
@@ -512,7 +511,8 @@ if (! $found){
 		// Custom fields support
 		$strSQL = "SELECT customfields.id as customfieldsid, customfields.name as customfieldname, * FROM customfields LEFT OUTER JOIN customdata ON (customdata.customfieldid = customfields.id and customdata.memberid = ? AND customfields.teamid = ?) WHERE customfields.teamid = ? ORDER BY customfields.listorder;";
 		$customdataResults= executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid, $teamid));
-		$loopMax = count( $customdataResults);
+		if (is_array($customdataResults)) $loopMax = count( $customdataResults);
+		else $loopMax = 0;
 		if ($loopMax > 0) {?>
 <form action="/1team/user-props-custom.php" method="post">
 <?php buildRequiredPostFields($session) ?>

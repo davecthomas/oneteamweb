@@ -63,7 +63,7 @@ if (isValidUserID( $userid)) {
 			echo ">";
 			echo trim($row["firstname"]);
 			echo " ";
-			echo $row["lastname"]);
+			echo ($row["lastname"]);
 			echo " " . roleToStr($row["roleid"], $teamterms) ;
 			echo "</option>\n";
 		} ?>

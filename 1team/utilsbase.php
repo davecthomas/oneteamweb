@@ -377,7 +377,9 @@ function executeQueryFetchBoolean($dbconn, $sql, &$bError = false, $array_params
 	  if (!$bError) {
 			// PDOStatement::fetchColumn() should not be used to retrieve boolean columns
 			$item = $statement->fetch();
-			// var_dump(array($bError, $item));
+			if (count($item)>1) {
+				$item = $item[0];
+			}
 		}
 		else {
 			// echo("ERROR");
@@ -697,7 +699,8 @@ function trimPassword( $passwd) {
 
 // Generate a random string CleartextPasswordLength long
 function generatePassword(){
-	return substr(md5(uniqid(rand(), true)), 0, CleartextPasswordLength);
+	$p = substr(md5(uniqid(rand(), true)), 0, CleartextPasswordLength);
+	return $p;
 }
 
 // getTeamInfo - Get the team settings from DB and return as array
@@ -847,7 +850,7 @@ function isSuccessful( $rc){
 }
 
 // Get the team terms array. Must be used by any script needing to display team terms
-function getTeamTerms(	$teamid, $dbconnection = null){
+function getTeamTerms(	$teamid, $dbconn = null){
 	$bError = false;
 	$teamterms = array();
 
@@ -860,7 +863,7 @@ function getTeamTerms(	$teamid, $dbconnection = null){
 	$termclass = defaultterm_class;
 	if ($teamid >= TeamID_Base) {
 		$strSQL = "SELECT * FROM teamterms WHERE teamid = ?;";
-		if ($dbconnection == null) $dbconn = getConnection();
+		if ($dbconn == null) $dbconn = getConnection();
 		$termsResults = executeQuery($strSQL, $dbconn, $bError, array($teamid));
 		if (count($termsResults)>0) {
 			$teamTermResult = $termsResults[0];
@@ -1200,8 +1203,9 @@ function isLockedOut( $userid, $teamid, $dbconn = null){
 	else {
 		$strSQL = "select '{$timelockoutexpires}' > current_timestamp;";
 		$isLocked = executeQueryFetchBoolean( $dbconn, $strSQL, $bError );
+		// var_dump($isLocked);
+		// echo("select '{$timelockoutexpires}' > current_timestamp = {$isLocked}");
 		// If the result is 0, the session is expired
-		$result = gettype($isLocked);
 		return (bool) $isLocked;
 	}
 }

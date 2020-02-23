@@ -47,6 +47,9 @@ if ($isAdmin){ ?>
 $rowCount = 0;
 $numRows = count($user_results);
 while ($rowCount < $numRows) {
+	if (array_key_exists("teamteamid", $user_results[$rowCount])){
+		$teamid = $user_results[$rowCount]["teamteamid"];
+	}
 	$accountStatus = $user_results[$rowCount]["status"]; ?>
 <tr class="<?php if ((bool)( $rowCount % 2 )) echo("even"); else echo("odd") ?>">
 <?php
@@ -71,7 +74,7 @@ while ($rowCount < $numRows) {
 	}
 	if ($isAdmin){ ?>
 <a href="user-props-form.php?<?php
-		echo returnRequiredParams($session) . "&id=" . $user_results[$rowCount][ "userid"] . "&teamid=" . $user_results[$rowCount][ "teamid"]?>">
+		echo returnRequiredParams($session) . "&id=" . $user_results[$rowCount][ "userid"] . "&teamid=" . $teamid?>">
 <?php
 	} ?>
 <span <?php echo subdueInactive($accountStatus)?>><?php echo $user_results[$rowCount][ "firstname"];?></span>

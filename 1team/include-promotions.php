@@ -62,8 +62,9 @@ if ($whomode == "user"){
 	} else {
 		$canAdmin = false;
 	}
+	if (isset($_GET["startdate"])) {
+	}
 }
-
 if (($whomode == "team") && (!isAnyAdminLoggedIn($session))) {
 	$bError = true;
 	$errStr = Error;
@@ -208,10 +209,18 @@ href="#">
 			$strSQL = "SELECT teams.name, teams.startdate FROM teams where teams.id = ?";
 			$startDateResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 		}
-
-		if (isset($startDateResults["startdate"])) {
+		if (count($startDateResults) > 0) $startDateResults = $startDateResults[0];
+		if (array_key_exists("startdate", $startDateResults)) {
 			// default last promotion date to start date in case user has never been promoted
-			$datetimelastpromo = new DateTime($startDateResults["startdate"]);
+			try{ 
+				// $datetimelastpromo = new DateTime($startDateResults["startdate"]);
+				$format = "Y-m-d";
+				$datetimelastpromo = DateTime::createFromFormat($format,$startDateResults["startdate"]);
+
+			} catch (Exception $e) {
+				echo $e->getMessage();
+				$datetimelastpromo = new DateTime();
+			}
 			if ($whomode == "user") {
 				$objname = $startDateResults["firstname"] . " " . $startDateResults["lastname"];
 			} else {

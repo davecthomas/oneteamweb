@@ -25,8 +25,9 @@ if (!isUser($session, Role_ApplicationAdmin)){
 		$err = "t";
 	}
 } else {
-	if (isset($_GET["teamid"])){
-		$teamid = $_GET["teamid"];
+	if (isset($_POST["teamid"])){
+		$teamid = $_POST["teamid"];
+		echo("2tea {$teamid}!");
 	} else {
 	     $bError = true;
 		$err = "t";
@@ -60,7 +61,7 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 		} else {
 			$sendemail = false;
 		}
-
+		echo("teamid {$teamid}");
 		$bError = resetPassword($session, $teamid, $id, $sendemail, $intro);
 
 		if (!$bError){

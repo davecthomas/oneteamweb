@@ -35,16 +35,11 @@ if (!isUser($session, Role_ApplicationAdmin)){
 }
 
 if ( !$bError) {
-
-
 	$strSQL = "SELECT * FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? AND users.teamid = ?;";
 	$dbconn = getConnectionFromSession($session);
 	$userResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
-
 	if ($bError) $errstr = "s";
 	else {
-		$userResults = $pdostatement->fetchAll();
-
 		$rowCount = 0;
 		if (count($userResults) > 0) {
 		     // If the input POST data isn't present, set the local value to the existing value in the DB

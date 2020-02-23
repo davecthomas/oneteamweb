@@ -36,7 +36,7 @@ if (isset($_GET["id"])){
 	// This setting will force select list to be uninitialized
 	$userid = 0;
 }
-
+$dbconn = getConnectionFromSession($session);
 ?>
 <h3><?php echo $title?> <?php echo getTeamName($teamid, $dbconn)?>&nbsp;<?php echo $teamterms ["termmember"]?></h3>
 <?php

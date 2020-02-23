@@ -313,7 +313,7 @@ DROP TABLE IF EXISTS `images`;
 
 CREATE TABLE `images` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `url` varchar(255) DEFAULT NULL,
+  `url` varchar(512) DEFAULT NULL,
   `filename` varchar(255) DEFAULT NULL,
   `teamid` int(11) DEFAULT NULL,
   `type` int(11) DEFAULT NULL,
@@ -872,7 +872,7 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` (`id`, `firstname`, `lastname`, `startdate`, `address`, `city`, `state`, `postalcode`, `smsphone`, `phone2`, `login`, `birthdate`, `referredby`, `notes`, `coachid`, `emergencycontact`, `ecphone1`, `ecphone2`, `gender`, `stopdate`, `stopreason`, `teamid`, `roleid`, `address2`, `useraccountinfo`, `salt`, `passwd`, `imageid`, `smsphonecarrier`, `ipaddr`, `timelockoutexpires`)
 VALUES
   (1,'OneTeamWeb','Admin','2020-02-04','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','seattlejits@gmail.com','1965-01-01','','',0,'','','','M',NULL,NULL,0,1,'',1,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,'verizon',NULL,'2020-02-05 02:48:23'),
-	(2,'David','Thomas','2003-01-01','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','davidcthomas@gmail.com','1965-01-01','David Thomas','',0,'','','','0',NULL,'\'\'\'\'\'\'\'\'\'\'\'\'\'\'',1,2,NULL,2,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,NULL,NULL,'2011-12-12 02:10:29');
+	(2,'David','Thomas','2003-01-01','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','davidcthomas@gmail.com','1965-01-01','David Thomas','',0,'','','','0',NULL,'\'\'\'\'\'\'\'\'\'\'\'\'\'\'',1,2,NULL,2,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,NULL,NULL,'2020-02-05 02:48:23');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 

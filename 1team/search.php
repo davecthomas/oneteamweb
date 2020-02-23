@@ -47,8 +47,10 @@ if (isset($_REQUEST["filter"])) {
 	$filterRequestSQL = "";
 }
 $dbconn = getConnectionFromSession($session);
+// Search will not return the Application Admin since it has teamid=0 or NULL
 if (isUser( $session, Role_ApplicationAdmin) ) {
 	// PostgreSQL: $strSQL = "SELECT teams.name as teamname, users.firstname, users.lastname, users.id as userid, users.roleid, users.imageid, useraccountinfo.status, useraccountinfo.isbillable, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND (firstname ILIKE '%'||?||'%' or lastname ILIKE '%'||?||'%' or useraccountinfo.email ILIKE '%'||?||'%') ORDER BY " . $sortRequest .";";
+	// MySQL: 
 	$strSQL = <<<EOD
 	SELECT teams.name as teamname, teams.id as teamteamid, users.firstname, users.lastname, 
 users.id as userid, users.roleid, 

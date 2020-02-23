@@ -539,9 +539,7 @@ function getSelectList( srcList){
 <td class="strong">Program</td>
 <td><?php
 		$strSQL = "SELECT * FROM programs WHERE teamid = ? ORDER BY name;";
-		$executeQuery($dbconn, $strSQL, $bError, array($teamid));
-
-		$programsResults = $pdostatement->fetchAll();
+		$programsResults = $executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 		$rowCount = 0;
 		$loopMax = count($programsResults);
