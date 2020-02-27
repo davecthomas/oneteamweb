@@ -1,7 +1,7 @@
 <?php
 ob_start(); 	// This caches non-header output, allowing us to redirect after header.php
 include('utils.php');
-include_once('obj/Mail.php');
+include_once('obj/Mail1t.php');
 $bError = false;
 $err = "";
 // Assure we have the input we need, else send them to default.php

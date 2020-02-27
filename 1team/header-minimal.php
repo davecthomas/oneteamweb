@@ -15,7 +15,6 @@ $session = startSession($sessionkey, $userid_login);
 if (! isValidSession($session )){
 	redirectToLogin();
 }
-
 // Scripts that include header can optionally set isappadminrequired to force redirection to login if not an app admin
 if (((isset($isappadminrequired)) && ($isappadminrequired))){
 	redirectToLoginIfNot( $session, Role_ApplicationAdmin);

@@ -1,6 +1,6 @@
 <?php
 include('utils.php');
-include_once('obj/Mail.php');
+include_once('obj/Mail1t.php');
 // Assure we have the input we need, else send them to default.php
 if ((($sessionkey = getSessionKey()) == RC_RequiredInputMissing) || (($userid = getUserID()) == RC_RequiredInputMissing)){
 	redirect("default.php?rc=" . RC_RequiredInputMissing);

@@ -35,7 +35,7 @@ if ((isset($_REQUEST["teamid"])) && (is_numeric($_REQUEST["teamid"])))  {
 		if ($testmode) print_r($resArray);
 		// First, make sure this transaction doesn't already exist
 		$strSQL = "SELECT txid from epayments WHERE txid = ?";
-		$epaymentResults = executeQuery($strSQL, $dbconn, $bError, array($session["userid"], $session["sessionkey"]));array($txid));
+		$epaymentResults = executeQuery( $dbconn, $strSQL, $bError, array($session["userid"], $session["sessionkey"]));array($txid));
 
 		if (count($epaymentResults) == 0) {
 			$paymentdate = substr($resArray['ORDERTIME'], 0, 10);
@@ -55,7 +55,7 @@ if ((isset($_REQUEST["teamid"])) && (is_numeric($_REQUEST["teamid"])))  {
 				$skuname = "";
 			}
 			$strSQL = "INSERT INTO epayments VALUES (DEFAULT, ?, ?, FALSE, ?, ?, ?, ?, ?, ? , ? );";
-			executeQuery($strSQL, $dbconn, $bError, array(ePaymentSourcePayPal, $txid, $teamid, $amount, $paymentdate, $item, $payeremail, $skuname, $fee ));
+			executeQuery( $dbconn, $strSQL, $bError, array(ePaymentSourcePayPal, $txid, $teamid, $amount, $paymentdate, $item, $payeremail, $skuname, $fee ));
 			if ($bError) {
 				testecho($testmode, "INSERT fail");
 		} else {
@@ -69,7 +69,7 @@ if ((isset($_REQUEST["teamid"])) && (is_numeric($_REQUEST["teamid"])))  {
 
 function get_team_payment_provider($dbconn, &$bError, $teamid){
 	$strSQL = "SELECT payment_provider, api_username, api_password, api_signature from teams WHERE teamid = ?";
-	$team_payment_provider = executeQuery($strSQL, $dbconn, $bError, array($session["userid"], $session["sessionkey"]));array($teamid));
+	$team_payment_provider = executeQuery( $dbconn, $strSQL, $bError, array($session["userid"], $session["sessionkey"]));array($teamid));
 
 	if ((! $bError) and (count($team_payment_provider)>0)) $team_payment_provider[0];
 	else return null;

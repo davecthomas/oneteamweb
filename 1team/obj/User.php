@@ -1,6 +1,6 @@
 <?php
 include_once('DbObject.php');
-include_once('Mail.php');
+include_once('Mail1t.php');
 /**
  * Support a user object as stored in the DB
  *

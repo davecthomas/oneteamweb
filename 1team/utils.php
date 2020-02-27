@@ -710,7 +710,7 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 	$strSQL = "SELECT * FROM users WHERE id = ? and teamid=?;";
   $dbconn = getConnectionFromSession($session);
   $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
-	var_dump(array($strSQL, $userprops, $teamid, $userid, $bEmail ));
+	// var_dump(array($strSQL, $userprops, $teamid, $userid, $bEmail ));
 	if (count($userprops) == 1) {
 		// If intro is set, add into text from team settings to the email you send the user.
 		if ($bIntro){
@@ -757,7 +757,7 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 		$strSQL = "update users set passwd = ?, salt = ? where id = ?;";
 		$mailok = 0;
     $results = executeQuery($dbconn, $strSQL, $bError, array($passwd, $salt, $userid));
-		var_dump(array($results, $bError));
+		// var_dump(array($results, $bError));
 		// Email the password to the user
 		$mailok = 0;
 		if ($bEmail) {
@@ -869,19 +869,24 @@ function getSmsCarrierEmail($smsphonecarrier){
 function getSmsPhone( $userid, $teamid, &$smsphonecarrieremail, &$err, $dbconn = null){
 	$smsphone = "";
 	$strSQL = "SELECT smsphone, smsphonecarrier FROM users WHERE id = ? and teamid = ?;";
-  if ($dbconn = null) $dbconn = getConnection();
+  if ($dbconn == null) $dbconn = getConnection();
   $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
-	$smsphonecarrieremail ="";
-	if (isset($userprops["smsphone"])){
-		$smsphone = cleanupPhone($userprops["smsphone"]);
-		$smsphonecarrier = trim($userprops["smsphonecarrier"]);
-		$smsphonecarrieremail = getSmsCarrierEmail($smsphonecarrier);
+	if (count($userprops)>0) {
+		$userprops = $userprops[0];
+		$smsphonecarrieremail ="";
+		if (isset($userprops["smsphone"])){
+			$smsphone = cleanupPhone($userprops["smsphone"]);
+			$smsphonecarrier = trim($userprops["smsphonecarrier"]);
+			$smsphonecarrieremail = getSmsCarrierEmail($smsphonecarrier);
+		} else {
+			$bError = true;
+			$err = "n";
+		}
 	} else {
-		$bError = true;
-		$err = "n";
+			$bError = true;
+			$err = "n";		
 	}
-	return $smsphone;
-
+		return $smsphone;
 }
 
 // Generate an "email" SMS to the current session user's smsphone
@@ -890,19 +895,23 @@ function generate2fauthn( $session, &$err, $dbconn = null){
 	$bError = false;
 	$err = "";
 	$carrier_email = "";
-  if ($dbconn = null) $dbconn = getConnection();
+  if ($dbconn == null) $dbconn = getConnectionFromSession($session);
 
 	$smsphone = getSmsPhone( $session["userid"], $session["teamid"], $carrier_email, $err, $dbconn);
-//	print_r(array($dbh, $session["userid"], $session["teamid"], $carrier_email, $err));
 	if (strlen($err) == 0){
 		// Generate an auth code
-		$message= rand ( 1000, 9999 );
+		$message= strval(rand ( 1000, 9999 ));
 		// Save the auth code in the session
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
     $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
-		if (!mail("$smsphone@$carrier_email", "", "$message" , "From: " . emailadmin)) {
+		$m = new Mail1t($session);
+		
+		$statuscode = $m->mail("$smsphone@$carrier_email", "", $message, $session["fullname"] );
+		if (!$m->statusok($statuscode)){
 			$bError = true;
-			$err = RC_EmailFailure;
+			$err = $statuscode;
+	var_dump(array($bError, $err));
+
 		}
 	}
 	return $bError;

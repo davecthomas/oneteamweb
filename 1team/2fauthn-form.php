@@ -27,11 +27,13 @@ if (! isValidSession($session )) {
 }
 // Only admins can execute this script
 redirectToLoginIfNotAdmin( $session);
+$dbconn = getConnectionFromSession($session);
 
 if ((!isset($_GET["err"])) && (!isset($_GET["done"]))){
 	// Get the retry count to decide what text to include
 	$strSQL = "SELECT authsmsretries FROM sessions WHERE userid = ? and login = ? and teamid = ?;";
-	$authsmsretries = executeQueryFetchColumn( getConnectionFromSession($session), $strSQL, $bError, array($session["userid"], $session["login"], $session["teamid"]));
+	$authsmsretries = executeQueryFetchColumn( $dbconn, $strSQL, $bError, array($session["userid"], $session["login"], $session["teamid"]));
+
 	if ($authsmsretries >= authsmsretries_Max){
 		// Penalty box! TODO: lock the account for 5 minutes
 		$timeoutpenalty = authsmsfailure_LockoutPenalty;

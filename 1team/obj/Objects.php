@@ -1,6 +1,6 @@
 <?php
-include_once ('globals.php');
-include_once ('utils.php');
+// include_once ('globals.php');
+// include_once ('utils.php');
 // For including object classes
 include_once('DbObject.php');
 include_once('Attendance.php');

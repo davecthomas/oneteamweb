@@ -1,4 +1,5 @@
 <?php
+include_once ('utils.php');
 include('obj/Objects.php');
 
 // Declare global variables

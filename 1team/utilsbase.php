@@ -274,7 +274,7 @@ function getSessionUserID($session){
 function getUserEmail($session, $dbconn = null){
 	$strSQL = "SELECT email FROM useraccountinfo WHERE useraccountinfo.userid = ?;";
 	$bError = false;
-	if ($dbconn = null) $dbconn = getConnection();
+	if ($dbconn == null) $dbconn = getConnection();
 	$result = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($session["userid"]));
 	return $result;
 }
@@ -864,7 +864,7 @@ function getTeamTerms(	$teamid, $dbconn = null){
 	if ($teamid >= TeamID_Base) {
 		$strSQL = "SELECT * FROM teamterms WHERE teamid = ?;";
 		if ($dbconn == null) $dbconn = getConnection();
-		$termsResults = executeQuery($strSQL, $dbconn, $bError, array($teamid));
+		$termsResults = executeQuery( $dbconn, $strSQL, $bError, array($teamid));
 		if (count($termsResults)>0) {
 			$teamTermResult = $termsResults[0];
 			$termadmin = $teamTermResult["termadmin"];
