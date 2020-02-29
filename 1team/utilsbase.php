@@ -712,15 +712,19 @@ function getTeamInfo( $id){
 	}
 	$teaminfo = array();
 
-	$strSQL = "SELECT * FROM teams WHERE id = " . $id . ";";
+	$strSQL = "SELECT * FROM teams WHERE id = ?;";
 
 	$dbconn = getConnection();
-	$rsTeam = executeQuery($dbconn, $strSQL, $bError);
+	$rsTeam = executeQuery($dbconn, $strSQL, $bError, array($id));
 
 	if (count($rsTeam)>0) {
 		$team = $rsTeam[0];
 		$teaminfo["teamname"] = $team["name"];
-		$teaminfo["coachid"] = (int) $team["coachid"];
+		if (array_key_exists("coachid", $team)){
+			$teaminfo["coachid"] = (int) $team["coachid"];
+		} else {
+			$teaminfo["coachid"] = null;
+		}
 		$teaminfo["activityname"] = $team["activityname"];
 		$teaminfo["paymenturl"] = $team["paymenturl"];
 		$teaminfo["startdate"] = $team["startdate"];

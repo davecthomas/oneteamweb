@@ -1,7 +1,8 @@
 <?php
-include_once ('globals.php');
-include_once ('utils.php');
+// include_once ('globals.php');
+// include_once ('utils.php');
 require '../vendor/autoload.php';
+
 /**
  * Support Mail
  *
@@ -9,53 +10,53 @@ require '../vendor/autoload.php';
  */
 class Mail1t {
   function __construct( $session = null ) {
-    $this->from = new SendGrid\Email(null, emailadmin);
-    $this->apiKey = getenv('SENDGRID_API_KEY');
-    $this->sendgrid = new \SendGrid($this->apiKey);
-    $this->session = $session;
-    $this->statuscode = null;
+    try {
+    
+      $this->from = new SendGrid\Email(companyname. " ". defaultterm_appadmin, emailadmin);
+      $this->apiKey = getenv('SENDGRID_API_KEY');
+      $this->sg = new \SendGrid($this->apiKey);
+      // $this->email = new \SendGrid\Mail();
+      // $this->sendgrid = new \SendGrid($this->apiKey);
+      // $this->session = $session;
+      // $this->statuscode = null;
+    } catch (Exception $e) {
+        echo 'Mail1t exception: ',  $e->getMessage(), "\n";
+    }
   }
 
+  // function helloEmail(){
+  //   $from = new SendGrid\Email(null, "app160835029@heroku.com");
+  //   $subject = "New email World from the SendGrid PHP Library!";
+  //   $to = new SendGrid\Email(null, "foo@gmail.com");
+  //   $content = new SendGrid\Content("text/plain", "Testing, This is different!");
+  //   $mail = new SendGrid\Mail($from, $subject, $to, $content);
+
+  //   $apiKey = getenv('SENDGRID_API_KEY');
+  //   $sg = new \SendGrid($apiKey);
+
+  //   $response = $sg->client->mail()->send()->post($mail);
+  //   echo $response->statusCode();
+  //   echo $response->headers();
+  //   echo $response->body();
+  // }
+
   function mail($to_address, $subject, $body, $to_name = ""){
-    $result = false;
+    $result = null;
     $from = $this->from;
     // var_dump(array($to_address, $subject, $body, $to_name));
     try {
-      $email = new \SendGrid\Mail\Mail();
-      var_dump($email);
-      $email->setFrom($from, "1TeamWeb Support");
-      $email->setSubject($subject);
-      $email->addTo($to_address, $to_name);
-      $email->addContent(
-          "text/plain", $body
-      );
-    // $email->addContent(
-    //     "text/html", "<strong>and easy to do anywhere, even with PHP</strong>"
-    // );
-
-      var_dump($email);
-      $response = $this->sendgrid->send($email);
+      
+      $to = new SendGrid\Email($to_name, $to_address);
+      $content = new SendGrid\Content("text/plain", $body );
+      $mail = new SendGrid\Mail($from, $subject, $to, $content);
+      $response = $this->sg->client->mail()->send()->post($mail);
       $this->statuscode = $response->statusCode();
-      print $this->statuscode . "\n";
-      print_r($response->headers());
-      print $response->body() . "\n";
       $result = $this->statusok($this->statuscode);
-
     } catch (Exception $e) {
-        echo 'Caught exception: ',  $e->getMessage(), "\n";
+      echo 'Mail1t.mail exception: ',  $e->getMessage(), "\n";
     }
-    return result;
+    return $result;
   }
-
-    // $to = new SendGrid\Mail(null, $to_address);
-    // $content = new SendGrid\Content("text/plain", $body);
-    // $mail = new SendGrid\Mail($from, $subject, $to, $content);
-
-    // $sg = new \SendGrid($this->apiKey);
-    // $response = $sg->client->mail()->send()->post($mail);
-  //   return $response->statusCode();
-  // }
-
 
   function statusok($statuscode){
     return $statuscode < 400;

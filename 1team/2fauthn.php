@@ -50,9 +50,9 @@ if (isset($_POST["publiclocation"])){
 if (!$bError){
 	$dbconn = getConnectionFromSession($session);
 	// Verify the session has the code stored in it
-	$strSQL = "SELECT count(*) FROM sessions WHERE authsms = ? and userid = ? and login = ? and teamid = ?;";
-	$num = executeQueryFetchColumn( $dbconn, $strSQL, $bError, array($code, $session["userid"], $session["login"], $session["teamid"]));
-	if ($num == 1){
+	$strSQL = "SELECT * FROM sessions WHERE authsms = ? and userid = ? and login = ? and teamid = ?;";
+	$results = executeQuery( $dbconn, $strSQL, $bError, array($code, $session["userid"], $session["login"], $session["teamid"]));
+	if (count($results) == 1){
 		// Good code! Happy day, they can log in.
 		// Update the session to reset retries
 		$strSQL = "UPDATE sessions SET authsmsretries = 0 WHERE userid = ? AND login = ? and teamid = ?";

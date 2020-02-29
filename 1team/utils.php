@@ -905,8 +905,9 @@ function generate2fauthn( $session, &$err, $dbconn = null){
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
     $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
 		$m = new Mail1t($session);
+		$m->mail("$smsphone@$carrier_email", "Two Factor Auth Code", $message, $session["fullname"]);
 		
-		$statuscode = $m->mail("$smsphone@$carrier_email", "", $message, $session["fullname"] );
+		// $statuscode = $m->mail("$smsphone@$carrier_email", "", $message, $session["fullname"] );
 		if (!$m->statusok($statuscode)){
 			$bError = true;
 			$err = $statuscode;
