@@ -289,37 +289,54 @@ function getTeamID($session){
 
 // On fail return array(RC_PDO_Error)
 // Updates return count of update rows
-function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
+function executeQuery($dbconn, $strSQL, &$bError = false, $array_params = array(), $debug=false){
 	$items = array();
+	if ($debug) echo "<br/>DEBUG<br/>";
 	try {
-		$statement = $dbconn->prepare($sql);
+		$statement = $dbconn->prepare($strSQL);
+		if ($debug) var_dump($statement);
 		if (is_array($array_params)) {
 			if (count($array_params)<1){
+				if ($debug) echo("1");
 				$bError = ! $statement->execute();
+				if ($debug) var_dump($bError);
 			} else {
+				if ($debug) echo("2");
 				$bError = ! $statement->execute($array_params);
+				if ($debug) var_dump($bError);
 			}
 		} else {
+			if ($debug) echo("3");
 			$bError = ! $statement->execute();
+			if ($debug) var_dump($bError);
 		}
+		if ($debug) var_dump($bError);
 		if (!$bError) {
-			if ((strcasecmp(explode(' ',trim($sql))[0], "UPDATE") != 0) ||
-					(strcasecmp(explode(' ',trim($sql))[0], "INSERT") != 0) ||
-					(strcasecmp(explode(' ',trim($sql))[0], "DELETE") != 0)){
+			if ((strcasecmp(explode(' ',trim($strSQL))[0], "UPDATE") != 0) &&
+					(strcasecmp(explode(' ',trim($strSQL))[0], "INSERT") != 0) &&
+					(strcasecmp(explode(' ',trim($strSQL))[0], "DELETE") != 0)){
 				$items = $statement->fetchAll();
+				if ($debug)
+					var_dump(array("A#",(explode(' ',trim($strSQL))[0])));
 			}
-			else {
+			else if ((strcasecmp(explode(' ',trim($strSQL))[0], "UPDATE") == 0) ||
+					(strcasecmp(explode(' ',trim($strSQL))[0], "INSERT") == 0) ||
+					(strcasecmp(explode(' ',trim($strSQL))[0], "DELETE") == 0)){
 				$items = $statement->rowCount();
+				if ($debug)
+					var_dump(array("B#", $items,(explode(' ',trim($strSQL))[0])));
 			}
 		}
 		else {
 			$items = null;
 		}
 	} catch (PDOException $e) {
+		if ($debug) var_dump($e);
 		$err_detail = $dbconn->errorInfo();
 		if (strcmp($err_detail[0], "00000") != 0){
 			$bError = true;
-			var_dump(array($sql,$array_params, $err_detail));
+			echo("executeQuery failed<br/>");
+			var_dump(array($strSQL,$array_params, $err_detail));
 			print($e->getMessage());
 		}
 	}
@@ -449,7 +466,7 @@ function startSession( $sessionkey, $userid ){
 			echo( $Exception->getMessage( ) ." ". (int)$Exception->getCode( ) );
 	}
 
-	if (count($sessionResults) != 1) {
+	if ((! is_array($sessionResults)) || (count($sessionResults) != 1)) {
 		return RC_SessionNotFound_Error;
 	}
 
@@ -541,7 +558,7 @@ function isValidSessionKey( $userid, $sessionkey ){
 	if ($bError) return false;
 
 	// If no results, create a session record
-	if (count($rs) == 0) {
+	if ((! is_array($rs)) || (count($rs) == 0)) {
 		return false;
 	}
 	// if Session is expired, delete the row and return false

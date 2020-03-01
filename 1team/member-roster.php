@@ -60,7 +60,6 @@ if (!$bError) {
 	$array_params = array($teamid);
 	$user_results = executeQuery($dbconn, $strSQL, $bError, $array_params);
 
-
 	// Now that we've done the query, we need to strip the secondary sort column off.
 	$sortRequest = substr($sortRequest, 0, strpos($sortRequest, ",")); ?>
 <div id="bodycontent">

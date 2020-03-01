@@ -9,7 +9,6 @@ $bError = false;
 $err = "";
 
 if ( !$bError){
-	echo("1");
 	if ( isset($_REQUEST["roleid"])) {
 		$roleid = $_REQUEST["roleid"];
 	} else {
@@ -71,7 +70,6 @@ if ( !$bError){
 	} else {
 		$smsphone = "";
 	}
-	echo("2");
 
 	if ( isset($_REQUEST["smsphonecarrier"])) {
 		$smsphonecarrier = $_REQUEST["smsphonecarrier"];
@@ -206,7 +204,7 @@ if ( !$bError){
 	}
 }
 if ($bError){
-	// redirectToReferrer("&err=" . urlencode($err));
+	redirectToReferrer("&err=" . urlencode($err));
 }
 
 // Start footer section

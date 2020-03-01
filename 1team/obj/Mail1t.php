@@ -15,6 +15,8 @@ class Mail1t {
       $this->from = new SendGrid\Email(companyname. " ". defaultterm_appadmin, emailadmin);
       $this->apiKey = getenv('SENDGRID_API_KEY');
       $this->sg = new \SendGrid($this->apiKey);
+      $this->statuscode = null;
+      $this->response = null;
     } catch (Exception $e) {
         echo 'Mail1t exception: ',  $e->getMessage(), "\n";
     }
@@ -37,25 +39,28 @@ class Mail1t {
   // }
 
   function mail($to_address, $subject, $body, $to_name = ""){
-    $result = null;
+    $bError = false;
     $from = $this->from;
     // var_dump(array($to_address, $subject, $body, $to_name));
-    try {
-      
+    try { 
       $to = new SendGrid\Email($to_name, $to_address);
       $content = new SendGrid\Content("text/plain", $body );
       $mail = new SendGrid\Mail($from, $subject, $to, $content);
-      $response = $this->sg->client->mail()->send()->post($mail);
-      $this->statuscode = $response->statusCode();
-      $result = $this->statusok($this->statuscode);
+      $this->response  = $this->sg->client->mail()->send()->post($mail);
+      $this->statuscode = intval($this->response->statusCode());
+      $bError = ! $this->statusok($this->response );
     } catch (Exception $e) {
       echo 'Mail1t.mail exception: ',  $e->getMessage(), "\n";
     }
-    return $result;
+    return $bError;
   }
 
-  function statusok($response){
-    return $response->statuscode() < 400;
+  function statusok(){
+    if ($this->statuscode == null) return false;
+    else {
+      $status = intval($this->response->statuscode());
+      return ($status < 400);
+    }
   }
 
 }

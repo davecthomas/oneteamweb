@@ -23,12 +23,13 @@ if ((isset($_POST['gotourl'])) && (is_url($_POST["gotourl"]))) {
 $strSQL = "SELECT users.teamid as team_id, users.id as userid, users.*, teamaccountinfo.status as teamstatus FROM useraccountinfo, users LEFT OUTER JOIN teamaccountinfo ON (teamaccountinfo.teamid = users.teamid AND teamaccountinfo.status <> " . TeamAccountStatus_Inactive . ") WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND login = ?;";
 $dbconn = getConnection();
 $loginResults = executeQuery($dbconn, $strSQL, $bError, array($formLogin));
-$rowCount = count( $loginResults);
-if ($rowCount != 1) {
+
+if ((! is_array($loginResults)) || (count($loginResults) != 1)) {
 	$bError = true;
 	redirect("login-form.php?e=".RC_LoginFailure);
 
 } else {
+	$rowCount = count( $loginResults);
 	// Pull out the password and salt from the db
 	$salt = $loginResults[0]["salt"];
 	$passwordenc_db = $loginResults[0]["passwd"];

@@ -16,11 +16,7 @@ if ( isset($_GET["teamid"])){
 ?>
 <table  class="memberlist">
 <thead class="head"><tr>
-<?php
-if (isUser( $session, Role_ApplicationAdmin)){ ?>
 <th valign="top"><a href="<?php echo $referrer?><?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("firstname",$sortRequest)?><?php echo urlencode(", teamid")?>&filter=<?php echo $filterRequest?><?php echo $searchparm?>">Team</a></th>
-<?php
-} ?>
 <th valign="top"><a href="<?php echo $referrer?><?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("firstname",$sortRequest)?><?php echo urlencode(", lastname")?>&filter=<?php echo $filterRequest?><?php echo $searchparm?>">First Name</a></th>
 <th valign="top"><a href="<?php echo $referrer?><?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("lastname",$sortRequest)?><?php echo urlencode(", firstname")?>&filter=<?php echo $filterRequest?><?php echo $searchparm?>">Last Name</a></th>
 <th valign="top"><a href="<?php echo $referrer?><?php buildRequiredParams($session) ?>&teamid=<?php echo $teamid?>&sort=<?php echo sortModifier("roleid",$sortRequest)?><?php echo urlencode(", firstname")?>&filter=<?php echo $filterRequest?><?php echo $searchparm?>">Role</a></th>

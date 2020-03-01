@@ -590,7 +590,6 @@ $bgenpass, $bIntro, &$err ){
 	$strSQL = "SELECT id FROM users WHERE login=? AND teamid = ?;";
   $dbconn = getConnectionFromSession($session);
   $results = executeQuery($dbconn, $strSQL, $bError, array($login, $teamid));
-		var_dump($results);
 
 	if ( count($results) > 0) {
 		$bError = true;
@@ -631,14 +630,24 @@ $bgenpass, $bIntro, &$err ){
 	timelockoutexpires - for accounts locked for time period
 	*/
 	} else {
-		var_dump(array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
 		// Non members have a bunch of null fields
 		if (!doesRoleContain($roleid, Role_Member)) {
-			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
-      $results = executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
+			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, DEFAULT);" ;
+			$results = executeQuery($dbconn, $strSQL, $bError, 
+			array($firstname, $lastname, /* startdate, */ $address1, $city, $state, $postalcode, 
+			$smsphone, $phone2, $login, /* birthdate, */ $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
 		} else {
-			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
-			$results = executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $teamid, $roleid, $address2, $smsphonecarrier));
+			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, DEFAULT);" ;
+			// var_dump(array($firstname, $lastname, /* startdate, */ $address1, $city, $state, $postalcode, 
+			// $smsphone, $phone2, $login, /* birthdate, */ $referredby, $notes, $coachid, 
+			// $emergencycontact, $ecphone1, $ecphone2, $gender, /* stopdate, stopreason, */ $teamid, $roleid, 
+			// $address2, /* useraccountinfo, salt, passwd, imageid, */ $smsphonecarrier /* , ipaddr, timelockoutexpires */ ));
+			$results = executeQuery($dbconn, $strSQL, $bError, 
+			array($firstname, $lastname, /* startdate, */ $address1, $city, $state, $postalcode, 
+			$smsphone, $phone2, $login, /* birthdate, */ $referredby, $notes, $coachid, 
+			$emergencycontact, $ecphone1, $ecphone2, $gender, /* stopdate, stopreason, */ $teamid, $roleid, 
+			$address2, /* useraccountinfo, salt, passwd, imageid, */ 
+			$smsphonecarrier /* , ipaddr, timelockoutexpires */ ));
 		}
 		
 		if ($bError) {
@@ -680,15 +689,15 @@ $bgenpass, $bIntro, &$err ){
 				} else {
 					// Get the new useraccountinfo id
 					$strSQL = "SELECT id FROM useraccountinfo WHERE userid = ? AND teamid = ?;";
-					$useracctResults = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+					$useracctResults = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($userid, $teamid));
 
-					if (count($useracctResults) == 0) {
+					if ($useracctResults == null) {
 						$bError = true;
 						$err = "Account info.";
 					} else {
 						// Update the user record with the useraccountinfo
 						$strSQL = "UPDATE users SET useraccountinfo = ? WHERE id = ? AND teamid = ?;";
-						$results = executeQuery(array($useracctResults[0]["id"], $userid, $teamid));
+						$results = executeQuery(array($useracctResults, $userid, $teamid));
 						if ($bError) {
 							$err = "User to user account.";
 						} else {
@@ -702,7 +711,7 @@ $bgenpass, $bIntro, &$err ){
 			}
 		}
 	}
-	if ($bError)                  // failure
+	if (($bError) && ($userid != User::UserID_Undefined)) // failure
 		return User::UserID_Undefined;
 	else
 		return $userid;          // Success
@@ -903,7 +912,6 @@ function getSmsPhone( $userid, $teamid, &$smsphonecarrieremail, &$err, $dbconn =
 
 // Generate an "email" SMS to the current session user's smsphone
 function generate2fauthn( $session, &$err, $dbconn = null){
-
 	$bError = false;
 	$err = "";
 	$carrier_email = "";
@@ -916,15 +924,17 @@ function generate2fauthn( $session, &$err, $dbconn = null){
 		// Save the auth code in the session
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
     $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
-		$m = new Mail1t($session);
-		$response = $m->mail("$smsphone@$carrier_email", "Two Factor Auth Code", $message, $session["fullname"]);
-		
-		// $statuscode = $m->mail("$smsphone@$carrier_email", "", $message, $session["fullname"] );
-		if (!$m->statusok($response)){
+		if ($results == 1){
+			$m = new Mail1t($session);
+			$bError = $m->mail("$smsphone@$carrier_email", appname." Two Factor Auth Code", $message, $session["fullname"]);
+			if (!$m->statusok()){
+				$bError = true;
+				$err = $m->statuscode;
+			}
+		} else {
 			$bError = true;
-			$err = $statuscode;
-	var_dump(array($bError, $err));
-
+			$err = "sql";
+			echo("swl");
 		}
 	}
 	return $bError;
