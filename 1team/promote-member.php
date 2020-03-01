@@ -49,4 +49,3 @@ if ($bError) {
 } else {
 	redirect("include-promotions.php?id=" . $memberID . "&pagemode=standalone&mode=user&teamid=" . $teamid. "&done=1" . buildRequiredParamsConcat($session));
 } ?>
-

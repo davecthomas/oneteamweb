@@ -39,7 +39,7 @@ if (isUser($session, Role_TeamAdmin)){
 
 
 if (!$bError) {
-
+	$dbconn = getConnectionFromSession($session);
 	$teamname = getTeamName($teamid, $dbconn);
 
 	// GEt skus

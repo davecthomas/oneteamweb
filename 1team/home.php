@@ -12,9 +12,22 @@ if ((!isUser( $session, Role_ApplicationAdmin)) && (isset($session["teamid"]))) 
 	else $teamid = 0;
 }
 
-$strSQL = "SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
+$strSQL = <<<EOD
+SELECT users.*, users.id as userid, images.*, useraccountinfo.* FROM useraccountinfo, teams 
+RIGHT OUTER JOIN images 
+RIGHT OUTER JOIN users 
+ON users.imageid = images.id 
+ON images.teamid = teams.id 
+WHERE users.useraccountinfo = useraccountinfo.id 
+AND users.id = ? and users.teamid = ?;
+EOD;
 $dbconn = getConnectionFromSession($session);
-$userprops = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+$userprops_records = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
+if (count($userprops_records) == 1){
+	$userprops = $userprops_records[0];
+} else {
+	$userprops = null;
+}
 if ((! is_array($teaminfo)) && ($teaminfo == RC_TeamID_Invalid)){
 	$teamname_str = "";
 	$teamname = "";
@@ -25,7 +38,7 @@ if ((! is_array($teaminfo)) && ($teaminfo == RC_TeamID_Invalid)){
 
 echo "<h3>" .$title . " of " . roleToStr($session["roleid"], $teamterms) . " " . $username . $teamname_str ."</h3>\n";
 
-if (isset($userprops["id"])) {
+if (($userprops != null) && (isset($userprops["id"]))) {
 	$teamid = $userprops["teamid"];
 	$roleid = $userprops["roleid"];
 	$runningOnAdminConsole = (bool) (AttendanceConsole::isAttendanceConsole($session));
@@ -252,7 +265,7 @@ if (! isUser( $session,Role_ApplicationAdmin) ) {
 	} else {
 		$startdate =  date("m/d/Y");
 	}
-	$time_in_str = getMembershipDurationInMonths($userid, $dbconn, $bError);?>
+	$time_in_str = getMembershipDurationString($userid, $dbconn, $bError);?>
 <td  valign="top"><?php echo $startdate?> (<?php echo $time_in_str ?>)</td>
 </tr>
 </table>

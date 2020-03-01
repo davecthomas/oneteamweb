@@ -15,10 +15,6 @@ class Mail1t {
       $this->from = new SendGrid\Email(companyname. " ". defaultterm_appadmin, emailadmin);
       $this->apiKey = getenv('SENDGRID_API_KEY');
       $this->sg = new \SendGrid($this->apiKey);
-      // $this->email = new \SendGrid\Mail();
-      // $this->sendgrid = new \SendGrid($this->apiKey);
-      // $this->session = $session;
-      // $this->statuscode = null;
     } catch (Exception $e) {
         echo 'Mail1t exception: ',  $e->getMessage(), "\n";
     }
@@ -58,8 +54,8 @@ class Mail1t {
     return $result;
   }
 
-  function statusok($statuscode){
-    return $statuscode < 400;
+  function statusok($response){
+    return $response->statuscode() < 400;
   }
 
 }

@@ -39,9 +39,8 @@ if ( isset($_GET["pagemode"])) {
 } else {
 	$pagemode = "standalone";
 }
-
-$teamname = getTeamName($teamid, $dbconn);
 $dbconn = getConnectionFromSession($session);
+$teamname = getTeamName($teamid, $dbconn);
 ?>
 <h3><?php echo $title . " for " . $teamname . " " . $teamterms["termmember"] . " " . getUserName($memberid, $dbconn);?></h3>
 <?php

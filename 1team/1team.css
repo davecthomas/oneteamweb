@@ -18,7 +18,7 @@
 }
 /* The userbanner is the lucky inhabitant of the top of the screen */
 #userbanner {
-	font-size: .6em;
+	font-size: .8em;
 	position:absolute;
 	top:0; right:0;
 }
@@ -30,13 +30,13 @@
 #search {
 	position:absolute; left: 0px; top: 0px;
 	margin-top: -13px;
-	font-size:.6em;
+	font-size:.8em;
 }
 
 #wrapper {
     position: absolute;
 	/* Leave just enough room for the userbanner */
-    top: 1.25em;
+    top: 2em;
     left: 5;
 	min-height: 95%;
 	/* next 2 lines: hack for IE 6 */
@@ -59,7 +59,7 @@ html, body {
 	width: 110px;
 }
 #footer {
-	font-size: .6em;
+	font-size: .8em;
 	float: left;
 	position:absolute;
 	bottom: 0; left: 0;
@@ -91,7 +91,7 @@ div.navtop {
 }
 
 .navtop li  {
-	width:120px;
+	width:9em;
 	margin: 0 -1px 0 0;
 	padding: 0;
 	border:1px solid #88aa88;
@@ -123,7 +123,7 @@ div.navtop {
 	display: block;
 	position:absolute;
 	z-index:1;
-	width:120px;
+	width:9em;
 	padding: 0;
 	margin: 0;
 	border:1px solid #88aa88;
@@ -214,22 +214,22 @@ table.idcard td {
 .noevents { color: red;font-weight:bold; background-color:inherit}
 .money { background-color:inherit}
 .debit { color: red;font-style:italic; background-color:inherit}
-.moneytotal { border-width: 3px 0 0 0; border-style: solid;  border-color:#000000; font-weight:bold ; font-size: 1.5em; background-color:inherit}
-.moneytotaldebit { border-width: 3px 0 0 0; border-style: solid; font-style:italic; border-color:#000000; color: red; font-weight:bold ; font-size: 1.5em; background-color:inherit}
+.moneytotal { border-width: 3px 0 0 0; border-style: solid;  border-color:#000000; font-weight:bold ; font-size: 2em; background-color:inherit}
+.moneytotaldebit { border-width: 3px 0 0 0; border-style: solid; font-style:italic; border-color:#000000; color: red; font-weight:bold ; font-size: 2em; background-color:inherit}
 .billingissue { color:#CC6600;font-weight:bold; background-color:inherit}
 .important { color:#CC33CC;font-weight:bold; background-color:inherit}
 .usererror { color: red;font-weight:bold; background-color:inherit}
 .attention {font-weight:bold; background-color:inherit}
 .bold { font-weight:bold ; background-color:inherit}
 .subdued{ color:#999999; background-color:inherit}
-.small {	font-size: .8em;background-color:inherit}
-.smallnormal {	font-size: .8em;font-weight: normal;background-color:inherit}
+.small {	font-size: 1em;background-color:inherit}
+.smallnormal {	font-size: 1em;font-weight: normal;background-color:inherit}
 .normal {	font-weight: normal;}
-.smallbold {	font-size: .8em;font-weight:bold ;background-color:inherit}
-.smaller {	font-size: .6em;background-color:inherit}
-.smallerbold {	font-size: .6em;font-weight:bold ;background-color:inherit}
-.bigstrong {	 font-weight:bold ;font-size: 1.5em;background-color:inherit}
-.bigstrongcenter {	 font-weight:bold ;font-size: 1.5em;background-color:inherit;text-align: center}
+.smallbold {	font-size: 1em;font-weight:bold ;background-color:inherit}
+.smaller {	font-size: .8em;background-color:inherit}
+.smallerbold {	font-size: .8em;font-weight:bold ;background-color:inherit}
+.bigstrong {	 font-weight:bold ;font-size: 1.9em;background-color:inherit}
+.bigstrongcenter {	 font-weight:bold ;font-size: 1.9em;background-color:inherit;text-align: center}
 .strong { font-weight:bold ;}
 
 /* Anchor treatment can be summed up as follows:
@@ -334,12 +334,12 @@ input{
   border-color:#88aa88;
   border-width:thin;
   background:#fefffe;
-  font-size:9px;
+  font-size: 1em;
 }
 
 input.btn{
    font-weight:bold;
-   font-size:9px;
+   font-size: 1.2em;
    background-color: #ddeedd;
    border-color:#efe;
    -moz-border-radius: 5px; -webkit-border-radius: 5px;
@@ -354,13 +354,13 @@ input.btnhover{
 
 input.btnbig{
    font-weight:bold;
-   font-size:14px;
+   font-size:2em;
    background-color: #ddffdd;
    -moz-border-radius: 5px; -webkit-border-radius: 5px;
 }
 
 input.btnbighover{
-	font-size:14px;
+	font-size:2em;
   	color: #FFFFFF;
 	background-color: #003300;
 	-moz-border-radius: 5px; -webkit-border-radius: 5px;
@@ -371,13 +371,13 @@ div helpbox{
 }
 div.helpboxtitle {
 	font-size: 2em; 
-	font-size: .83em; 
+	font-size: 1.2em; 
 	font-weight: bolder;
 	margin-left:50px;
 	margin-right:200px;
 } 
 div.helpboxtext {
-	font-size: .75em; 
+	font-size: 1em; 
 	padding:4px 6px 4px 6px; 
 	color: #555555; 
 	background-color: #eeeeee; 
@@ -390,7 +390,7 @@ div.helpboxtext {
 }
 
 div.scanbox {
-	font-size: .75em; 
+	font-size: 1em; 
 	padding:4px 6px 4px 6px; 
 	background-color: #ddeedd; 
 	border: #dddddd 2px solid;
@@ -413,7 +413,7 @@ div.errorboxclose {
 
 div.errorboxshow {
 	display:inline;
-	font-size: .75em; 
+	font-size: 1em; 
 	color:#FF0000;
 	position:absolute;
 	top: 100px;
@@ -440,7 +440,7 @@ div.msgboxclose {
 
 div.msgboxshow {
 	display:inline;
-	font-size: .75em; 
+	font-size: 1em; 
 	color:#000000;
 	position:absolute;
 	top: 33%;
@@ -467,7 +467,7 @@ div.confirmboxclose {
 
 div.confirmboxshow {
 	display:inline;
-	font-size: .75em; 
+	font-size: 1em; 
 	color:#000000;
 	position:absolute;
 	top: 33%;
@@ -502,16 +502,17 @@ TH              { font-weight: bolder; text-align: center }
 CAPTION         { text-align: center }
 BODY            { padding: 8px; line-height: 1.33 }
 H1              { font-size: 2em; margin: .67em 0 }
-H2              { font-size: 1.5em; margin: .83em 0 }
-H3              { font-size: 1.17em; }
+H2              { font-size: 2em; margin: .83em 0 }
+H3              { font-size: 1.37em; }
+H4              { font-size: 1.17em; }
 H4, P,
 BLOCKQUOTE, UL,
 FIELDSET, FORM,
 OL, DL, DIR,
 MENU            { margin: 1.33em 0 }
-TABLE,P,UL,OL,select   { font-size: 10px }
-H5              { font-size: .83em; line-height: 1.17em; margin: 1.67em 0 }
-H6              { font-size: .67em; margin: 2.33em 0 }
+TABLE,P,UL,OL,select   { font-size: 1.2em }
+H5              { font-size: 1.2em; line-height: 1.17em; margin: 1.67em 0 }
+H6              { font-size: .9em; margin: 2.33em 0 }
 H1, H2, H3, H4,
 H5, H6, B,
 STRONG          { font-weight: bolder }
@@ -520,7 +521,7 @@ STRONG          { font-weight: bolder }
 /* Calendar stuff */
 /* special tiny text for number of events on a date */
 #datedetail {
-	font-size: .6em;
+	font-size: .8em;
 	background-color:inherit;
 	text-decoration: none;
 	text-align:right;

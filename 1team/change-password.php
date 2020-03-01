@@ -43,8 +43,8 @@ foreach ($results as $row) {
 		$passwd = trimPassword( $passwd );
 		// Store the new passwd
 		$strSQL = "update users set passwd = ? where id = ?;";
-		$results = executeQuery(array($passwd, $session["userid"])))
-		if (count($results)>0){
+		$results = executeQuery(array($passwd, $session["userid"]));
+		if ($results != null){
 ?>
 <h3>Password changed</h3>
 <p>Password for <a href="home.php<?php buildRequiredParams($session)?>"><?php echo $session["fullname"] ?></a> changed.</p>

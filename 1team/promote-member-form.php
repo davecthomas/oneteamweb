@@ -52,7 +52,7 @@ if ( ! $bError ) { ?>
 <p>
 <table class="noborders">
 <?php
-	$strSQL = "SELECT users.firstname, users.lastname, users.id, useraccountinfo.status, useraccountinfo FROM users, useraccountinfo WHERE roleid & " . Role_Member . " = " . Role_Member . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> ? ORDER BY firstname;";
+	$strSQL = "SELECT users.firstname, users.lastname, users.id, useraccountinfo.status, useraccountinfo FROM users, useraccountinfo WHERE roleid <>" . Role_ApplicationAdmin . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> ? ORDER BY firstname;";
 	$dbconn = getConnectionFromSession($session);
 	$user_records = executeQuery($dbconn, $strSQL, $bError, array( $teamid, UserAccountStatus_Inactive));
 	$promolistorder = 0;
@@ -62,7 +62,7 @@ if ( ! $bError ) { ?>
 <td><select name="id">
 	<?php
 	if ( $userid == 0 ) {
-		echo('<option value="0" selected>Select user...</option>');
+		echo('<option value="0" selected>Select '.defaultterm_member.'...</option>');
 	}
 	foreach ($user_records as $row) {
 		echo '<option value="';

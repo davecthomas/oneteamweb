@@ -9,6 +9,7 @@ $bError = false;
 $err = "";
 
 if ( !$bError){
+	echo("1");
 	if ( isset($_REQUEST["roleid"])) {
 		$roleid = $_REQUEST["roleid"];
 	} else {
@@ -70,6 +71,7 @@ if ( !$bError){
 	} else {
 		$smsphone = "";
 	}
+	echo("2");
 
 	if ( isset($_REQUEST["smsphonecarrier"])) {
 		$smsphonecarrier = $_REQUEST["smsphonecarrier"];
@@ -189,9 +191,11 @@ if ( !$bError){
 	}
 
 	if ( !$bError) {
-	     $userid = createUser($session, $teamid, $roleid, $startdate, $firstname, $lastname, $login, $email, $address, $address2, $city, $state, $postalcode,
-				$smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $isbillable, $status,
-				$sendemail, /* Gen password is driven off of same value as email */ $sendemail /* Send email */);
+	     $userid = createUser($session, $teamid, $roleid, $startdate, $firstname, $lastname, 
+			 $login, $email, $address1, $address2, $city, $state, $postalcode,
+				$smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid, 
+				$emergencycontact, $ecphone1, $ecphone2, $gender, $isbillable, $status,
+				$sendemail, /* Gen password is driven off of same value as email */ $sendemail /* Send email */, $bError);
 		if ($userid != User::UserID_Undefined) {
 			redirect("user-props-form.php?teamid=" . $teamid . "&id=" . $userid . "&" . returnRequiredParams($session)."&new=1");
 		} else {
@@ -202,7 +206,7 @@ if ( !$bError){
 	}
 }
 if ($bError){
-	redirect($_SERVER['HTTP_REFERER'] . "&err=" . urlencode($err));
+	// redirectToReferrer("&err=" . urlencode($err));
 }
 
 // Start footer section

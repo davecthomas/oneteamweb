@@ -6,7 +6,6 @@ include_once('DbObject.php');
  * @author dthomas
  */
 class RedemptionCard extends DbObject {
-
 	const TypeUndefined = Attendance::AttendanceLogTypeUndefined;
 	const TypeRegular = Attendance::AttendanceLogTypeRegular;
 	const TypeGuestPass= Attendance::AttendanceLogTypeGuestPass;
@@ -24,7 +23,7 @@ class RedemptionCard extends DbObject {
 	const RecipientGroupGuest = 8;				// Guests - non-members
 
 	// Returns an array of supported Redemption Cards
-	static function getRedemptionCardTypes(){
+	static public function getRedemptionCardTypes(){
 		return array(RedemptionCard::TypeUndefined => "undefined", RedemptionCard::TypeGiftCard => "Gift Certificate", RedemptionCard::TypeGuestPass => "Guest Pass", RedemptionCard::TypeEPunch => "Electronic Punch Card");
 	}
 
@@ -43,13 +42,11 @@ class RedemptionCard extends DbObject {
 
 	function __construct( $session, $id = DbObject::DbID_Undefined, $code = ""){
 		parent::__construct($session);
-		echo "7.1";
 		if ($id != DbObject::DbID_Undefined)
 			$this->initLocals( $this->getRecord($id));
 		else if (strlen($code)>0)
 			$this->initLocals( $this->getRecordFromCode($code));
 		// if neither branch executes, we basically have a useless, harmless empty object, so no need to error
-		echo "7.2";
 
 	}
 	function initFromCode( $barcode) {
@@ -77,18 +74,20 @@ class RedemptionCard extends DbObject {
 	}
 
 	private function getRecord( $id){
+		$bError = false;
 		// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 		$strSQL = "SELECT * FROM redemptioncards WHERE teamid = ? AND id = ?;";
-		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), array($this->teamid, $id));
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), $strSQL, $bError, array($this->teamid, $id));
 		if ($bError) return RC_PDO_Error;
 		else return $this->dbrecord ;
 	}
 
 
 	private function getRecordFromCode( $barcode){
+		$bError = false;
 		// Now get the sum of the face value since this should be very interesting for guest passes and other give-aways
 		$strSQL = "SELECT * FROM redemptioncards WHERE teamid = ? AND code = ?;";
-		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), array($this->teamid, $barcode)));
+		$this->dbrecord = executeQuery( getConnectionFromSession($this->session), $strSQL, $bError, array($this->teamid, $barcode));
 		if ($bError) return RC_PDO_Error;
 		else return $this->dbrecord ;
 	}

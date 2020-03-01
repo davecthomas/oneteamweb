@@ -9,6 +9,7 @@ if ($pagemode == "standalone") {
 	include('header.php');
 	$expandimg = "collapse";
 	$expandclass = "showit";
+	$session = getSession();
 } else { ?>
 <link rel="stylesheet" type="text/css" href="1team.css"/>
 <script type="text/javascript" src="/1team/utils.js"></script>
@@ -17,6 +18,7 @@ if ($pagemode == "standalone") {
 	$expandimg = "expand";
 	$expandclass = "hideit";
 }
+$dbconn = getConnectionFromSession($session);
 if (isset($_GET["id"])) {
 	$userid = $_GET["id"];
 	if (!isset($username)) {
@@ -98,7 +100,6 @@ if (!$bError ) {
 		if ($whomode == "team") { ?>
 <h5>Promotions for Active <?php echo $teamterms["termmember"]?>s</h5>
 <?php
-			$objname = $teamterms["termteam"];
 		} else {
 			$objname = $promoResults[0]["firstname"] . " " . $promoResults[0]["lastname"];
 			if ($pagemode == "standalone") { ?>

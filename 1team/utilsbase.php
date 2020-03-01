@@ -290,7 +290,7 @@ function getTeamID($session){
 // On fail return array(RC_PDO_Error)
 // Updates return count of update rows
 function executeQuery($dbconn, $sql, &$bError = false, $array_params = array()){
-	$items = null;
+	$items = array();
 	try {
 		$statement = $dbconn->prepare($sql);
 		if (is_array($array_params)) {

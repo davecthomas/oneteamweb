@@ -578,16 +578,20 @@ function getMoneyTotalClass($amount){
 }
 
 // Returns a userid or User::UserID_Undefined on failure
-function 	createUser($session, $teamid, $roleid, $startdate, $firstname, $lastname, $login, $email, $address1, $address2, $city, $state, $postalcode,
-$smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $isbillable, $status, $bgenpass, $bIntro, &$err ){
-
+function 	createUser($session, $teamid, $roleid, $startdate, $firstname, $lastname, 
+$login, $email, $address1, $address2, $city, $state, $postalcode,
+$smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid, 
+$emergencycontact, $ecphone1, $ecphone2, $gender, $isbillable, $status, 
+$bgenpass, $bIntro, &$err ){
 	$bError = false;
 	$userid= User::UserID_Undefined;
 
-	// Make sure this is a unique login on this team
+	// // Make sure this is a unique login on this team
 	$strSQL = "SELECT id FROM users WHERE login=? AND teamid = ?;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $results = executeQuery($dbconn, $strSQL, $bError, array($login, $teamid));
+		var_dump($results);
+
 	if ( count($results) > 0) {
 		$bError = true;
 		$err = "Login unavailable.";
@@ -627,6 +631,7 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 	timelockoutexpires - for accounts locked for time period
 	*/
 	} else {
+		var_dump(array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $teamid, $roleid, $address2, $smsphonecarrier));
 		// Non members have a bunch of null fields
 		if (!doesRoleContain($roleid, Role_Member)) {
 			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
@@ -635,7 +640,7 @@ $smsphone, $smsphonecarrier, $phone2, $birthdate, $referredby, $notes, $coachid,
 			$strSQL = "INSERT INTO users VALUES (DEFAULT, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, NULL);" ;
 			$results = executeQuery($dbconn, $strSQL, $bError, array($firstname, $lastname, $address1, $city, $state, $postalcode, $smsphone, $phone2, $login, $referredby, $notes, $coachid, $emergencycontact, $ecphone1, $ecphone2, $gender, $teamid, $roleid, $address2, $smsphonecarrier));
 		}
-
+		
 		if ($bError) {
 			$err = "User creation error.";
 		} else {
@@ -782,10 +787,15 @@ function resetPassword($session, $teamid, $userid, $bEmail, $bIntro){
 
 // get team and accountinfo
 function getTeam($session, $teamid, &$teamResults){
-
+	$bError = false;
 	$strSQL = "SELECT teams.id as id_team, teams.*, teamaccountinfo.* FROM teams, teamaccountinfo WHERE teamaccountinfo.teamid = teams.id AND teams.id = ?;";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $teamResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+	if (count($teamResults)>0){
+		$teamResults = $teamResults[0];
+	} else {
+		$teamResults = array();
+	}
   return RC_Success;
 }
 
@@ -818,21 +828,23 @@ function getUserBarcodeNumber($teamid, $id){
 }
 
 function promoteUser($session, $teamid, $userid, $levelID, $promotionDate){
-
+	$rc = null;
 	$strSQL = "SELECT * FROM users WHERE id = ?";
-  $dbconn = getConnection();
+  $dbconn = getConnectionFromSession($session);
   $userprops = executeQuery($dbconn, $strSQL, $bError, array($userid ));
-
-	if (isset($userprops["id"])) {
+	if ((count($userprops) == 1) && (isset($userprops[0]["id"]))) {
 		// Add a record to the promotions table with the member id and date.
-		$strSQL = "INSERT INTO promotions VALUES ( DEFAULT, ?,?,?, ?);";
+		$strSQL = "INSERT INTO promotions VALUES ( DEFAULT, ?,?,?,?, NULL);";
+		// var_dump(array($userid, $promotionDate, $levelID, $teamid));
 		$results = executeQuery($dbconn, $strSQL, $bError, array($userid, $promotionDate, $levelID, $teamid));
-		return RC_Success;
+		if ($bError) $rc = RC_Promotion_Error;
+		else $rc = RC_Success;
 
 	// Error
 	} else {
-		return RC_Promotion_Error;
+		$rc = RC_Promotion_Error;
 	}
+	return $rc;
 }
 
 // Return the Level ID given the name (case insensitive)
@@ -905,10 +917,10 @@ function generate2fauthn( $session, &$err, $dbconn = null){
 		$strSQL = "UPDATE sessions SET authsms = ? WHERE ipaddr = ? AND userid = ? AND teamid = ?;";
     $results = executeQuery($dbconn, $strSQL, $bError, array((int)$message, $session["ipaddr"], $session["userid"], $session["teamid"]));
 		$m = new Mail1t($session);
-		$m->mail("$smsphone@$carrier_email", "Two Factor Auth Code", $message, $session["fullname"]);
+		$response = $m->mail("$smsphone@$carrier_email", "Two Factor Auth Code", $message, $session["fullname"]);
 		
 		// $statuscode = $m->mail("$smsphone@$carrier_email", "", $message, $session["fullname"] );
-		if (!$m->statusok($statuscode)){
+		if (!$m->statusok($response)){
 			$bError = true;
 			$err = $statuscode;
 	var_dump(array($bError, $err));

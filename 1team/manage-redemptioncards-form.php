@@ -25,6 +25,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
+$dbconn = getConnectionFromSession($session);
 $objname = getTeamName($teamid, $dbconn);
 
 // set up sort redemptioncard
@@ -97,6 +98,7 @@ if (!$bError){
 				paymentmethod, redemptioncards.description, redemptioncards.expires, type, code, users.id, firstname, lastname, skus.programid, skus.name
 				ORDER BY createdate DESC";
 		$results = executeQuery($dbconn, $strSQL, $bError, array($programid, $teamid));
+		if ($results == null) $results = array();
 
 		// Now get guest cards, if any
 		$strSQL = "select redemptioncards.userid as uid, redemptioncards.teamid as redemptioncardteamid, redemptioncards.id as redemptioncardid, redemptioncards.*,

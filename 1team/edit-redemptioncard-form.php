@@ -15,7 +15,6 @@ if ((isset($_GET["id"])) && (is_numeric($_GET["id"]))) {
 	$id = RedemptionCardID_Unknown;
 }
 
-
 // Default values
 $cardTypes = RedemptionCard::getRedemptionCardTypes();
 $type = RedemptionCard::TypeGuestPass;
@@ -53,7 +52,6 @@ if (isUser($session, Role_TeamAdmin)){
 	}
 }
 
-
 if (!$bError) {
 	if ($mode == EditCard){
 		$redemptioncard = new RedemptionCard($session, $id);
@@ -71,7 +69,8 @@ if (!$bError) {
 			$description = $redemptioncard->getDescription();
 			$uid = $redemptioncard->getUserID();
 		}
-	}?>
+	}
+	?>
 <h3><?php	echo $title . " for " . $teaminfo["teamname"]?></h3>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">Instructions for Redemption Cards<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
@@ -458,8 +457,9 @@ function getSelectList( srcList){
 			$sortRequest = cleanSQL($sortRequest);
 		}
 
-		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = " . UserAccountStatus_Active . " AND users.teamid = ? ORDER BY firstname;";
-		$results = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+		$strSQL = "SELECT users.firstname, users.lastname, users.id as userid, users.smsphone, users.smsphonecarrier, useraccountinfo.email FROM users, useraccountinfo WHERE users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status = ? AND users.teamid = ? ORDER BY firstname;";
+		$results = executeQuery($dbconn, $strSQL, $bError, array(UserAccountStatus_Active, $teamid));
+		?>
 <div id="rosterdiv">
 <h4>Select From List</h4>
 <p>Selected <?php echo $teamterms["termmember"]?>s.</p>
