@@ -21,13 +21,13 @@ if (!isUser($session, Role_ApplicationAdmin)){
 	if (isset($session["teamid"])){
 		$teamid = $session["teamid"];
 	} else {
-	     $bError = true;
+	  $bError = true;
 		$err = "t";
 	}
 } else {
 	if (isset($_POST["teamid"])){
 		$teamid = $_POST["teamid"];
-		echo("2tea {$teamid}!");
+		// echo("2tea {$teamid}!");
 	} else {
 	     $bError = true;
 		$err = "t";
@@ -61,11 +61,10 @@ if (($id == User::UserID_Undefined) || (!isValidUserID($id))) { ?>
 		} else {
 			$sendemail = false;
 		}
-		echo("teamid {$teamid}");
+		// echo("teamid {$teamid}");
 		$bError = resetPassword($session, $teamid, $id, $sendemail, $intro);
 
-		if (!$bError){
-		  ?>
+		if (!$bError){?>
 <h3>Password Reset</h3>
 <div class="indented-group-noborder">
 <p>Password for <a href="user-props-form.php?id=<?php echo $id . "&" . returnRequiredParams($session) . "&teamid=".$teamid?>"><?php echo getUserName($id, $dbconn)?></a> has been reset

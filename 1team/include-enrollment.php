@@ -51,70 +51,134 @@ $numMonths = datediff("m", $startdatetime->format("m/d/Y"), date("m/d/Y"));
 $nextmonth = new DateTime($startdatetime->format("d-m-Y"));
 
 // Only looking for a count with this query
-$sqlBase = "SELECT COUNT(*) AS ROW_COUNT FROM users where teamid = ?";
+$sqlBase = "SELECT * FROM users where teamid = ?";
 $dbconn = getConnectionFromSession($session);
-
+$enrollmentArrayStarted = array();
+$enrollmentArrayStopped = array();
 for ($enrollmentLoop = 0; $enrollmentLoop < $numMonths; $enrollmentLoop++){
-	$thismonth = $nextmonth->format("m-d-Y");
+	$thismonth = $nextmonth->format("Y-m-d");
 	$nextmonth->modify("+1 month");
 	// Finish the query by adding a where clause covering one month beyond the last query
-	$strSQL = $sqlBase . " and (startdate >= '" . $thismonth . "' and startdate < '" . $nextmonth->format("m-d-Y") . "');";
-  $results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid))
-  if (!$bError)){
-	     $enrollmentArrayStarted[$enrollmentLoop] = $results;
+	$strSQL = $sqlBase . " and (startdate >= '" . $thismonth . "' and startdate < '" . $nextmonth->format("Y-m-d") . "');";
+  $results_rows = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+  if ((is_array($results_rows)) && (!$bError)){
+	     $enrollmentArrayStarted[$enrollmentLoop] = count($results_rows);
 	} else {
 	     $enrollmentArrayStarted[$enrollmentLoop] = 0;
 	}
 
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (stopdate >= '" . $thismonth . "' and stopdate < '" . $nextmonth->format("m-d-Y") . "');";
-	$results = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid))
-	if (! $bError)){
-	     $enrollmentArrayStopped[$enrollmentLoop] = $results;
+	$results_rows = executeQuery($dbconn, $strSQL, $bError, array($teamid));
+	if ((is_array($results_rows)) && (!$bError)){
+	     $enrollmentArrayStopped[$enrollmentLoop] = count($results_rows);
 	} else {
 	     $enrollmentArrayStopped[$enrollmentLoop] = 0;
 	}
 }
-
 $enrollmentCount = 0;
 $monthseries = new DateTime($startdatetime->format("d-m-Y"));
-$datastring = "<chart>" . "<series>";
-for ($enrollmentLoop = 0 ;  $enrollmentLoop <= $numMonths-1; $enrollmentLoop++){
-	$monthseries->modify("+1 month");
-	$datastring = $datastring . "<value xid='" . $enrollmentLoop . "'>" . $monthseries->format("m/d/Y") . "</value>" ;
-}
-$datastring = $datastring . "</series>";
-
+$datastring = "[\n";
 // This graph data includes the number of members in enrollment for each month the team has been in 1TeamWeb
-$datastring = $datastring . "<graphs>";
-$datastring = $datastring . "<graph gid='2' title='Number of " . $teamterms["termmember"] . "s'>";
 for ($enrollmentLoop = 0;  $enrollmentLoop <= $numMonths-1; $enrollmentLoop++){
 	$enrollmentCount = $enrollmentCount + $enrollmentArrayStarted[$enrollmentLoop] - $enrollmentArrayStopped[$enrollmentLoop];
-	$datastring = $datastring . "<value xid='" . $enrollmentLoop . "'>" . $enrollmentCount . "</value>";
+	
+	$nextmonth = $monthseries->modify("+1 month");
+	$nextmonth_js_timestamp = $nextmonth->getTimestamp() * 1000;
+	$datastring = $datastring . "{date: " . "new Date( " . $nextmonth_js_timestamp.")" . ",\n";
+	$datastring = $datastring . "enrollment: " .$enrollmentCount . "}\n";
+	if ($enrollmentLoop<$numMonths-1){
+		$datastring = $datastring . ",\n";
+	}
 }
-$datastring = $datastring . "</graph>";
-$datastring = $datastring . "</graphs>";
-$datastring = $datastring . "</chart>";
+$datastring = $datastring . "]\n";
 ?>
-<!-- amline script-->
-<script type="text/javascript" src="amline/swfobject.js"></script>
-<div id="altcontent">
-<strong>You need to upgrade your Flash Player</strong>
-</div>
-<script type="text/javascript">
-// <![CDATA[
-var flashvars = {
-  path: "amline/",
-  settings_file: escape("amline/amline_settings.xml"),
-  chart_data: "<?php echo $datastring?>",
-  loading_settings: "Preparing attendance report",
-  loading_data: "Preparing attendance report",
-  preloader_color: "#999999"
+<style>
+#chartdiv {
+  width: 100%;
+  height: 500px;
+}
+
+</style>
+
+<!-- Resources -->
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+// Create chart
+var chart = am4core.create("chartdiv", am4charts.XYChart);
+chart.paddingRight = 20;
+
+chart.data = <?php echo $datastring?>;
+
+var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+dateAxis.baseInterval = {
+  "timeUnit": "month",
+  "count": 1
 };
-swfobject.embedSWF("amline/amline.swf", "altcontent", "520", "400", "8.0.0", "amline/expressInstall.swf", flashvars);
-// ]]>
+dateAxis.tooltipDateFormat = "d MMMM YYYY";
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.tooltip.disabled = true;
+valueAxis.title.text = "Members";
+valueAxis.min = 0;
+
+var series = chart.series.push(new am4charts.LineSeries());
+series.dataFields.dateX = "date";
+series.dataFields.valueY = "enrollment";
+series.tooltipText = "Enrollment: [bold]{valueY}[/]";
+series.fillOpacity = 0.3;
+
+
+chart.cursor = new am4charts.XYCursor();
+chart.cursor.lineY.opacity = 0;
+chart.scrollbarX = new am4charts.XYChartScrollbar();
+chart.scrollbarX.series.push(series);
+
+
+dateAxis.start = 0;
+dateAxis.keepSelection = true;
+
+
+
+// function generateChartData() {
+//     var chartData = [];
+//     // current date
+//     var firstDate = new Date();
+//     // now set 500 minutes back
+//     firstDate.setMinutes(firstDate.getDate() - 500);
+
+//     // and generate 500 data items
+//     var visits = 500;
+//     for (var i = 0; i < 500; i++) {
+//         var newDate = new Date(firstDate);
+//         // each time we add one minute
+//         newDate.setMinutes(newDate.getMinutes() + i);
+//         // some random number
+//         visits += Math.round((Math.random()<0.5?1:-1)*Math.random()*10);
+//         // add data item to the array
+//         chartData.push({
+//             date: newDate,
+//             visits: visits
+//         });
+//     }
+//     return chartData;
+// }
+
+}); // end am4core.ready()
 </script>
-<!-- end of amline script -->
+
+<!-- HTML -->
+<div id="chartdiv"></div>
 <?php
 // Start footer section
 include('footer.php'); ?>
