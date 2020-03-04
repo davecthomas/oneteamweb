@@ -24,6 +24,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$teamid = $_GET["teamid"];
 	}
 }
+$dbconn = getConnectionFromSession($session);
 
 ?>
 <h4>SKUs for <?php echo getTeamName($teamid, $dbconn);?></h4>
@@ -99,8 +100,8 @@ To reorder the SKU list, click and drag them, then press the "Reorder SKUs" butt
 <td width="50%">
 <form name="newsku" action="/1team/new-sku.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="60" maxlength="80" value="New SKU Name"></td>
-<td width="10%">$<input type="text" name="price" size="10" maxlength="10" value="0.00"></td>
+<input type="text" name="name" size="40" maxlength="80" value="New SKU Name"></td>
+<td width="10%">$<input type="text" name="price" size="6" maxlength="10" value="0.00"></td>
 <td width="30">
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";

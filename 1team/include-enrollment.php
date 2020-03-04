@@ -68,7 +68,7 @@ for ($enrollmentLoop = 0; $enrollmentLoop < $numMonths; $enrollmentLoop++){
 	}
 
 	// Finish the query by adding a where clause covering one month beyond the last query
-	$strSQL = $sqlBase . " and (stopdate >= '" . $thismonth . "' and stopdate < '" . $nextmonth->format("m-d-Y") . "');";
+	$strSQL = $sqlBase . " and (stopdate >= '" . $thismonth . "' and stopdate < '" . $nextmonth->format("Y-m-d") . "');";
 	$results_rows = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	if ((is_array($results_rows)) && (!$bError)){
 	     $enrollmentArrayStopped[$enrollmentLoop] = count($results_rows);
@@ -147,32 +147,6 @@ chart.scrollbarX.series.push(series);
 
 dateAxis.start = 0;
 dateAxis.keepSelection = true;
-
-
-
-// function generateChartData() {
-//     var chartData = [];
-//     // current date
-//     var firstDate = new Date();
-//     // now set 500 minutes back
-//     firstDate.setMinutes(firstDate.getDate() - 500);
-
-//     // and generate 500 data items
-//     var visits = 500;
-//     for (var i = 0; i < 500; i++) {
-//         var newDate = new Date(firstDate);
-//         // each time we add one minute
-//         newDate.setMinutes(newDate.getMinutes() + i);
-//         // some random number
-//         visits += Math.round((Math.random()<0.5?1:-1)*Math.random()*10);
-//         // add data item to the array
-//         chartData.push({
-//             date: newDate,
-//             visits: visits
-//         });
-//     }
-//     return chartData;
-// }
 
 }); // end am4core.ready()
 </script>

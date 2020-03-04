@@ -18,6 +18,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
+$dbconn = getConnectionFromSession($session);
 ?>
 <h4><?php echo $title?> for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">

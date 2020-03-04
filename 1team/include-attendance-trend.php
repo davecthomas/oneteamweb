@@ -151,10 +151,10 @@ for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (attendance.attendancedate >= ? and attendance.attendancedate < ?)";
 	if ( $whomode == "team" ) {
-		$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($teamid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($teamid, $FirstDayofMonthdatetime->format("Y-m-d"), $lastDayofMonthdatetime->format("Y-m-d")));
 	} else {
 		if (!isset($teamid)) $teamid = $session["teamid"];
-		$attendance_records = executeQuery($dbconn, $strSQL, $bError, (array($teamid, $objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, (array($teamid, $objid, $FirstDayofMonthdatetime->format("Y-m-d"), $lastDayofMonthdatetime->format("Y-m-d")));
 	}
 
 	// Get the team attendance
@@ -185,47 +185,78 @@ for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
 	$monthdate->modify("+1 month");
 }
 
-$datastring = $datastring . "</series>";
-$datastring = $datastring . "<graphs>" ;
-$datastring = $datastring . "<graph gid='" . $graphGID . "' title='" . $graphTitle . "'>" ;
-
 for ($attendanceLoop = 0; $attendanceLoop< $numMonths; $attendanceLoop++){
 	$datastring = $datastring . "<value xid='" . $attendanceLoop . "'>" . $attendanceArrayAvgPerClass[$attendanceLoop] . "</value>";
 }
-
-$datastring = $datastring . "</graph>" ;
 
 if ( $whomode == "team" ) {
 	$datastring = $datastring . "<graph gid='1' title='Unique per Month'>" ;
 	for ($attendanceLoop = 1; $attendanceLoop< $numMonths-1; $attendanceLoop++){
 		$datastring = $datastring . "<value xid='" . $attendanceLoop . "'>" . $attendanceArrayUniqueMember[$attendanceLoop] . "</value>" ;
-	}
-	$datastring = $datastring . "</graph>" ;
+	
 }
 
-$datastring = $datastring . "</graphs>" ;
-$datastring = $datastring . "</chart>";
-
 ?>
-<!-- amline script-->
-<script type="text/javascript" src="amline/swfobject.js"></script>
-<div id="altcontent">
-<strong>You need to upgrade your Flash Player</strong>
-</div>
-<script type="text/javascript">
-// <![CDATA[
-var flashvars = {
-  path: "amline/",
-  settings_file: escape("amline/amline_settings.xml"),
-  chart_data: "<?php echo $datastring?>",
-  loading_settings: "Preparing attendance report",
-  loading_data: "Preparing attendance report",
-  preloader_color: "#999999"
+<style>
+#chartdiv {
+  width: 100%;
+  height: 500px;
+}
+
+</style>
+
+<!-- Resources -->
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+// Create chart
+var chart = am4core.create("chartdiv", am4charts.XYChart);
+chart.paddingRight = 20;
+
+chart.data = <?php echo $datastring?>;
+
+var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+dateAxis.baseInterval = {
+  "timeUnit": "day",
+  "count": 1
 };
-swfobject.embedSWF("amline/amline.swf", "altcontent", "520", "400", "8.0.0", "amline/expressInstall.swf", flashvars);
-// ]]>
+dateAxis.tooltipDateFormat = "d MMMM YYYY";
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.tooltip.disabled = true;
+valueAxis.title.text = "Members";
+valueAxis.min = 0;
+
+var series = chart.series.push(new am4charts.LineSeries());
+series.dataFields.dateX = "date";
+series.dataFields.valueY = "attendance";
+series.tooltipText = "Attendance: [bold]{valueY}[/]";
+series.fillOpacity = 0.3;
+
+
+chart.cursor = new am4charts.XYCursor();
+chart.cursor.lineY.opacity = 0;
+chart.scrollbarX = new am4charts.XYChartScrollbar();
+chart.scrollbarX.series.push(series);
+
+
+dateAxis.start = 0;
+dateAxis.keepSelection = true;
+
+}); // end am4core.ready()
 </script>
-<!-- end of amline script -->
+
+<!-- HTML -->
+<div id="chartdiv"></div>
 <?php
 if ($pagemode == "standalone" ) {
 	// Start footer section

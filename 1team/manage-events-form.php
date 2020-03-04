@@ -27,13 +27,14 @@ if (isUser($session, Role_TeamAdmin)){
 		$err = "t";
 	}
 }
+$dbconn = getConnectionFromSession($session);
 ?>
 <h4>Meeting Types for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are Meeting Types?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">
 <div class="helpboxtext">
-<p>Meetings are gatherings of your team and are associated with attendance at those meetings. Each time your <?php echo $teamterms["termmember"]?>s participate in a team activity, you can associate that attendance with the event that represents this activity. For example, if you have an monthly members' meeting, you can create a meeting type called "Monthly Meeting" and track the attendance of your team at this meeting. <br/>
+<p>Meetings are gatherings of your team and are associated with attendance at those meetings. Each time your <?php echo $teamterms['termmember']?>s participate in a team activity, you can associate that attendance with the event that represents this activity. For example, if you have an monthly membership meeting, you can create a meeting type called "Monthly Meeting" and track the attendance of your team at this meeting. <br/>
 You can have meetings that are associated with a specific location or date or repeating meetings that are not related to locations or dates. If you have multiple locations where your team meets, you can distinguish the events based on location. If you would like your <?php echo $teamterms["termmember"]?>s to be able to attend different types of meetingss, create and manage them from this page.</p></div></div>
 <div class="push"></div>
 </div>
@@ -103,9 +104,10 @@ Ordering only changes the order of lists within <?php appname?>. To reorder the 
 <tr class="even">
 <td width="30%"><form name="newevent" action="/1team/new-event.php" method="post"/>
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="60" maxlength="80" value=""></td>
-<td width="20%"><input type="text" name="eventdate" id="eventdate" value="<?php echo date("Y-m-d")?>" dojoType="dijit.form.DateTextBox" /></td>
-<td width="20%"><input type="text" name="location" size="40" maxlength="80" value=""></td>
+<input type="text" name="name" size="30" maxlength="80" value="">
+</td>
+<td width="10%"><input type="text" name="eventdate" size="10" id="eventdate" value="<?php echo date("Y-m-d")?>" dojoType="dijit.form.DateTextBox" /></td>
+<td width="30%"><input type="text" name="location" size="20" maxlength="80" value=""></td>
 <td width="10%"><a href="#" title="Add Meeting Type" onClick="newevent.submit()"><img src="img/add.gif" alt="Add Meeting Type" border="0"></a></td>
 </tr>
 </table>

@@ -10,7 +10,7 @@ dojo.require("dojo.dnd.Source");
 </script>
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
-
+$dbconn = getConnectionFromSession($session);
 
 $bError = false;
 $teamid = NotFound;

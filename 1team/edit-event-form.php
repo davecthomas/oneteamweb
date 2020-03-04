@@ -34,7 +34,7 @@ $strSQL = "SELECT * FROM events WHERE id = ?;";
 $dbconn = getConnectionFromSession($session);
 $eventResults = executeQuery($dbconn, $strSQL, $bError, array($eventid));
 
-if (count($eventResults) > 0) { ?>
+if ((is_array($eventResults)) && (count($eventResults) > 0)) { ?>
 <h4>Modify an event for <?php echo getTeamName($teamid, $dbconn)?></h4>
 <div class="indented-group-noborder">
 <form action="/1team/edit-event.php" method="post"/>
@@ -51,11 +51,13 @@ if (count($eventResults) > 0) { ?>
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";
 	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
-
 	$rowCount = 0;
-	$loopMax = count($programResults);
-
-	if (count($loopMax ) > 0) { ?>
+	if ((is_array($programResults)) && (count($programResults) > 0)) {
+		$loopMax = count($programResults);
+	} else {
+		$loopMax = 0;
+	}
+	if ($loopMax > 0) { ?>
 
 <select name="programid" onchange="if (this.selectedIndex.value != <?php echo Program_Undefined?>) document.all.programnamelabel.innerText = this.options[this.selectedIndex].text">
 <?php

@@ -25,6 +25,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
+
 $objname = getTeamName($teamid, $dbconn);
 
 // set up sort order

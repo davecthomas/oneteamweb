@@ -24,6 +24,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 	}
 }
+$dbconn = getConnectionFromSession($session);
 ?>
 <h4>Payment Methods for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
@@ -34,11 +35,15 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT * FROM paymentmethods WHERE teamid = ? ORDER BY listorder;";
-  $dbconn = getConnectionFromSession($session);
-	$paymentmethodResults = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($teamid));
-
+	$paymentmethodResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 	$rowCount = 0;
-	$loopMax = count($paymentmethodResults);?>
+	if ((is_array($paymentmethodResults)) && (count($paymentmethodResults)>0)){
+		$loopMax = count($paymentmethodResults);
+		$has_payment_methods = true;
+	} else {
+		$has_payment_methods = false;
+		$loopMax = 0;
+	}?>
 <table width="65%">
 <thead>
 <tr>

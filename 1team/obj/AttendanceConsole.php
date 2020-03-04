@@ -134,6 +134,7 @@ class AttendanceConsole extends DbObject {
 		$this->name = $name;
 		$this->ip = $ip;
 		$this->id = $id;
+		var_dump($this);
 	}
 
 	function remove(){
