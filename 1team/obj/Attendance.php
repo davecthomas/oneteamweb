@@ -41,6 +41,7 @@ class Attendance extends DbObject {
 		$this->attendancedate = $attendancedate;
 		$this->eventid = $eventid;
 		$this->type = $type;
+		$this->isdirty = true;
 	}
 
 	private function initRecord( ){
@@ -51,14 +52,18 @@ class Attendance extends DbObject {
 	}
 
 	function commit(){
-		if ($this->isdirty){
+		if (($this->isdirty) && ($this->isValid())){
 			$strSQL = "UPDATE attendance set memberid = ?, attendancedate = ?, eventid = ?, type = ? WHERE teamid = ? AND id = ?;";
 			executeQuery($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->type, $this->teamid, $this->id));
 			if (!$bError) $this->isdirty = false;
 		} else if ($this->id == DbObject::DbID_Undefined){
-			$strSQL = "INSERT INTO attendance VALUES(?, ?, ?, DEFAULT, ?, ?) RETURNING id;";
-			$this->id = executeQueryFetchColumn($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type));
+			// PostgreSQL $strSQL = "INSERT INTO attendance VALUES(?, ?, ?, DEFAULT, ?, ?) RETURNING id;";
+			$strSQL = "INSERT INTO attendance VALUES(?, ?, ?, DEFAULT, ?, ?);";
+			executeQuery($this->dbconn, $strSQL, $bError, array($this->userid, $this->attendancedate, $this->eventid, $this->teamid, $this->type));
+			$strSQL = "SELECT LAST_INSERT_ID();";
+			$this->id = executeQuery($this->dbconn, $strSQL, $bError);
 			if ($bError) $this->id = null;
+			else return $this->getDberrinfo();
 		}
 	}
 

@@ -31,7 +31,7 @@ if (isUser($session, Role_TeamAdmin)){
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are Programs?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">
 <div class="helpboxtext">
-<p>Programs are associated with payments. If you would like your <?php echo $teamterms["termmember"]?>s to be able to pay for different types of programs, create and manage them from this page. If you segment your customers based on the amount they pay for the services you provide, you should consider using programs. Programs are required to be set up if payments are tracked.</p>
+<p>Programs are associated with payments. If you would like your <?php echo $teamterms['termmember']?>s to be able to pay for different types of programs, create and manage them from this page. If you segment your customers based on the amount they pay for the services you provide, you should consider using programs. Programs are required to be set up if payments are tracked.</p>
 <p>If you track attendance, each program can have an event associated with it. This event is the used to track attendance if you have automated attendance scanning in use for your <?php echo $teamterms["termmember"]?>s. For example, if a customer is enrolled in a Masters Swimming program, you may want to have their attendance recorded as a Masters swimming event by default.</p>
 </div></div></div>
 <?php
@@ -42,7 +42,8 @@ if (isUser($session, Role_TeamAdmin)){
 	$programResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
-	$loopMax = count($programResults);?>
+	$loopMax = count($programResults);
+?>
 <table width="65%">
 <thead>
 <tr>
@@ -91,7 +92,7 @@ if (isUser($session, Role_TeamAdmin)){
 <tr class="even"><td colspan="3" width="70%"><form name="reorderprogram" action="/1team/reorder-program.php" method="post">
 <?php buildRequiredPostFields($session) ?>
 <input type="hidden" name="teamid" value="<?php echo $teamid?>"/>
-<input type="hidden" name="programorder" value="" />
+<input type="hidden" name="listorder" value="" />
 To reorder the program list, click and drag them, then press the "Reorder programs" button.</td>
 <td width="10%" align="center"><input type="submit" value="Reorder programs" onclick="getProgramOrder()" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'"/></td>
 </tr>
@@ -100,11 +101,11 @@ To reorder the program list, click and drag them, then press the "Reorder progra
 <?php
 	}?>
 <table width="65%">
-<tr class="odd"><td colspan="2"><span class="bigstrong">Add new Program</span></td></tr>
+<tr class="odd"><td colspan="3"><span class="bigstrong">Add new Program</span></td></tr>
 <tr class="even">
 <td width="50%"><form name="newprogram" action="/1team/new-program.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="80" maxlength="80" value="New Program Name"></td>
+<input type="text" name="name" size="40" maxlength="80" placeholder="New Program Name"></td>
 <td width="40%"><?php
 	// Event selector
 	if ( isUser($session, Role_ApplicationAdmin) ) {
@@ -157,7 +158,7 @@ function getProgramOrder(){
 	for (var i = 0; i < dndSource.getAllNodes().length; i++) {
 		childnodes[i] = dndSource.getAllNodes()[i].childNodes[1].innerHTML;
 	}
-	document.reorderprogram.programorder.value = childnodes.toString();
+	document.reorderprogram.listorder.value = childnodes.toString();
 }
 </script>
 <?php

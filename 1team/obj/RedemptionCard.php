@@ -32,9 +32,9 @@ class RedemptionCard extends DbObject {
 	private $createdate;
 	private $amountpaid;
 	private $numeventsremaining;
-	private $description;
-	private $paymentmethod;
 	private $expires;
+	private $paymentmethod;
+	private $description;
 	private $type;
 	private $facevalue;
 	private $code;
@@ -92,9 +92,25 @@ class RedemptionCard extends DbObject {
 		else return $this->dbrecord ;
 	}
 
+	function init( $teamid, $userid, $skuid, $createdate,$amountpaid,
+									$numeventsremaining, $expires,$paymentmethod, $description, $type, $facevalue, $code){
+		$this->$teamid = $teamid; 
+		$this->$userid = $userid;
+		$this->$skuid = $skuid;
+		$this->$createdate = $createdate;
+		$this->$amountpaid = $amountpaid;
+		$this->$numeventsremaining = $numeventsremaining;
+		$this->$expires =$expires;
+		$this->$paymentmethod = $paymentmethod;
+		$this->$description = $description;
+		$this->$type = $type;
+		$this->$facevalue = $facevalue;
+		$this->$code = $code;
+	}
+
 	function commit(){
 		$bError = false;
-		if ($this->isdirty){
+		if (($this->isdirty) && ($this->isValid())){
 			// Note we don't update the code. This is because the barcode is based on the redemptioncardid, the teamid, and the type, which are immutable
 			// by definition in order to guarantee the barcode doesn't change for an existing card
 			$strSQL = "UPDATE redemptioncards SET description = ?, numeventsremaining = ?, expires=?, facevalue=?, paymentmethod=?, userid=?, skuid=?,
@@ -102,6 +118,40 @@ class RedemptionCard extends DbObject {
 			executeQuery( getConnectionFromSession($this->session),array($this->getDescription(), $this->getNumEventsRemaining(), $this->getExpires(), $this->getFaceValue(),
 				$this->getPaymentMethod(), $this->userid, $this->getSkuID(), $this->getCreateDate(), $this->getAmountPaid(), $this->teamid, $this->id));
 			if (!$bError) $this->isdirty = false;
+		} else if ($this->id == DbObject::DbID_Undefined){
+			// | id                 | int          | NO   | PRI | NULL    | auto_increment |
+			// | teamid             | int          | YES  |     | NULL    |                |
+			// | userid             | int          | YES  |     | NULL    |                |
+			// | skuid              | int          | YES  |     | NULL    |                |
+			// | createdate         | date         | YES  |     | NULL    |                |
+			// | amountpaid         | decimal(6,2) | YES  |     | NULL    |                |
+			// | numeventsremaining | int          | YES  |     | NULL    |                |
+			// | expires            | date         | YES  |     | NULL    |                |
+			// | paymentmethod      | int          | YES  |     | 0       |                |
+			// | description        | varchar(128) | YES  |     | NULL    |                |
+			// | type               | int          | YES  |     | NULL    |                |
+			// | facevalue          | decimal(6,2) | YES  |     | NULL    |                |
+			// | code               | char(12)     | YES  |     | NULL    |    
+			// PostGreSQL $strSQL = "INSERT INTO redemptioncards VALUES(DEFAULT, ?, ?, ?, current_date, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;";
+			$strSQL = "INSERT INTO redemptioncards VALUES(DEFAULT, ?, ?, ?, current_date, ?, ?, ?, ?, ?, ?, ?, ?);";
+			executeQuery($this->dbconn, $strSQL, $bError, 
+									array(
+												$this->$teamid, 
+												$this->$userid,
+												$this->$skuid,
+												$this->$createdate,
+												$this->$amountpaid,
+												$this->$numeventsremaining,
+												$this->$expires,
+												$this->$paymentmethod,
+												$this->$description,
+												$this->$type,
+												$this->$facevalue,
+												$this->$code));
+			$strSQL = "SELECT LAST_INSERT_ID();";
+			$this->id = executeQuery($this->dbconn, $strSQL, $bError);
+			if ($bError) $this->id = null;
+			else return $this->getDberrinfo();
 		}
 		if ($bError) return RC_PDO_Error;
 		else return RC_Success;

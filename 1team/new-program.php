@@ -30,15 +30,25 @@ if (isset($_POST["name"])) {
 } else {
 	$bError = true;
 }
+if (isset($_POST["listorder"])) {
+	$listorder = $_POST["listorder"];
+} else {
+	$listorder = 0;
+}
+if (isset($_POST["eventid"])) {
+	$eventid = $_POST["eventid"];
+} else {
+	$bError = true;
+}
+var_dump($bError);
 
 if (!$bError) {
-
-
-	$strSQL = "INSERT INTO programs VALUES (DEFAULT, ?, ?, NULL);";
+	$strSQL = "INSERT INTO programs VALUES (DEFAULT, ?, ?, ?, ?);";
 	$dbconn = getConnectionFromSession($session);
-	executeQuery($dbconn, $strSQL, $bError, array($programname, $teamid));
+	executeQuery($dbconn, $strSQL, $bError, array($programname, $teamid, $listorder, $eventid));
 
 	redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
-} else {
-	redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");
+} 
+if ($bError) {
+	// redirect("manage-programs-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&err=1");
 }

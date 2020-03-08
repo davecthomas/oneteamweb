@@ -135,7 +135,7 @@ if (!$bError) {
 
 			// Get the image id
 			$strSQL = "SELECT LAST_INSERT_ID();";
-			$imageid = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($type, $objid, $teamid));
+			$imageid = executeQueryFetchColumn($dbconn, $strSQL, $bError;
 			if ($bError)
 				$errno = "GetNew";
 

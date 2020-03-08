@@ -9,11 +9,11 @@ if ((! isset($attendanceDate)) || (! isset($eventid)) ||(! isset($teamid)) ||(! 
 	$bError = true;
 } else {
 
-	$strSQL = "SELECT COUNT(*) FROM users WHERE users.id = ? AND users.teamid = ?;";
+	$strSQL = "SELECT * FROM users WHERE users.id = ? AND users.teamid = ?;";
 	$dbconn = getConnectionFromSession($session);
-	$rowCount = executeQueryFetchColumn($dbconn, $strSQL, $bError, array( $memberID, $teamid));
+	$user_records = executeQuery($dbconn, $strSQL, $bError, array( $memberID, $teamid));
 
-	if ($rowCount != 1 ) {?>
+	if (count($user_records) != 1 ) {?>
 <h3 class="usererror">Error</h3>
 <p class="usererror">The credentials you entered are not recognized.</p>
 <?php
@@ -119,19 +119,29 @@ There are <?php echo $numClassesRemaining?> classes remaining in the plan.</p>
 				if ($canLogAttendance ) {
 					// Regardless of if they pay, we log attendance
 					// Add a record to the attendance table with the member id and date.
-					$strSQL = "INSERT INTO attendance VALUES ( ?, ?, ?,DEFAULT,?)";
-					executeQuery($dbconn, $strSQL, $bError, array($memberID, $attendanceDate, $eventid, $teamid));
+					// describe attendance;
+					// +----------------+------+------+-----+---------+----------------+
+					// | Field          | Type | Null | Key | Default | Extra          |
+					// +----------------+------+------+-----+---------+----------------+
+					// | memberid       | int  | NO   |     | NULL    |                |
+					// | attendancedate | date | NO   |     | NULL    |                |
+					// | eventid        | int  | YES  |     | NULL    |                |
+					// | id             | int  | NO   | PRI | NULL    | auto_increment |
+					// | teamid         | int  | YES  |     | NULL    |                |
+					// | type           | int  | YES  |     | NULL    |                |
+					// +----------------+------+------+-----+---------+----------------+
+					$strSQL = "INSERT INTO attendance VALUES ( ?, ?, ?,DEFAULT,?, NULL)";
+					executeQuery($dbconn, $strSQL, $bError, array(intval($memberID), $attendanceDate, intval($eventid), $teamid));
 					$pagemode = "embedded";
 					$whomode = "user";
 					$userid = $memberID;
 				} else { ?>
 <p>Attendance not logged for <?php echo $fullname ?></p>
-<input type="button" value="Back" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = '<?php echo $_SERVER["HTTP_REFERER"]?>'"/>
 <?php
 				}
 				// Conditionally display image
 				if ((!is_null($userResults[0]["url"])) && (strlen($userResults[0]["url"]) > 0)) {?>
-<img src="<?php echo $userResults[0]["url"]?>" id="" border=0">
+<img src="<?php echo $userResults[0]['url']?>" id="" border="0">
 <?php
 				}
 			}
@@ -142,7 +152,9 @@ There are <?php echo $numClassesRemaining?> classes remaining in the plan.</p>
 if ($bError){ ?>
 <p class="usererror">Attendance not recorded.</p>
 <?php
-}
+}?>
+<input type="button" value="Back" class="btn" onmouseover="this.className='btn btnhover'" onmouseout="this.className='btn'" onclick="document.location.href = '<?php echo $_SERVER["HTTP_REFERER"]?>'"/>
+<?php
 // Start footer section
 include('footer.php');
 ?>

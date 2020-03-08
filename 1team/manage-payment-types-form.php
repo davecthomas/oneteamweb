@@ -99,7 +99,7 @@ To reorder the payment methods list, click and drag them, then press the "Reorde
 <tr class="even">
 <td width="90%"><form name="newpaymentmethod" action="/1team/new-payment-type.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="80" maxlength="80" value="New payment method name"></td>
+<input type="text" name="name" size="80" maxlength="80" placeholder="New payment method name"></td>
 <td width="10%"><a href="#" title="Add payment method" onClick="newpaymentmethod.submit()"><img src="img/add.gif" alt="Add paymenttype" border="0"></a></td>
 </tr>
 </table>

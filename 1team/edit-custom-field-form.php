@@ -160,9 +160,9 @@ function changeDisplayConditionUserAccount(){
 }
 
 </script>
-<table width="35%" class="noborders">
-<tr><td class="strong">Custom Field name</td><td><input type="text" name="name" size="60" maxlength="80" value="<?php echo $customfieldResults[0]["name"]?>"></td></tr>
-<tr><td class="strong">Data type</td><td width="30%"><select name="datatype" onchange="getDataType()">
+<table width="75%" class="noborders">
+<tr><td width="50%">Custom Field name</td><td width="50%"><input type="text" name="name" size="60" maxlength="80" value="<?php echo $customfieldResults[0]["name"]?>"></td></tr>
+<tr><td width="50%">Data type</td><td width="50%"><select name="datatype" onchange="getDataType()">
 <?php
 	$strSQL = "SELECT * FROM customdatatypes ORDER BY typename;";
 	$customdatatypesResults = executeQuery($dbconn, $strSQL, $bError);
@@ -219,8 +219,8 @@ function changeDisplayConditionUserAccount(){
 	} ?>
 </select></div>
 </td></tr>
-<tr><td class="strong">Custom Field list order</td><td><?php if ($customfieldResults[0]["listorder"] == "") echo "No order set"; else echo $customfieldResults[0]["listorder"];?></td></tr>
-<tr><td class="strong">Display this field for any <?php echo $teamterms["termmember"]?> who meets special conditions</td><td width="30%"><input type="checkbox" name="hasdisplaycondition" <?php if ($hasDisplayCondition) echo "checked='checked'";?> onchange="getDisplayConditions()"/></td></tr>
+<tr><td width="50%">Custom Field list order</td><td width="50%"><?php if ($customfieldResults[0]["listorder"] == "") echo "No order set"; else echo $customfieldResults[0]["listorder"];?></td></tr>
+<tr><td width="50%">Display this field for any <?php echo $teamterms["termmember"]?> who meets special conditions</td><td width="50%"><input type="checkbox" name="hasdisplaycondition" <?php if ($hasDisplayCondition) echo "checked='checked'";?> onchange="getDisplayConditions()"/></td></tr>
 </table>
 <div class="
 <?php
@@ -230,10 +230,10 @@ function changeDisplayConditionUserAccount(){
 		echo "hideit";
 	} ?>
 " id="displayinfo">
-<div class="indented-group-noborder">
+<div >
 <table class="noborders">
 <tr>
-<td class="bold">Display this custom field if&nbsp;
+<td >Display this custom field if&nbsp;
 <select name="displayconditionobject" onchange="changeDisplayConditionObject()">
 <option value="<?php echo DisplayConditionObject_User?>" <?php echo getDisplayConditionSelection(DisplayConditionObject_User, $displayConditionObject)?>>the <?php echo $teamterms["termmember"]?>'s</option>
 <option value="<?php echo DisplayConditionObject_UserAccount?>" <?php echo getDisplayConditionSelection(DisplayConditionObject_UserAccount, $displayConditionObject)?>><?php echo $teamterms["termmember"]?>&nbsp;account setting</option>
@@ -381,7 +381,8 @@ is
 <select name="displayconditionvalue">
 <option value="0" <?php if (0 == $displayConditionValue) echo "selected"?>>No</option>
 <option value="1" <?php if (1 == $displayConditionValue) echo "selected"?>>Yes</option>
-</select></div></td></tr>
+</select></div></td>
+</tr>
 </table>
 </div>
 </div>

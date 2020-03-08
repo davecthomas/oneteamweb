@@ -104,7 +104,7 @@ Ordering only changes the order of lists within <?php appname?>. To reorder the 
 <tr class="even">
 <td width="30%"><form name="newevent" action="/1team/new-event.php" method="post"/>
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="30" maxlength="80" value="">
+<input type="text" name="name" size="30" maxlength="80" value="" placeholder="Enter name...">
 </td>
 <td width="10%"><input type="text" name="eventdate" size="10" id="eventdate" value="<?php echo date("Y-m-d")?>" dojoType="dijit.form.DateTextBox" /></td>
 <td width="30%"><input type="text" name="location" size="20" maxlength="80" value=""></td>

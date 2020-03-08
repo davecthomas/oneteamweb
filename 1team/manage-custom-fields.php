@@ -25,17 +25,21 @@ if (isUser($session, Role_TeamAdmin)){
 		$bError = true;
 		$err = "t";
 	}
-}?>
+}
+$dbconn = getConnectionFromSession($session);?>
 <h4>Custom Fields for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
 <div class="helpboxtitle"><h5><a class="linkopacity" href="javascript:togglevis('overview')">What are Custom Fields?<img src="/1team/img/a_expand.gif" id="overview_img" border="0" alt="expand region"></a></h5></div>
 <div class="hideit" id="overview">
 <div class="helpboxtext">
-<p>If you want to include special fields for your customers, you can define custom fields. You can choose to display these custom fields based on information specific to the customer. For example, you can store special information such as shirt size, and show different sizes depending on if the customer is in your adult or children's program. You can also set display conditions for the custom field. For example, you can choose to only display a "lifeguard evaluation complete" field for adult customers. These custom fields can be of any data type, including a custom list based on your needs. It is helpful to understand custom list concepts before you create custom fields.</p>
+<p>If you want to include special fields for your customers, you can define custom fields. You can choose to display these custom fields based on information specific to the customer. For example, you can store special information such as shirt size, and show different sizes depending on if the customer is in your adult or children&apos;s program. You can also set display conditions for the custom field. For example, you can choose to only display a "lifeguard evaluation complete" field for adult customers. These custom fields can be of any data type, including a custom list based on your needs. It is helpful to understand custom list concepts before you create custom fields.</p>
 </div></div></div>
 <?php
-	$strSQL = "SELECT customfields.id as customfieldsid, customdatatypes.id as customdatatypesid, * FROM customfields, customdatatypes WHERE customfields.teamid = ? AND customfields.customdatatypeid = customdatatypes.id ORDER BY listorder;";
-	$dbconn = getConnectionFromSession($session);
+	$strSQL = <<<EOD
+	SELECT *, customfields.id as customfieldsid, customdatatypes.id as customdatatypesid FROM customfields, 
+	customdatatypes WHERE customfields.teamid = ? AND customfields.customdatatypeid = customdatatypes.id 
+	ORDER BY listorder;
+EOD;
 	$customfieldResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
@@ -103,7 +107,7 @@ To reorder the customfield list, click and drag them, then press the "Reorder cu
 <form name="newcustomfield" action="/1team/new-custom-field.php" method="post">
 <?php buildRequiredPostFields($session) ?>
 <input type="hidden" name="teamid" value="<?php echo $teamid?>">
-<input type="text" name="name" size="80" maxlength="80" value="New Custom Field Name"></td>
+<input type="text" name="name" size="50" maxlength="80" placeholder="New Custom Field Name"></td>
 <td width="30%"><select name="datatype">
 <option value="<?php echo CustomDataType_Undefined?>" selected>Select a data type...</option>
 <?php

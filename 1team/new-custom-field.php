@@ -44,18 +44,31 @@ if (isset($_POST["hasdisplaycondition"])) {
 }
 
 if (!$bError) {
-
-
+	// describe customfields;
+	// +--------------------------+-------------+------+-----+---------+----------------+
+	// | Field                    | Type        | Null | Key | Default | Extra          |
+	// +--------------------------+-------------+------+-----+---------+----------------+
+	// | id                       | int         | NO   | PRI | NULL    | auto_increment |
+	// | customdatatypeid         | int         | NO   |     | NULL    |                |
+	// | name                     | varchar(80) | YES  |     | NULL    |                |
+	// | teamid                   | int         | YES  |     | NULL    |                |
+	// | displayconditionobject   | varchar(80) | YES  |     | NULL    |                |
+	// | displayconditionfield    | varchar(80) | YES  |     | NULL    |                |
+	// | displayconditionoperator | varchar(2)  | YES  |     | NULL    |                |
+	// | displayconditionvalue    | varchar(80) | YES  |     | NULL    |                |
+	// | hasdisplaycondition      | tinyint(1)  | YES  |     | NULL    |                |
+	// | listorder                | int         | YES  |     | NULL    |                |
+	// | customlistid             | int         | YES  |     | NULL    |                |
+	// +--------------------------+-------------+------+-----+---------+----------------+
 	$strSQL = "INSERT INTO customfields VALUES (DEFAULT, ?, ?, ?, NULL, NULL, NULL, NULL, " . $hasdisplaycondition . ", NULL, NULL);";
 	$dbconn = getConnectionFromSession($session);
-	$results = executeQuery($dbconn, $strSQL, $bError, array($datatype, $name, $teamid, $hasdisplaycondition));
+	executeQuery($dbconn, $strSQL, $bError, array($datatype, $name, $teamid, $hasdisplaycondition));
 	if (! $bError) {
+		$customfieldid = 0;
+		$strSQL = "SELECT LAST_INSERT_ID();";
+		$customfieldid = executeQueryFetchColumn($dbconn, $strSQL, $bError);
 
-		// Get the new id and send them to the edit form for more details
-		$strSQL = "SELECT id from customfields WHERE name = ? AND teamid = ?;";
-		$customfieldsResults = executeQuery($dbconn, $strSQL, $bError, array($name, $teamid));
-
-		if (count($customfieldsResults) > 0) {
+		if ($customfieldid > 0) {
 			redirect("edit-custom-field-form.php?" . returnRequiredParams($session) . "&id=" . $customfieldsResults[0]["id"] . "&teamid=" . $teamid . "&done=1");
 		} else {
 			$bError = true;

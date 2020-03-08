@@ -386,20 +386,10 @@ function emailMember( $session, $teamid, $subject, $message, $toemail, $fromemai
 			return RC_EmailAddrInvalid;
 		}
 
-		$headers = "From: ".$fromemail."\r\nReply-To: ".$fromemail."\r\n";
-		if (!$sms){
-			// Always set content-type when sending HTML email
-			$headers .= "MIME-Version: 1.0" . "\r\n";
-			$headers .= "Content-type:text/html;charset=iso-8859-1" . "\r\n";
-			//define the headers we want passed. Note that they are separated with \r\n
-		}
-
-		ini_set("SMTP", MailServer);
-		$m = new Mail();
-		$statuscode = $m->mail($toemail, $subject, $message );
-		if (!$m->statusok($statuscode)){
-			$bError = true;
-			$err = "mail";
+		$mailer = new Mail1t($session);
+		$bError = $mailer->mail($toemail, $subject, $message, $session["fullname"]);
+		if (!$mailer->statusok()){
+			$err = $mailer->statuscode;
 		}
 	}
 	if (!$bError ) return RC_Success;

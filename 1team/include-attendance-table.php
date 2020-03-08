@@ -282,7 +282,7 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 	// See if there are any events for this date range
 	$strSQL = "SELECT COUNT(*) FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid) WHERE " . $sqlwhere . " AND (attendancedate >= ? and attendancedate < ?)" . $sqlprogram . " ;";
 
-	$rowCount = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
+	$rowCount = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($EventDate->format("Y-m-d"), $lastdaydate->format("Y-m-d")));
 	if ($rowCount > 0) { ?>
 <tr>
 <th style="text-align:left">Date</th>
@@ -304,7 +304,7 @@ from <?php echo $EventDate->format("F j, Y") ?> to <?php echo $lastdaydate->form
 		}
 	}
 	$strSQL = "SELECT attendance.id as attendanceid, attendance.memberid as attendancememberid, attendance.teamid as attendanceteamid, attendance.*, events.*, users.* FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid) WHERE " . $sqlwhere . " AND (attendancedate >= ? and attendancedate < ?) " . $sqlprogram . " ORDER BY attendance.attendancedate DESC;";
-	$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($EventDate->format("m-d-Y"), $lastdaydate->format("m-d-Y")));
+	$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($EventDate->format("Y-m-d"), $lastdaydate->format("Y-m-d")));
 
 	foreach ($attendance_records as $row) {
 ?>

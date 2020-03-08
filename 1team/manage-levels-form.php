@@ -26,6 +26,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$err = "t";
 	}
 }
+$dbconn = getConnectionFromSession($session);
 ?>
 <h4>Levels for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
@@ -36,7 +37,6 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT programs.name AS programs_name, levels.* FROM programs INNER JOIN levels on programs.id = levels.programid WHERE programs.teamid = ? ORDER BY levels.programid, listorder;";
-	$dbconn = getConnectionFromSession($session);
 	$levelResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
@@ -98,7 +98,7 @@ To reorder the level list, click and drag them, then press the "Reorder levels" 
 <tr class="even">
 <td width="50%"><form name="newlevel" action="/1team/new-level.php" method="post">
 <?php buildRequiredPostFields($session) ?>
-<input type="text" name="name" size="60" maxlength="80" value="New Level Name"></td>
+<input type="text" name="name" size="40" maxlength="80" placeholder="New Level Name"></td>
 <td width="40">
 <?php
 	$strSQL = "SELECT * FROM programs WHERE teamid = ?;";

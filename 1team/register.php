@@ -68,13 +68,12 @@ if (!$bError){
 		$textBody = $textBody . "Email: " . $email . "\n\n";
 		$textBody = $textBody . "Phone: " . $phone . "\n\n";
 		$textBody = $textBody . "Referred by: " . $referredby . "\n\n";
-		ini_set("SMTP", MailServer);
-		$m = new Mail();
-		$statuscode = $m->mail(emailadmin, $emailsubject, $textBody);
-
-		if (!$m->statusok($statuscode)){
-			$bError = TRUE;
+		$mailer = new Mail1t($session);
+		$bError = $mailer->mail(emailadmin, $emailsubject, $textBody);
+		if (!$mailer->statusok()){
+			$err = $mailer->statuscode;
 		}
+
 ?>
 <h3><?php echo $title?></h3>
 <p>Your registration has been sent. We will contact you with details soon. Thank you!</p>

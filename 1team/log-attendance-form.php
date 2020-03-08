@@ -28,7 +28,7 @@ if (isset($_GET["id"])){
 	// This setting will force select list to be uninitialized
 	$userid = 0;
 }
-
+$dbconn = getConnectionFromSession($session);
 $bDisplayUserSelector = true;
 // Conditionally include user name in title
 if ( $userid >= UserID_Base ) {

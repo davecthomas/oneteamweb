@@ -45,9 +45,14 @@ if (!$bError) {
 	executeQuery($dbconn, $strSQL, $bError, array($summary, $details, $session["userid"], date("m-d-Y"), $teamid));
 
 	if (!$bError){
-		$m = new Mail();
-		$statuscode = $m->mail(getAdminEmail($session, $dbconn), appname . " : " . $teamname . " " . " Feedback", "User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details, "From: " . getUserEmail($session, $dbconn) );
-
+		$mailer = new Mail1t($session);
+		$bError = $mailer->mail(getAdminEmail($session, $dbconn), 
+														appname . " : " . $teamname . " " . " Feedback", 
+														"User: " . getCurrentUserName($session) . "; Summary: " . $summary . "; Details " . $details,  
+														$session["fullname"]);
+		if (!$mailer->statusok()){
+			$err = $mailer->statuscode;
+		}
 		redirect("feedback-form.php?" . returnRequiredParams($session) . "&teamid=" . $teamid . "&done=1");
 	}
 }

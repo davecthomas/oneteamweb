@@ -144,7 +144,7 @@ LOCK TABLES `customfields` WRITE;
 INSERT INTO `customfields` (`id`, `customdatatypeid`, `name`, `teamid`, `displayconditionobject`, `displayconditionfield`, `displayconditionoperator`, `displayconditionvalue`, `hasdisplaycondition`, `listorder`, `customlistid`)
 VALUES
 	(1,7,'Weight Class',1,NULL,NULL,NULL,NULL,0,1,1),
-	(4,4,'Eligible for women\'s programs',1,'users','gender','=','F',1,3,0),
+	(4,4,"Eligible for women's programs",1,'users','gender','=','F',1,3,0),
 	(5,7,'Shirt Size',1,NULL,NULL,NULL,NULL,0,2,3);
 
 /*!40000 ALTER TABLE `customfields` ENABLE KEYS */;
@@ -263,7 +263,6 @@ VALUES
 	(5,'Class',NULL,'Other gym',9,1,NULL,NULL),
 	(6,'Competition',NULL,'any location',6,1,NULL,NULL),
 	(8,'Open mat',NULL,'Any gym',5,1,NULL,NULL),
-	(9,'Class',NULL,'Travis Tooke\'s Gym',8,1,NULL,NULL),
 	(15,'Private lesson ',NULL,'Austin Jiu-Jitsu',4,1,1,1),
 	(16,'Kickboxing Class',NULL,'Austin Jiu-Jitsu',3,1,1,7),
 	(19,'Team Outing',NULL,'any location',10,1,NULL,NULL),
@@ -522,12 +521,9 @@ INSERT INTO `programs` (`id`, `name`, `teamid`, `listorder`, `eventid`)
 VALUES
 	(1,'Adult Grappling',1,2,1),
 	(2,'Annual Membership',1,1,NULL),
-	(3,'Women\'s',1,6,NULL),
+	(3,"Women's",1,6,NULL),
 	(7,'Kickboxing',1,4,16),
-	(8,'Kids Grappling',1,3,2),
-	(17,'Bucky and Bob',8,1,40),
-	(18,'Boys2Men Track Club',8,2,NULL),
-	(19,'The Morning Group',8,3,NULL);
+	(8,'Kids Grappling',1,3,2);
 
 /*!40000 ALTER TABLE `programs` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -872,7 +868,7 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` (`id`, `firstname`, `lastname`, `startdate`, `address`, `city`, `state`, `postalcode`, `smsphone`, `phone2`, `login`, `birthdate`, `referredby`, `notes`, `coachid`, `emergencycontact`, `ecphone1`, `ecphone2`, `gender`, `stopdate`, `stopreason`, `teamid`, `roleid`, `address2`, `useraccountinfo`, `salt`, `passwd`, `imageid`, `smsphonecarrier`, `ipaddr`, `timelockoutexpires`)
 VALUES
   (1,'OneTeamWeb','Admin','2020-02-04','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','seattlejits@gmail.com','1965-01-01','','',0,'','','','M',NULL,NULL,0,1,'',1,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,'verizon',NULL,'2020-02-05 02:48:23'),
-	(2,'David','Thomas','2003-01-01','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','davidcthomas@gmail.com','1965-01-01','David Thomas','',0,'','','','0',NULL,'\'\'\'\'\'\'\'\'\'\'\'\'\'\'',1,2,NULL,2,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,'verizon',NULL,'2020-02-05 02:48:23');
+	(2,'David','Thomas','2003-01-01','2722 Queen Anne Ave N','Seattle','WA','98109-1823','6508457558','','davidcthomas@gmail.com','1965-01-01','David Thomas','',0,'','','','0',NULL,'',1,2,NULL,2,'f417895de','9d54cdc70b595ffb223078ba3b0e42a26b57d55c',NULL,'verizon',NULL,'2020-02-05 02:48:23');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 

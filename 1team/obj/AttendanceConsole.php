@@ -134,7 +134,7 @@ class AttendanceConsole extends DbObject {
 		$this->name = $name;
 		$this->ip = $ip;
 		$this->id = $id;
-		var_dump($this);
+		$this->isdirty = true;
 	}
 
 	function remove(){
@@ -158,9 +158,13 @@ class AttendanceConsole extends DbObject {
 			$strSQL = "UPDATE attendanceconsoles set name = ?, ip = ? WHERE teamid = ? AND id = ?;";
 			executeQuery($this->dbconn, $strSQL, $bError, array($this->name, $this->ip, $this->teamid, $this->id));
 			if (!$bError) $this->isdirty = false;
+			else return $this->getDberrinfo();
 		} else if ($this->id == DbObject::DbID_Undefined){
-			$strSQL = "INSERT INTO attendanceconsoles VALUES(DEFAULT, ?, ?, ?) RETURNING id;";
-			$this->id = executeQueryFetchColumn($this->dbconn, $strSQL, $bError, array($this->name, $this->ip, $this->teamid));
+			// PostGreSQL $strSQL = "INSERT INTO attendanceconsoles VALUES(DEFAULT, ?, ?, ?) RETURNING id;";
+			$strSQL = "INSERT INTO attendanceconsoles VALUES(DEFAULT, ?, ?, ?);";
+			executeQuery($this->dbconn, $strSQL, $bError, array($this->name, $this->ip, $this->teamid));
+			$strSQL = "SELECT LAST_INSERT_ID();";
+			$this->id = executeQuery($this->dbconn, $strSQL, $bError);
 			if ($bError) $this->id = null;
 			else return $this->getDberrinfo();
 		}

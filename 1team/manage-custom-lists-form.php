@@ -17,7 +17,7 @@ if (isUser($session, Role_TeamAdmin)){
 		$teamid = $_GET["teamid"];
 	}
 }
-
+$dbconn = getConnectionFromSession($session);
 ?>
 <h4><?php echo $title?> for <?php echo getTeamName($teamid, $dbconn);?></h4>
 <div class="helpbox">
@@ -28,7 +28,6 @@ if (isUser($session, Role_TeamAdmin)){
 </div></div></div>
 <?php
 	$strSQL = "SELECT * FROM customlists WHERE teamid = ?;";
-  $dbconn = getConnectionFromSession($session);
 	$customlistResults = executeQuery($dbconn, $strSQL, $bError, array($teamid));
 
 	$rowCount = 0;
@@ -58,7 +57,7 @@ if (isUser($session, Role_TeamAdmin)){
 <input type="hidden" name="teamid" value="<?php echo $teamid?>"/>
 <tr class="odd"><td colspan="2"><span class="bigstrong">Add new custom list</span></td></tr>
 <tr class="even">
-<td width="90%"><input type="text" name="name" size="80" maxlength="80" value="New customlist Name"></td>
+<td width="90%"><input type="text" name="name" size="80" maxlength="80" placeholder="New customlist Name"></td>
 <td width="10%"><a href="#" title="Add customlist" onClick="newcustomlist.submit()"><img src="img/add.gif" alt="Add customlist" border="0"></a></td>
 </tr>
 </table>

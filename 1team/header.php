@@ -1,5 +1,6 @@
 <?php
-include_once('header-minimal.php'); ?>
+include_once('header-minimal.php'); 
+?>
 <body class="<?php echo dojostyle?>">
 <?php include('include-user-header.php'); ?>
 <?php includeDojo();?>

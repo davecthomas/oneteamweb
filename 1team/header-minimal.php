@@ -1,5 +1,6 @@
 <?php
 include_once('utils.php');
+
 // before we worry about session, worry about SSL on production system only
 if(! isStagingServer() && $_SERVER['SERVER_PORT'] != 443) {
    header("HTTP/1.1 301 Moved Permanently");

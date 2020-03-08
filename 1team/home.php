@@ -22,7 +22,6 @@ WHERE users.useraccountinfo = useraccountinfo.id
 AND users.id = ? and users.teamid = ?;
 EOD;
 $dbconn = getConnectionFromSession($session);
-
 $userprops_records = executeQuery($dbconn, $strSQL, $bError, array($userid, $teamid));
 if (count($userprops_records) == 1){
 	$userprops = $userprops_records[0];

@@ -199,19 +199,24 @@ if (isset($_REQUEST["EventDateEnd"])) {
 
 $strSQL = "SELECT attendance.*, events.* FROM events INNER JOIN attendance on events.id = attendance.eventid WHERE " . $sqlwhere . " = ? AND (attendancedate >= ? and attendancedate < ?)" . $sqlprogram . " ORDER BY attendancedate;";
 
-$attendanceDates = executeQuery($dbconn, $strSQL, $bError, array($objid, $FirstDayofMonthdatetime->format("m-d-Y"), $lastDayofMonthdatetime->format("m-d-Y")));
+$attendanceDates = executeQuery($dbconn, $strSQL, $bError, array($objid, $FirstDayofMonthdatetime->format("Y-m-d"), $lastDayofMonthdatetime->format("Y-m-d")));
 
 // Get all attendances in one array and store them as DateTime objects in another array
 $numAttendances = count($attendanceDates );
 $attendanceDatetimes = array();
-$daysWithAttendance = array_unique($attendanceDates);
-$membersOnDates = array_count_values($attendanceDates);
 
+for ($i=0; $i< count($attendanceDates); $i++){
+	$daysWithAttendanceAll[$i] = $attendanceDates[$i]["attendancedate"];
+}
+$daysWithAttendance = array_unique($daysWithAttendanceAll);
+
+if ($whomode == "team") {
+	$membersOnDates = array_count_values($attendanceDates);
+}
 // This isn't used yet, ok to delete?
 for ($i = 0; $i < $numAttendances; $i++){
-	$attendanceDatetimes[$i] = new DateTime($attendanceDates[$i]);
+	$attendanceDatetimes[$i] = new DateTime($attendanceDates[$i]["attendancedate"]);
 }
-
 $attendance_numRows = 0;
 $rowCountAttendance = 0;
 $urlencodedName = htmlspecialchars($objname);
@@ -230,7 +235,6 @@ $tmpHTML = $tmpHTML . "<th colspan=\"5\">" . $CurMonthName . "</th>" . "\n";
 $tmpHTML = $tmpHTML . "<th align=\"right\"><a title=\"next month\" href=\"?EventDate=" . htmlspecialchars($nextmonth->format("d-m-Y")) . buildRequiredParamsConcat($session). "&id=" . $_REQUEST["id"] . "&whomode=" . $whomode . "\"><img src=\"img/a_next.gif\"></a></th>" . "\n" . "</tr>" . "\n" ;
 $tmpHTML = $tmpHTML . "<tr id=\"days\">";
 echo($tmpHTML);
-
 $daynames = array("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
 for ($DayLoop = 0; $DayLoop <7; $DayLoop++){
 	echo("<th>" . $daynames[$DayLoop] . "</th>" . "\n");
@@ -259,7 +263,7 @@ for ($dayLoop = 1; $dayLoop <= $numDaysInMonth; $dayLoop++) {
 		} else {
 			echo '<a  title="' . $objname . ' attended an event.">';
 		}
-		echo($dayLoop);
+		echo("<span class='strong'>".$dayLoop."</span>");
 		if ($whomode == "team") {
 			echo "</a>";
 			echo("<br><div id=\"datedetail\">" . $membersOnDates[$CurDayNumdatetime->format("Y-m-d")] . "</div>");

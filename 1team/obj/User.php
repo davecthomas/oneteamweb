@@ -7,7 +7,6 @@ include_once('Mail1t.php');
  * @author dthomas
  */
 class User extends DbObject {
-
 	const UserID_Guest = -1;
 	const UserID_Undefined = DbObject::DbID_Undefined;
 	const Username_Guest = "Guest";
@@ -62,6 +61,106 @@ class User extends DbObject {
 		if ($bError) return RC_PDO_Error;
 	}
 
+	function init(
+		// id                
+		$firstname,         
+		$lastname,          
+		$startdate,         
+		$address,           
+		$city,              
+		$state,             
+		$postalcode,        
+		$smsphone,          
+		$phone2,            
+		$login,             
+		$birthdate,         
+		$referredby,        
+		$notes,             
+		$coachid,           
+		$emergencycontact,  
+		$ecphone1,          
+		$ecphone2,          
+		$gender,            
+		$stopdate,          
+		$stopreason,        
+		$teamid,            
+		$roleid,            
+		$address2,          
+		$useraccountinfo,   
+		$salt = "",              
+		$passwd = "",           
+		$imageid = null,        
+		$smsphonecarrier = 0,   
+		$ipaddr = "",            
+		$timelockoutexpires = null
+	){
+		$this->$firstname = $firstname;         
+		$this->$lastname = $lastname;         
+		$this->$startdate =$startdate;
+		$this->$address = $address;
+		$this->$city = $city;
+		$this->$state = $state;     
+		$this->$postalcode = $postalcode;   
+		$this->$smsphone = $smsphone;
+		$this->$phone2 = $phone2;
+		$this->$login = $login; 
+		$this->$birthdate = $birthdate;   
+		$this->$referredby = $referredby;
+		$this->$notes = $notes;
+		$this->$coachid = $coachid;   
+		$this->$emergencycontact = $emergencycontact;
+		$this->$ecphone1 = $ecphone1;
+		$this->$ecphone2 = $ecphone2;
+		$this->$gender = $gender;
+		$this->$stopdate = $stopdate; 
+		$this->$stopreason = $stopreason;
+		$this->$teamid = $teamid;
+		$this->$roleid = $roleid; 
+		$this->$address2 = $address2; 
+		$this->$useraccountinfo = $useraccountinfo;
+		$this->$salt = $salt;
+		$this->$passwd = $passwd;     
+		$this->$imageid = $imageid; 
+		$this->$smsphonecarrier = $smsphonecarrier;
+		$this->$ipaddr = $ipaddr;
+		$this->$timelockoutexpires = $timelockoutexpires;
+ 	// +--------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+ 	// | Field              | Type         | Null | Key | Default           | Extra                                         |
+ 	// +--------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+ 	// | id                 | int          | NO   | PRI | NULL              | auto_increment                                |
+ 	// | firstname          | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | lastname           | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | startdate          | date         | YES  |     | NULL              |                                               |
+ 	// | address            | varchar(254) | YES  |     | NULL              |                                               |
+ 	// | city               | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | state              | varchar(20)  | YES  |     | NULL              |                                               |
+ 	// | postalcode         | varchar(20)  | YES  |     | NULL              |                                               |
+ 	// | smsphone           | varchar(30)  | YES  |     | NULL              |                                               |
+ 	// | phone2             | varchar(30)  | YES  |     | NULL              |                                               |
+ 	// | login              | varchar(50)  | NO   |     | NULL              |                                               |
+ 	// | birthdate          | date         | YES  |     | NULL              |                                               |
+ 	// | referredby         | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | notes              | text         | YES  |     | NULL              |                                               |
+ 	// | coachid            | int          | YES  |     | NULL              |                                               |
+ 	// | emergencycontact   | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | ecphone1           | varchar(50)  | YES  |     | NULL              |                                               |
+ 	// | ecphone2           | varchar(30)  | YES  |     | NULL              |                                               |
+ 	// | gender             | char(1)      | YES  |     | NULL              |                                               |
+ 	// | stopdate           | date         | YES  |     | NULL              |                                               |
+ 	// | stopreason         | varchar(80)  | YES  |     | NULL              |                                               |
+ 	// | teamid             | int          | YES  |     | NULL              |                                               |
+ 	// | roleid             | int          | YES  |     | NULL              |                                               |
+ 	// | address2           | varchar(80)  | YES  |     | NULL              |                                               |
+ 	// | useraccountinfo    | int          | YES  |     | NULL              |                                               |
+ 	// | salt               | char(9)      | YES  |     | NULL              |                                               |
+ 	// | passwd             | varchar(64)  | YES  |     | NULL              |                                               |
+ 	// | imageid            | int          | YES  |     | NULL              |                                               |
+ 	// | smsphonecarrier    | varchar(48)  | YES  |     | NULL              |                                               |
+ 	// | ipaddr             | char(16)     | YES  |     | NULL              |                                               |
+ 	// | timelockoutexpires | timestamp    | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
+ 	// +--------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+	}
+
 	function commit(){
 		if (($this->isdirty) && ($id != User::UserID_Guest)&& ($id != User::UserID_Undefined)){
 			$strSQL = "UPDATE users set firstname = ?, lastname = ?, email = ?, smsphone = ?, smsphonecarrier = ?
@@ -73,36 +172,20 @@ class User extends DbObject {
 	}
 
 	function sendEmail( $subject, $message, $fromemail, &$err){
-		$err = "";
-
-		$headers = "From: ".$fromemail."\r\nReply-To: ".$fromemail."\r\n";
-		// Always set content-type when sending HTML email
-		$headers .= "MIME-Version: 1.0" . "\r\n";
-		$headers .= "Content-type:text/html;charset=iso-8859-1" . "\r\n";
-		//define the headers we want passed. Note that they are separated with \r\n
-
-		$m = new Mail();
-		$statuscode = $m->mail($this->getEmail(), $subject, $message );
-
-		// $mailok = mail($this->getEmail(), $subject, $message , $headers);
-		if (!$m->statusok($statuscode)){
-			$bError = true;
-			$err = "mail";
+		$mailer = new Mail1t($session);
+		$bError = $mailer->mail($this->getEmail(), $subject, $message);
+		if (!$mailer->statusok()){
+			$err = $mailer->statuscode;
 		}
 		if (!$bError ) return RC_Success;
 		else return RC_EmailFailed;
-
 	}
 
 	function sendText( $message, $fromemail, &$err){
-		$err = "";
-
-		$headers = "From: ".$fromemail."\r\nReply-To: ".$fromemail."\r\n";
-
-		$mailok = mail($toemail, "", $message , $headers);
-		if (!$mailok){
-			$bError = true;
-			$err = "mail";
+		$mailer = new Mail1t($session);
+		$bError = $mailer->mail($this->getEmail(), "", $message);
+		if (!$mailer->statusok()){
+			$err = $mailer->statuscode;
 		}
 		if (!$bError ) return RC_Success;
 		else return RC_EmailFailed;

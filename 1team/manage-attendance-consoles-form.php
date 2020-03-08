@@ -66,7 +66,7 @@ access to, it is recommended you do <i>not</i> use this system for attendance lo
 <?php buildRequiredPostFields($session) ?>
 <tr class="odd"><td colspan="3"><span class="bigstrong">Add new attendance console</span></td></tr>
 <tr class="even">
-<td width="60%"><input type="text" name="name" size="80" maxlength="80" value="New attendance console name"></td>
+<td width="60%"><input type="text" name="name" size="50" maxlength="80" placeholder="New attendance console name"></td>
 <td width="30%"><input type="text" name="ip" size="<?php echo AttendanceConsole::MaxLenIPAddress;?>" maxlength="<?php echo AttendanceConsole::MaxLenIPAddress;?>" value="<?php echo $_SERVER["REMOTE_ADDR"];?>"></td>
 <td width="10%"><a href="#" title="Add attendance console" onClick="newattendanceconsole.submit()"><img src="img/add.gif" alt="Add attendanceconsole" border="0"></a></td>
 </tr>
