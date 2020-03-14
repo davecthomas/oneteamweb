@@ -86,7 +86,7 @@ for ($enrollmentLoop = 0;  $enrollmentLoop <= $numMonths-1; $enrollmentLoop++){
 	$nextmonth = $monthseries->modify("+1 month");
 	$nextmonth_js_timestamp = $nextmonth->getTimestamp() * 1000;
 	$datastring = $datastring . "{date: " . "new Date( " . $nextmonth_js_timestamp.")" . ",\n";
-	$datastring = $datastring . "enrollment: " .$enrollmentCount . "}\n";
+	$datastring = $datastring . "enrollment: " .$enrollmentCount . "}";
 	if ($enrollmentLoop<$numMonths-1){
 		$datastring = $datastring . ",\n";
 	}

@@ -75,7 +75,7 @@ if (isset($_GET["EventDate"])) {
 	if ($whomode == "user")	$strSQL = "SELECT users.startdate FROM users where users.id = ?";
 	else $strSQL = "SELECT teams.name, teams.startdate FROM teams where teams.id = ?";
 	$startdatearray = executeQuery($dbconn, $strSQL, $bError, array($objid));
-	$eventdatetime = new DateTime($startdatearray["startdate"]);
+	$eventdatetime = new DateTime($startdatearray[0]["startdate"]);
 }
 
 // Get the date of the first day of the month.
@@ -96,9 +96,9 @@ if ($whomode == "user") {
 }
 
 // Count the number of months we need to track attendance. This will be from EventDate to today
-$numMonths  = dateDiffNumMonths($eventdatetime->format("m/d/Y"), date("m/d/Y"), $dbconn);
+$numMonths  = dateDiffNumMonths($eventdatetime->format("Y-m-d"), date("Y-m-d"), $dbconn);
 if ($numMonths == 0) $numMonths = 1;	// Tweak on first months (zero months counts as 1)
-$attendancespan_str = dateDiffString($eventdatetime->format("m/d/Y"), date("m/d/Y"), $dbconn);
+$attendancespan_str = getYearsMonthsFromMonths($numMonths);
 
 if (isset($_GET["EventDateEnd"])) {
 	$lastdaydateReqdatetime = new DateTime($_GET["EventDateEnd"]);
@@ -140,23 +140,25 @@ if ($whomode == "user") { ?>
 $sqlBase = "SELECT COUNT(DISTINCT(attendance.attendancedate)) as classesinmonth,COUNT( attendance.memberid) as attendancecount, COUNT( DISTINCT(attendance.memberid)) as uniquemembers FROM attendance where teamid = ?";
 if ( $whomode == "user" ) {
 	$sqlBase = $sqlBase . " and memberid = ?";
-}
-?>
+}?>
 <p>Attendance starting <?php echo $eventdatetime->format("m-d-Y")?> and running for <?php echo $attendancespan_str?>.</p>
 <?php
 // Arrays for storing results
 $attendanceArrayAvgPerClass = array();
 $attendanceArrayUniqueMember = array();
-for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
+for ($attendanceLoop = 0; $attendanceLoop <= $numMonths; $attendanceLoop++){
 	// Finish the query by adding a where clause covering one month beyond the last query
 	$strSQL = $sqlBase . " and (attendance.attendancedate >= ? and attendance.attendancedate < ?)";
 	if ( $whomode == "team" ) {
-		$attendance_records = executeQuery($dbconn, $strSQL, $bError, array($teamid, $FirstDayofMonthdatetime->format("Y-m-d"), $lastDayofMonthdatetime->format("Y-m-d")));
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, 
+																			array($teamid, $FirstDayofMonthdatetime->format("Y-m-d"), 
+																			$lastDayofMonthdatetime->format("Y-m-d")));
 	} else {
 		if (!isset($teamid)) $teamid = $session["teamid"];
-		$attendance_records = executeQuery($dbconn, $strSQL, $bError, (array($teamid, $objid, $FirstDayofMonthdatetime->format("Y-m-d"), $lastDayofMonthdatetime->format("Y-m-d")));
+		$attendance_records = executeQuery($dbconn, $strSQL, $bError, 
+													array($teamid, $objid, $FirstDayofMonthdatetime->format("Y-m-d"), 
+													$lastDayofMonthdatetime->format("Y-m-d")));
 	}
-
 	// Get the team attendance
 	foreach ($attendance_records as $row) {
 		if ( $whomode == "team" ) {
@@ -176,24 +178,37 @@ for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
 	$lastDayofMonthdatetime->modify("+1 month");
 }
 $attendanceCount = 0;
-$datastring = "<chart>" . "<series>" ;
 
-// Create a table and dump data to a file
 $monthdate = $saveFirstDayofMonthdatetime;
-for ($attendanceLoop = 0; $attendanceLoop < $numMonths; $attendanceLoop++){
-	$datastring = $datastring . "<value xid='" . $attendanceLoop . "'>" . $monthdate->format("m-d-Y") . "</value>" ;
-	$monthdate->modify("+1 month");
-}
+$datastring = "[\n";
+$monthseries = new DateTime($savelastDayofMonthdatetime->format("d-m-Y"));
 
-for ($attendanceLoop = 0; $attendanceLoop< $numMonths; $attendanceLoop++){
-	$datastring = $datastring . "<value xid='" . $attendanceLoop . "'>" . $attendanceArrayAvgPerClass[$attendanceLoop] . "</value>";
+for ($attendanceLoop = 0; $attendanceLoop<= $numMonths; $attendanceLoop++){
+	$nextmonth = $monthseries->modify("+1 month");
+	$nextmonth_js_timestamp = $nextmonth->getTimestamp() * 1000;
+	$datastring = $datastring . "{date: " . "new Date( " . $nextmonth_js_timestamp.")" . ",\n";
+	$datastring = $datastring . "attendance: " .$attendanceArrayAvgPerClass[$attendanceLoop] . "}";
+	if ($attendanceLoop<$numMonths){
+		$datastring = $datastring . ",\n";
+	}
 }
+$datastring = $datastring . "];\n";
 
 if ( $whomode == "team" ) {
-	$datastring = $datastring . "<graph gid='1' title='Unique per Month'>" ;
-	for ($attendanceLoop = 1; $attendanceLoop< $numMonths-1; $attendanceLoop++){
-		$datastring = $datastring . "<value xid='" . $attendanceLoop . "'>" . $attendanceArrayUniqueMember[$attendanceLoop] . "</value>" ;
-	
+	$datastring2 = "[\n";
+	$monthseries = new DateTime($savelastDayofMonthdatetime->format("d-m-Y"));
+
+	for ($attendanceLoop = 1; $attendanceLoop<= $numMonths; $attendanceLoop++){
+		$nextmonth = $monthseries->modify("+1 month");
+		$nextmonth_js_timestamp = $nextmonth->getTimestamp() * 1000;
+		$datastring2 = $datastring2 . "// ".$nextmonth->format("Y-m-d")."\n";
+		$datastring2 = $datastring2 . "{date: " . "new Date( " . $nextmonth_js_timestamp.")" . ",\n";
+		$datastring2 = $datastring2 . "attendance: " . $attendanceArrayUniqueMember[$attendanceLoop] . "}" ;
+		if ($attendanceLoop<$numMonths){
+			$datastring2 = $datastring2 . ",\n";
+		}
+	}
+	$datastring2 = $datastring2 . "];\n";
 }
 
 ?>
@@ -202,7 +217,10 @@ if ( $whomode == "team" ) {
   width: 100%;
   height: 500px;
 }
-
+#chart2div {
+  width: 100%;
+  height: 500px;
+}
 </style>
 
 <!-- Resources -->
@@ -218,22 +236,21 @@ am4core.ready(function() {
 am4core.useTheme(am4themes_animated);
 // Themes end
 
-// Create chart
+// Create Average Members per Class chart
 var chart = am4core.create("chartdiv", am4charts.XYChart);
 chart.paddingRight = 20;
-
 chart.data = <?php echo $datastring?>;
 
 var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
 dateAxis.baseInterval = {
-  "timeUnit": "day",
+  "timeUnit": "month",
   "count": 1
 };
 dateAxis.tooltipDateFormat = "d MMMM YYYY";
 
 var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
 valueAxis.tooltip.disabled = true;
-valueAxis.title.text = "Members";
+valueAxis.title.text = "Average Members per Class";
 valueAxis.min = 0;
 
 var series = chart.series.push(new am4charts.LineSeries());
@@ -252,11 +269,53 @@ chart.scrollbarX.series.push(series);
 dateAxis.start = 0;
 dateAxis.keepSelection = true;
 
+<?php
+if ( $whomode == "team" ) {?>
+// Create Unique Members per Class chart
+var chart2 = am4core.create("chart2div", am4charts.XYChart);
+chart2.paddingRight = 20;
+chart2.data = <?php echo $datastring2?>;
+
+var dateAxis2 = chart2.xAxes.push(new am4charts.DateAxis());
+dateAxis2.baseInterval = {
+  "timeUnit": "month",
+  "count": 1
+};
+dateAxis2.tooltipDateFormat = "d MMMM YYYY";
+
+var valueAxis2 = chart2.yAxes.push(new am4charts.ValueAxis());
+valueAxis2.tooltip.disabled = true;
+valueAxis2.title.text = "Unique Members per Class";
+valueAxis2.min = 0;
+
+var series2 = chart2.series.push(new am4charts.LineSeries());
+series2.dataFields.dateX = "date";
+series2.dataFields.valueY = "attendance";
+series2.tooltipText = "Attendance: [bold]{valueY}[/]";
+series2.fillOpacity = 0.3;
+
+
+chart2.cursor = new am4charts.XYCursor();
+chart2.cursor.lineY.opacity = 0;
+chart2.scrollbarX = new am4charts.XYChartScrollbar();
+chart2.scrollbarX.series.push(series);
+
+
+dateAxis2.start = 0;
+dateAxis2.keepSelection = true;
+<?php
+}?>
+
 }); // end am4core.ready()
 </script>
 
 <!-- HTML -->
 <div id="chartdiv"></div>
+<?php
+if ( $whomode == "team" ) {?>
+<div id="chart2div"></div>
+<?php
+}?>
 <?php
 if ($pagemode == "standalone" ) {
 	// Start footer section

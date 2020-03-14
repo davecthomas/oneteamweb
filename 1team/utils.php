@@ -182,7 +182,7 @@ function dateDiffString($date1 , $date2, $dbconn = null){
 	// PostgreSQL $strSQL = "select age(?, ?)";
   $strSQL = "select TIMESTAMPDIFF(DAY,?,?);";
 	if ($dbconn == null) $dbconn = getConnection();
-	$diff_days = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date2, $date1));
+	$diff_days = executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date1, $date2));
 	if (! $bError) $diff_str = "{$diff_days} days";
 	return $diff_str;
 }
@@ -198,7 +198,7 @@ function dateDiffNumDays($date1 , $date2, $dbconn = null){
 	return $diff_days;
 }
 
-// Requires this sql installed:
+// PostGreSQL: For number of months, Requires this sql installed:
 /* CREATE OR REPLACE FUNCTION every_what( start_date date,end_date date,incr integer, unit text)
 	RETURNS SETOF date AS
 	$$
@@ -218,7 +218,7 @@ function dateDiffNumDays($date1 , $date2, $dbconn = null){
 	LANGUAGE 'plpgsql';
  */
 function dateDiffNumMonths($date1 , $date2, $dbconn= null){
-	$strSQL = "select count(*) from every_what( ?, ?::date, 1, 'months' );";
+	$strSQL = "select TIMESTAMPDIFF(MONTH,?,?);";
   if ($dbconn==null) $dbconn = getConnection();
 	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($date1, $date2));
 }
@@ -231,23 +231,30 @@ function getMembershipDurationInMonths( $id, $dbconn= null, &$bError) {
 	return executeQueryFetchColumn($dbconn, $strSQL, $bError, array($id));
 }
 
+function getYearsMonthsFromMonths( $num_months){
+	$years_months = "";
+
+	if ($num_months>11){
+      $time_in_years = intdiv($num_months, 12);
+      $months_remaining = $num_months%12;
+      $years_months = "{$time_in_years} years, ";
+	} else {
+		$months_remaining = $num_months;
+	}
+	if ($months_remaining != 1){
+		$years_months .= "{$months_remaining} months";
+	} else {
+		$years_months .= "{$months_remaining} month";
+	}
+	return $years_months;
+}
+
 function getMembershipDurationString($id, $dbconn= null, &$bError){
   $timeIn = getMembershipDurationInMonths($id, $dbconn, $bError);
 
   $time_in_str = "";
   if (! $bError){
-    if ($timeIn>11){
-      $time_in_years = intdiv($timeIn, 12);
-      $months_remaining = $timeIn%12;
-      $time_in_str = "{$time_in_years} years, ";
-    } else {
-      $months_remaining = $timeIn;
-    }
-    if ($months_remaining != 1){
-      $time_in_str .= "{$months_remaining} months";
-    } else {
-      $time_in_str .= "{$months_remaining} month";
-    }
+		$time_in_str = getYearsMonthsFromMonths($timeIn);
   }
   return $time_in_str;
 }

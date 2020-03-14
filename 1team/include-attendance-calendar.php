@@ -204,14 +204,14 @@ $attendanceDates = executeQuery($dbconn, $strSQL, $bError, array($objid, $FirstD
 // Get all attendances in one array and store them as DateTime objects in another array
 $numAttendances = count($attendanceDates );
 $attendanceDatetimes = array();
-
+$daysWithAttendanceAll = array();
 for ($i=0; $i< count($attendanceDates); $i++){
 	$daysWithAttendanceAll[$i] = $attendanceDates[$i]["attendancedate"];
 }
 $daysWithAttendance = array_unique($daysWithAttendanceAll);
 
 if ($whomode == "team") {
-	$membersOnDates = array_count_values($attendanceDates);
+	$membersOnDates = array_count_values($daysWithAttendance);
 }
 // This isn't used yet, ok to delete?
 for ($i = 0; $i < $numAttendances; $i++){
