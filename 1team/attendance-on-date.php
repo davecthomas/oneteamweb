@@ -10,7 +10,7 @@ dojo.require("dijit.form.DateTextBox");
 
 <?php
 echo "<h3>" . getTitle($session, $title) . "</h3>";
-
+$bError = false;
 $teamid = NotFound;
 // teamid depends on who is calling
 if (isUser($session, Role_TeamAdmin)){
@@ -35,7 +35,7 @@ if ((isset($_POST['date']))) {
 
 // If bad date, default to today
 if (! check_date($inputdate) ) {
-	$formdate = date("Y-m-d");
+	$formdate = date("m-d-Y");
 	$thedatesql = "current_date";
 } else {
 	$formdate = $inputdate;
@@ -48,7 +48,7 @@ $datearray = explode("-",$formdate);
 $attendanceCheckDate = new DateTime($datearray[2] . "-" . $datearray[1] . "-" . $datearray[0]);
 
 if (strcmp($thedatesql, "current_date") != 0){
-	$thedatesql = "'" . $attendanceCheckDate->format("m-d-Y") . "'";
+	$thedatesql = "'" . $attendanceCheckDate->format("Y-m-d") . "'";
 }
 // set up sort order
 $sortRequest = "firstname";
@@ -78,16 +78,16 @@ if (isset($_GET["filter"])) {
 </form>
 <?php
 //	$strSQL = "SELECT attendance.id as attendanceid, attendance.*, events.id as eventid, events.*, users.id as userid, users.*, useraccountinfo.* FROM (events INNER JOIN (attendance INNER JOIN users ON attendance.memberid = users.id) on events.id = attendance.eventid), useraccountinfo WHERE attendance.teamid = ? AND attendancedate = ? and users.useraccountinfo = useraccountinfo.id ORDER BY attendance.attendancedate DESC";
-	$strSQL = "SELECT attendance.id as attendanceid, attendance.*, events.id as eventid, events.*, users.id as userid, users.*, useraccountinfo.*, images.* FROM useraccountinfo, events INNER JOIN attendance INNER JOIN teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id ON attendance.memberid = users.id on events.id = attendance.eventid WHERE attendance.teamid = ? AND attendancedate = ? and users.useraccountinfo = useraccountinfo.id ORDER BY attendance.attendancedate DESC;";
-
+	$strSQL = "SELECT attendance.id as attendanceid, attendance.*, events.id as eventid, events.*, users.id as userid, users.*, useraccountinfo.*, images.* FROM useraccountinfo, events INNER JOIN attendance INNER JOIN teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id ON attendance.memberid = users.id on events.id = attendance.eventid WHERE attendance.teamid = ? AND attendancedate = ".$thedatesql." and users.useraccountinfo = useraccountinfo.id ORDER BY attendance.attendancedate DESC;";
 	$dbconn = getConnectionFromSession($session);
-	$results = executeQuery($dbconn, $strSQL, $bError, array($session["teamid"],$thedatesql));
+	$user_results = executeQuery($dbconn, $strSQL, $bError, array($session["teamid"]));
+	$team_name = getTeamName($teamid, $dbconn);
 ?>
-<h4><?php echo getTeamName($teamid, $dbconn)?> Members attending on <?php echo $attendanceCheckDate->format("F j, Y") ?></h4>
+<h4><?php echo $team_name?> Members attending on <?php echo $attendanceCheckDate->format("F j, Y") ?></h4>
 <div id="bodycontent">
 <?php
 	// If none found
-	if (count($results ) == 0) { ?>
+	if (count($user_results ) == 0) { ?>
 <?php
 	echo "<p>No members found.<br>\n";
 // If only one result, go to props page for that user

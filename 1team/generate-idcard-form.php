@@ -3,7 +3,7 @@
 $isadminrequired = true;
 $title = "Generate ID Card";
 include('header.php');
-
+	echo("1");
 $bError = false;
 $teamid = NotFound;
 $err = "";
@@ -26,7 +26,9 @@ if (isset($_GET["id"])){
 }
 
 if (!$bError) {
+	$dbconn = getConnectionFromSession($session);
 	$teamname = getTeamName($teamid, $dbconn);
+
 	// Conditionally include user name in title
 	if ( $userid != User::UserID_Undefined ) {
 		$bDisplayUserSelector = false;?>
@@ -36,7 +38,6 @@ if (!$bError) {
 		$bDisplayUserSelector = true;
 		echo '<h3>' . $title . ' for ' . $teamname . ' ' . $teamterms["termmember"] . '</h3>';
 	}
-	$dbconn = getConnectionFromSession($session);
 	// If invalid userID, Build a select list of all billable and active students to allow selection
 	if ($bDisplayUserSelector) {
 		// Team admin must get team id from session
