@@ -329,7 +329,7 @@ href="member-roster.php<?php buildRequiredParams($session) ?>&teamid=<?php echo 
 </select></td></tr>
 </table>
 <table class="noborders">
-<tr><td class="bigstrongcenter"><?php echo $teamterms["termteam"]?> Roster</td><td></td><td class="bigstrongcenter">Present&nbsp;<div id="datediv"><?php echo date("F jS, Y")?></div></td></tr>
+<tr><td class="presentnotpresent_buttons"><?php echo $teamterms["termteam"]?> Roster</td><td></td><td class="presentnotpresent_buttons">Present&nbsp;<div id="datediv"><?php echo date("F jS, Y")?></div></td></tr>
 <tr><td>
 <select size="<?php
 		if ($numUsers < memberSelectionListMaxRows) echo $numUsers;
@@ -349,13 +349,13 @@ href="member-roster.php<?php buildRequiredParams($session) ?>&teamid=<?php echo 
 </select>
 </td>
 <td align="center">
-<input type="button" class="btnbig" onmouseover="this.className='btnbig btnbighover'" onmouseout="this.className='btnbig'" onclick="moveOptions( 'attendancerosterlistleft', 'attendancerosterlistright', 'attendancerosterlistright', 'presentpassword')" name="present" value="   Present  >  ">
+<input type="button" class="presentnotpresent_buttons" onmouseover="this.className='btnbig btnbighover'" onmouseout="this.className='btnbig'" onclick="moveOptions( 'attendancerosterlistleft', 'attendancerosterlistright', 'attendancerosterlistright', 'presentpassword')" name="present" value="   Present  >  ">
 <br>
 <br>
 <br>
 <br>
 <br>
-<input id="remove" type="button" class="btnbig" onmouseover="this.className='btnbig btnbighover'" onmouseout="this.className='btnbig'" onclick="moveOptions( 'attendancerosterlistright',  'attendancerosterlistleft', 'attendancerosterlistright', 'presentpassword')" name="notpresent" value="< Not present" disabled>
+<input id="remove" type="button" class="presentnotpresent_buttons" onmouseover="this.className='btnbig btnbighover'" onmouseout="this.className='btnbig'" onclick="moveOptions( 'attendancerosterlistright',  'attendancerosterlistleft', 'attendancerosterlistright', 'presentpassword')" name="notpresent" value="< Not present" disabled>
 <br>
 </td>
 <td>

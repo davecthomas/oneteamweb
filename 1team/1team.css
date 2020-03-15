@@ -228,8 +228,9 @@ table.idcard td {
 .smallbold {	font-size: 1em;font-weight:bold ;background-color:inherit}
 .smaller {	font-size: .8em;background-color:inherit}
 .smallerbold {	font-size: .8em;font-weight:bold ;background-color:inherit}
-.bigstrong {	 font-weight:bold ;font-size: 1.2em;background-color:inherit}
-.bigstrongcenter {	 font-weight:bold ;font-size: 1.2em;background-color:inherit;text-align: center}
+.bigstrong {	 font-weight:bold ;font-size: 1em;background-color:inherit}
+.bigstrongcenter {	 font-weight:bold ;font-size: 1em;background-color:inherit;text-align: center}
+.presentnotpresent_buttons {font-weight:bold ;font-size: 1em;background-color:inherit;text-align: center}
 .strong { font-weight:bold ;}
 
 /* Anchor treatment can be summed up as follows:

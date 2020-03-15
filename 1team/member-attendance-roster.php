@@ -93,12 +93,22 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 	$bError = false;
 	$err = "";
 	// Make sure this user exists
-	$strSQL = "SELECT users.firstname, users.lastname, users.roleid, users.id AS userid, users.useraccountinfo, useraccountinfo.*, images.* FROM useraccountinfo, teams RIGHT OUTER JOIN images RIGHT OUTER JOIN users ON users.imageid = images.id ON images.teamid = teams.id WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;";
+	$strSQL = <<<EOD
+	SELECT users.firstname, users.lastname, users.roleid, users.id AS userid, users.useraccountinfo, 
+	useraccountinfo.*, images.* 
+	FROM useraccountinfo, teams 
+		RIGHT OUTER JOIN images 
+			RIGHT OUTER JOIN users 
+			ON users.imageid = images.id 
+		ON images.teamid = teams.id 
+	WHERE users.useraccountinfo = useraccountinfo.id AND users.id = ? and users.teamid = ?;
+	EOD;
 
 	$dbconn = getConnectionFromSession($session);
 	$userResults = executeQuery($dbconn, $strSQL, $bError, array($uid, $teamid));
 
-	if (!$bError)  {
+	if ((!$bError) && (count($userResults) > 0)) {
+		$userResults = $userResults[0];
 
 		$fullname = $userResults["firstname"] . "&nbsp;" . $userResults["lastname"];
 		$canLogAttendance = false;
@@ -107,12 +117,14 @@ function logAttendance( $session, $uid, $teamid, $attendanceDate, $eventid, &$er
 			$accountStatus  = $userResults["status"];
 			$isUserBillable = $userResults["isbillable"];
 			// Non-billable and active is ok to log
+			var_dump($isUserBillable && $accountStatus);
 			if (! $isUserBillable && $accountStatus == UserAccountStatus_Active ) {
 				$canLogAttendance = true;
 			}
 
 			// Billable and active members requires check for payments made to log attendance
-			else if ($isUserBillable && ($accountStatus == UserAccountStatus_Active) && (doesRoleContain($userResults["roleid"], Role_Member)) ) {
+			else if ($isUserBillable && ($accountStatus == UserAccountStatus_Active) && 
+							(doesRoleContain($userResults["roleid"], Role_Member)) ) {
 				$today = date("m/d/Y");
 				$bNoValidPaymentsFound = true;
 
