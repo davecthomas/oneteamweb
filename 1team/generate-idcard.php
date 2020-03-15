@@ -6,7 +6,6 @@ include_once('header-minimal.php');
 // require("php-barcode/php-barcode.php");
 use chillerlan\QRCode\{QRCode, QROptions};
 require_once '../vendor/autoload.php';
-var_dump(QRCode::ECC_L);
 define("rowsPerPage", 8);
 define("numColumns", 3);
 define("userList", 1);?>
@@ -81,7 +80,7 @@ if (!$bError){
 			$userprops = executeQuery($dbconn, $strSQL, $bError, array( ImageType_Team, $teamid));
 		}
 	} else if ($command == userList ){
-		$strSQL = "SELECT teams.id as id_team, teams.*, users.firstname, users.lastname, users.teamid, users.id as userid, useraccountinfo.status, useraccountinfo, images.* FROM users, useraccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE users.id IN (" . implode(",", $useridList) . ") AND users.teamid = teams.id AND (users.roleid & " . Role_Member  . ") = " . Role_Member . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> " . UserAccountStatus_Inactive ;
+		$strSQL = "SELECT teams.id as id_team, teams.*, users.firstname, users.lastname, users.teamid, users.id as userid, useraccountinfo.status, useraccountinfo, images.* FROM users, useraccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE users.id IN (" . implode(",", $useridList) . ") AND users.teamid = teams.id AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> " . UserAccountStatus_Inactive ;
 		$userprops = executeQuery($dbconn, $strSQL, $bError, array( ImageType_Team, $teamid));
 	} else {
 		$bError = true;
@@ -92,6 +91,8 @@ if (!$bError){
 		$loopCount = 0;
 		$numUserRecords = count($userprops);
 		$rowCount = 0;
+		$qrcode = new QRCode();
+
 		while ($loopCount < $numUserRecords) {
 			$loopCount++;?>
 <!-- loopCount = <?php echo $loopCount ?>-->
@@ -134,19 +135,11 @@ if (!$bError){
 				else
 					$formataddress = "&nbsp;"; 
 				$qrcode_data = str_pad(getUserBarcodeNumber($userprops[$loopCount-1]["teamid"],$userprops[$loopCount-1]["userid"]), barcodeLength, "0", STR_PAD_LEFT);
-				var_dump(array($qrcode_data, QRCode::OUTPUT_MARKUP_SVG));
-				$options = new QROptions([
-																	'version'    => 5,
-																	'outputType' => QRCode::OUTPUT_MARKUP_SVG,
-																	'eccLevel'   => QRCode::ECC_L,
-																]);
-				$qrcode = new QRCode($options);
-				var_dump(array($qrcode, $qrcode_data));
 				?>
 <div id="idcard_address"><?php echo $formataddress?></div>
 <?php echo $teamterms["termmember"] . ": " . $userprops[$loopCount-1]["firstname"] . " " . $userprops[$loopCount-1]["lastname"]?><br>
-<?php echo $qrcode_data?><br>
-<img src="<?php echo $qrcode->render($qrcode_data)?>" alt="QR Code" />
+<?php echo $qrcode_data . "<br>";
+echo '<img src="'. $qrcode->render($qrcode_data).'" alt="QR Code" />';?>
 </td>
 <?php
 				// move to the next item so we can see if we are done, so we know how much to pad or close row
