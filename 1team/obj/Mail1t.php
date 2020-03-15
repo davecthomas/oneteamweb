@@ -1,6 +1,7 @@
 <?php
 // include_once ('globals.php');
 // include_once ('utils.php');
+use chillerlan\QRCode\{QRCode, QROptions};
 require '../vendor/autoload.php';
 
 /**

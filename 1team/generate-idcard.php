@@ -3,11 +3,13 @@ $title=" Generate ID Card";
 $isadminrequired= true;
 $bError = false;
 include_once('header-minimal.php');
-require("php-barcode/php-barcode.php");
+// require("php-barcode/php-barcode.php");
+use chillerlan\QRCode\{QRCode, QROptions};
+require_once '../vendor/autoload.php';
+var_dump(QRCode::ECC_L);
 define("rowsPerPage", 8);
 define("numColumns", 3);
-define("userList", 1);
-?>
+define("userList", 1);?>
 <body>
 <div id="userbanner">
 <a href="<?php echo $_SERVER['HTTP_REFERER']?>"><- Back</a>&nbsp;Signed in as <?php echo roleToStr($session["roleid"],$teamterms)?>&nbsp;<?php echo $session["fullname"]?>. Session time remaining:&nbsp;<?php echo getSessionTimeRemaining($session)?> <a href="/1team/logout.php<?php buildRequiredParams($session)?>">Sign out</a>
@@ -54,15 +56,14 @@ if (isset($_REQUEST["id"])){
 
 if (!$bError){
 	$dbconn = getConnectionFromSession($session);
-
   if (strlen($session["teamimageurl"]) > 0) {
 		$teamlogo = $session["teamimageurl"];
 	} else {
-	     $teamlogo = "/1team/img/1teamweb-logo-200.png";
+	  $teamlogo = "/1team/img/1teamweb-logo-200.png";
 	}
 
 	if (($command == GenerateAllMembers) || ($command == GenerateLatestMembers)){
-		$strSQL = "SELECT teams.id as id_team, teams.*, users.firstname, users.lastname, users.teamid, users.id as userid, useraccountinfo.status, useraccountinfo, images.* FROM users, useraccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE users.teamid = teams.id AND (users.roleid & " . Role_Member  . ") = " . Role_Member . " AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> " . UserAccountStatus_Inactive ;
+		$strSQL = "SELECT teams.id as id_team, teams.*, users.firstname, users.lastname, users.teamid, users.id as userid, useraccountinfo.status, useraccountinfo, images.* FROM users, useraccountinfo, teams LEFT OUTER JOIN images ON (images.teamid = teams.id and images.type = ?) WHERE users.teamid = teams.id AND users.teamid = ? AND users.useraccountinfo = useraccountinfo.id AND useraccountinfo.status <> " . UserAccountStatus_Inactive ;
 
 		if ($command == GenerateLatestMembers){
 			try{
@@ -107,10 +108,11 @@ if (!$bError){
 <div style="page-break-before:always;font-size:1;margin:0;border:0;"><span style="visibility: hidden;">-</span></div>
 <?php					// Generate a page full of logos so when printed duplex, the logos are on the back of the barcode cards ?>
 <table class="idcard">
-<?php						for ($loopLogo=1; $loopLogo <= rowsPerPage; $loopLogo++){
+<?php					
+							for ($loopLogo=1; $loopLogo <= rowsPerPage; $loopLogo++){
 								echo "<tr>\n";
 								for ($loopRow = 1; $loopRow <= numColumns; $loopRow++){ ?>
-<td align="center" class="idcard_cell"><img class="idcard_logo" src="<?php echo $teamlogo?>" alt="logo"></td>
+<td align='center' class='idcard_cell'><img class='idcard_logo' src='<?php echo $teamlogo?>' alt='logo'></td>
 <?php							}
 								echo "</tr>\n";
 							} ?>
@@ -130,11 +132,21 @@ if (!$bError){
 				if (strlen($userprops[$loopCount-1]["address1"] . $userprops[$loopCount-1]["city"] . $userprops[$loopCount-1]["state"] . $userprops[$loopCount-1]["postalcode"]) > 0)
 					$formataddress = $userprops[$loopCount-1]["address1"] . " " . $userprops[$loopCount-1]["city"] . ", ". $userprops[$loopCount-1]["state"] . "&nbsp;" . $userprops[$loopCount-1]["postalcode"];
 				else
-					$formataddress = "&nbsp;"; ?>
+					$formataddress = "&nbsp;"; 
+				$qrcode_data = str_pad(getUserBarcodeNumber($userprops[$loopCount-1]["teamid"],$userprops[$loopCount-1]["userid"]), barcodeLength, "0", STR_PAD_LEFT);
+				var_dump(array($qrcode_data, QRCode::OUTPUT_MARKUP_SVG));
+				$options = new QROptions([
+																	'version'    => 5,
+																	'outputType' => QRCode::OUTPUT_MARKUP_SVG,
+																	'eccLevel'   => QRCode::ECC_L,
+																]);
+				$qrcode = new QRCode($options);
+				var_dump(array($qrcode, $qrcode_data));
+				?>
 <div id="idcard_address"><?php echo $formataddress?></div>
 <?php echo $teamterms["termmember"] . ": " . $userprops[$loopCount-1]["firstname"] . " " . $userprops[$loopCount-1]["lastname"]?><br>
-<?php  echo str_pad(getUserBarcodeNumber($userprops[$loopCount-1]["teamid"],$userprops[$loopCount-1]["userid"]), barcodeLength, "0", STR_PAD_LEFT)?><br>
-<img class="idcard_barcode" src="./php-barcode/barcode.php?code=<?php echo str_pad(getUserBarcodeNumber($userprops[$loopCount-1]["teamid"],$userprops[$loopCount-1]["userid"]), barcodeLength, "0", STR_PAD_LEFT)?>" alt="barcode"></div>
+<?php echo $qrcode_data?><br>
+<img src="<?php echo $qrcode->render($qrcode_data)?>" alt="QR Code" />
 </td>
 <?php
 				// move to the next item so we can see if we are done, so we know how much to pad or close row

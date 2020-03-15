@@ -1,6 +1,8 @@
 {
   "require": {
-    "sendgrid/sendgrid": "~5.0.9"
+    "php": "^7.4",
+    "sendgrid/sendgrid": "~5.0.9",
+    "chillerlan/php-qrcode": "dev-master"
   },
   "require-dev": {
     "heroku/heroku-buildpack-php": "*"

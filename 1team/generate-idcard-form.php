@@ -3,7 +3,6 @@
 $isadminrequired = true;
 $title = "Generate ID Card";
 include('header.php');
-	echo("1");
 $bError = false;
 $teamid = NotFound;
 $err = "";
